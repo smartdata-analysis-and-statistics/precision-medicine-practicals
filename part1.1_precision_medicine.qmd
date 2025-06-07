@@ -1,24 +1,29 @@
 ---
 title: "Part 1.1 Data Preparation and Exploration (Binary Outcomes)"
-format: html
+format: 
+  html :
+    toc: true 
+    toc-depth: 3    
+    toc-location: right
+    number-sections: false 
 editor: visual
 ---
 
 The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
 
-### 1. **Expected Background Knowledge**
+# 1. **Expected Background Knowledge**
 
 -   Basic R programming
 -   Basic statistics (means, proportions, distribution)
 -   Familiarity with binary outcomes
 
-### 2. **Learning Objectives**
+# 2. **Learning Objectives**
 
 -   Understand the structure and content of the dataset
 -   Identify and handle missing data
 -   Prepare variables for modeling (e.g., correct formats, imputation)
 
-### **3. Key Sections**
+# **3. Key Sections**
 
 In this part, you will learn about :
 
@@ -230,6 +235,13 @@ df = as.data.frame(imputed1[[1]])
 head(df)
 ```
 
+Since this dataset will be used for the next step, modelling and validation. We need to save the data as rds files.
+
+```{r}
+# Save the entire imputed datasets list
+saveRDS(imputed1, "imputed_datasets.rds")
+```
+
 ## **5. Exploratory Data Analysis (EDA)**
 
 For the EDA Parts, we used the first bootstrap list. First we check if the missing values still persist or not.
@@ -239,7 +251,7 @@ colSums(is.na(df))
 
 ```
 
-Then we look at the summary for continuous_vars variable :
+Then we look at the summary for continuous variable :
 
 ```{r}
 continuous_vars <- c("x1", "x2", "z1", "z2")
@@ -259,6 +271,8 @@ sapply(continuous_data, function(x) {
 
 ```
 
+Then we would like to create some basic visualizations.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -267,9 +281,6 @@ theme_custom <- theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 11))
-
-# 4.1 Distribution plots for continuous variables
-cat("\n=== CREATING VISUALIZATIONS ===\n")
 
 # Histograms for continuous variables
 p1 <- ggplot(df, aes(x = x1)) + 
@@ -292,6 +303,10 @@ p4 <- ggplot(df, aes(x = z2)) +
 grid.arrange(p1, p2, p3, p4, ncol = 2, top = "Distribution of Continuous Variables")
 ```
 
+Distribution of all continuous variables are typically similar, as they generated from the same distributions.
+
+The next plot is the distribution of categorical variables and target variable.
+
 ```{r}
 # 4.2 Bar plots for categorical variables
 p5 <- ggplot(df, aes(x = x3)) + 
@@ -311,7 +326,12 @@ p8 <- ggplot(df, aes(x = y)) +
   labs(title = "Distribution of Outcome Y", x = "Y", y = "Count") + theme_custom
 
 grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variables")
+
 ```
+
+The result showed that in the data target, outcome "0" is more dominant than outcome "1".
+
+The next plot is the distribution of clusters.
 
 ```{r}
 # 4.3 Cluster analysis
@@ -320,7 +340,12 @@ p9 <- ggplot(df, aes(x = clust)) +
   labs(title = "Distribution of Clusters", x = "Cluster", y = "Count") + theme_custom
 
 print(p9)
+
 ```
+
+The cluster is dominated by cluster 5 and 2, while cluster 1,3,4 has less value others.
+
+Additionally, we will also take a look at correlation in each variable by using correlation matrix.
 
 ```{r}
 # 4.4 Correlation matrix for continuous variables
@@ -332,9 +357,16 @@ corrplot(cor_matrix, method = "color", type = "upper",
          order = "hclust", tl.cex = 0.8, tl.col = "black",
          title = "Correlation Matrix of Continuous Variables",
          mar = c(0,0,1,0))
+
 ```
 
+Some variables are highly correlated such as variables X2 and X1, Z2 and Z1. While others have relatively low correlation.
+
+The next plot will figure out the distribution of continuous predictors with outcome.
+
 ```{r}
+#| message: false
+#| warning: false
 # Outcome by continuous predictors (boxplots)
 p10 <- ggplot(df, aes(x = y, y = x1, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
@@ -343,13 +375,16 @@ p10 <- ggplot(df, aes(x = y, y = x1, fill = y)) +
 
 p11 <- ggplot(df, aes(x = y, y = x2, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
-  labs(title = "X2 by Outcome Y", x = "Y", y = "X2") + theme_custom +
-  theme(legend.position = "none")
+  labs(title = "X2 by Outcome Y", x = "Y", y = "X2") + theme_custom
 
 grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 ```
 
+The results show that the distribution between X1 by Outcome Y is similar with X2 by Outcome Y.
+
 ```{r}
+#| message: false
+#| warning: false
 vars <- c("x3", "x4", "x5", "clust")
 plot_list <- list()  # to store plots
 
@@ -357,14 +392,19 @@ for (var in vars) {
   p <- ggplot(df, aes_string(x = var, fill = "factor(y)")) +
     geom_bar(position = "fill") +  # stacked proportion bars
     ylab("Proportion") +
-    labs(fill = "y", title = paste("Proportion of y by", var)) +
-    theme_minimal()
+    labs(fill = "y", title = paste(var," by Outcome Y")) + theme_custom
   
   plot_list[[var]] <- p
 }
 
 # Arrange all plots in a 2x2 grid
-grid.arrange(grobs = plot_list, ncol = 2)
+grid.arrange(grobs = plot_list, ncol = 2, top = "Cetagorical Predictors by Outcome")
 
 
 ```
+
+The plot shows that the distribution of categorical variables in each outcome has been proportional.
+
+# **4. Conclusion** 
+
+This comprehensive simulation study demonstrates a robust approach to prepare and understand clinical data. By generating a realistic dataset with mixed variable types, non-linear relationships, and clustered observations, we created a representative scenario that mirrors real-world clinical research challenges. We will also be able to handle missing data in complex biomedical datasets through multiple imputation techniques. The exploratory data analysis revealed the intricate structure of the data, including correlation patterns, distributional characteristics, and the impact of clustering on outcome variables.

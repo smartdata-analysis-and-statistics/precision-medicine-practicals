@@ -1,0 +1,435 @@
+---
+title: "Model Development (Binary Outcomes)"
+format: 
+  html :
+    toc: true 
+    toc-depth: 3    
+    toc-location: right
+    number-sections: false 
+editor: visual
+---
+
+After preparing the data, the next step will be modelling. Modeling helps us understand how variables relate to each other. Models allow us to predict outcomes for new observations. Any prediction function demonstrates this - it takes new patient data and estimates their probability of the outcome occurring. This is crucial for clinical decision-making.
+
+# Key Sections :
+
+This part 1.2 Modelling will consist of some sections :
+
+-   Choosing a modelling strategy
+-   Building The Model
+-   Assessing model performance including AUC, Calibration Plot
+-   Assessing performance using validation metrics
+
+## 1. Choosing The Model Strategy
+
+During this section, we will cover three models, including logistic regression with splines, GAM, Ridge.
+
+The first step is load the neccessary libarary
+
+```{r}
+#| include: false
+library(survival)
+library(lattice)
+library(Formula)
+library(ggplot2)
+library(Hmisc)
+library(rms)
+library(gridExtra)
+library(reshape2)
+library(MASS)
+library(mgcv)
+library(glmnet)
+
+logit <- function(x){log(x/(1-x))}
+expit <- function(x){exp(x)/(1+exp(x))}
+```
+
+For the first step, load the datasets from previous part.
+
+```{r}
+# Load previous datasets
+imputed1 <- readRDS("imputed_datasets.rds")
+head(as.data.frame(imputed1[[1]]))
+
+data.bin = as.data.frame(imputed1[[1]])
+
+n.impute <- 10
+```
+
+#### Baseline for Predictions
+
+```{r}
+new.patient <- new.patient <- data.frame(x1=-0.3, x2=-0.5, x3=1, x4=1, x5=2)
+new.logit <- with(new.patient,-2 +0.5*x1+0.1*x1^2+0.2*x2-0.05*x2^2+0.1*(x3==2)+0.2*(x4==2)+0.2
+                  *(x5==2)-0.1*(x5==3)+0.2*(x5==4))
+# this is the true log odds
+exp(new.logit)
+```
+
+#### First Method : Regression Spline
+
+```{r}
+regression.splines<-list()
+for (i in 1:n.impute){ 
+    regression.splines[[i]]<- lrm(y~rcs(x1,3)+rcs(x2,3)+x3+x4+x5, data=imputed1[[i]]) 
+}
+```
+
+This creates multiple logistic regression models (one for each imputed dataset):
+
+-   `lrm()` fits logistic regression models
+-   `rcs(x1,3)` and `rcs(x2,3)` create restricted cubic splines with 3 knots for variables x1 and x2
+-   x3, x4, x5 are included as linear terms
+-   Each model is fitted on a different imputed dataset (`imputed1[[i]]`)
+
+```{r}
+#| message: false
+#| warning: false
+spl1<-ggplot(data.frame(x1=seq(-3,3, 0.1),
+    logit.py=Predict(regression.splines[[i]], x1=seq(-3,3,0.1),
+    x2=0, x3=1, x4=1, x5=2)$yhat),
+    aes(x=x1, y=logit.py)) + geom_smooth()
+
+spl2<-ggplot(data.frame(x2=seq(-3,3, 0.1),
+    logit.py=Predict(regression.splines[[i]], x1=1, x2=seq(-3,3,0.1), 
+    x3=1, x4=1, x5=2)$yhat),
+    aes(x=x2, y=logit.py)) + geom_smooth()
+
+grid.arrange(spl1,spl2,ncol=2)
+```
+
+This creates partial effect plots showing:
+
+-   How the log-odds (logit) changes with x1 (holding other variables constant)
+-   How the log-odds changes with x2 (holding other variables constant)
+-   The smooth curves reveal the non-linear relationships captured by the splines
+
+```{r}
+prediction.lr <- function(new.patient, single.fit = NULL, multiple.fit = NULL){
+    if(!is.null(multiple.fit)){
+        # Handle multiple imputation models
+        mygrid <- expand.grid(k = 1:dim(new.patient)[1], i = 1:length(multiple.fit))
+        ff <- function(k,i){
+            with(new.patient, Predict(multiple.fit[[i]], x1= x1[k], x2 = x2[k],
+                x3= x3[k], x4= x4[k], x5= x5[k])$y) 
+        }
+        prediction_matrix <- matrix(mapply(ff, mygrid$k, mygrid$i),
+            nrow = dim(new.patient)[1], ncol = length(multiple.fit))
+        prediction <- apply(prediction_matrix, 1, mean)  # Average across imputations
+    } else if(!is.null(single.fit)){
+        # Handle single model
+        ff <- function(k){
+            with(new.patient, Predict(single.fit, x1= x1[k], x2 = x2[k], 
+                x3= x3[k], x4= x4[k], x5= x5[k])$y) 
+        }
+        prediction <- sapply(1:dim(new.patient)[1], ff) 
+    }
+    return(prediction)
+}
+```
+
+This flexible function:
+
+-   Can handle either a single model or multiple imputation models
+-   For multiple models: generates predictions from each model and averages them (Rubin's rules)
+-   For single models: generates predictions directly
+-   Returns predictions on the log-odds scale
+
+```{r}
+expit(prediction.lr(new.patient, multiple.fit = regression.splines))
+```
+
+The predicted probability is only differ 0.2 from the baseline predictions.
+
+```{r}
+complete.data <- data.bin[complete.cases(data.bin[,c("x1","x2","x3","x4","x5","y")]),]
+predicted.lr <- prediction.lr(complete.data, multiple.fit = regression.splines) 
+
+# these are patients with fully observed data
+ggplot(data.frame(p=expit(predicted.lr)), aes(x=p)) +
+  geom_histogram() + geom_histogram(color="black", fill="white")
+```
+
+#### Second Method : GAM
+
+```{r}
+fit.gam <- list()
+```
+
+Creates an empty list called `fit.gam` that will store multiple GAM model objects - one for each imputed dataset.
+
+```{r}
+for( i in 1:n.impute){
+  fit.gam[[i]] <- gam(y~x3+x4+x5+s(x1)+s(x2), data = imputed1[[i]],
+                      family=binomial)
+}
+```
+
+This loop fits a GAM to each of the `n.impute` imputed datasets:
+
+-   `y` is the binary outcome variable (since `family=binomial`)
+-   `x3`, `x4`, `x5` are included as linear terms
+-   `s(x1)` and `s(x2)` are smooth terms (non-linear relationships)
+-   Each model is fitted to a different imputed dataset `imputed1[[i]]`
+-   Results are stored in `fit.gam[[i]]`
+
+Defines `prediction.gam` function that can make predictions using either:
+
+-   `single.fit`: one GAM model
+-   `multiple.fit`: multiple GAM models (for multiple imputation)
+-   `new.patient`: new data to make predictions on
+
+```{r}
+prediction.gam <- function(new.patient, single.fit = NULL, multiple.fit = NULL){
+    if(!is.null(multiple.fit)){
+      mygrid <- expand.grid(k = 1:dim(new.patient)[1], i = 1:length(multiple.fit))
+      
+      # Creates a helper function that predicts for patient k using model i.
+      
+      ff <- function(k,i){
+        predict.gam(multiple.fit[[i]], newdata = new.patient[k,])
+      }
+      
+      prediction_matrix <- matrix(mapply(ff, mygrid$k, mygrid$i),
+                               nrow = dim(new.patient)[1], ncol = length(multiple.fit))
+      
+      prediction <- apply(prediction_matrix, 1, mean)
+    }
+    
+    else if(!is.null(single.fit)){
+      ff <- function(k){
+        predict.gam(single.fit, newdata = new.patient[k,])
+      }
+      prediction <- sapply(1:dim(new.patient)[1], ff)
+    }
+  return(prediction)
+}
+```
+
+`mygrid` variable explanation :
+
+-   Creates a grid combining all patients (k) with all models (i)
+-   This allows making predictions for each patient using each model
+
+`ff` variable explanation :
+
+-   Creates a helper function that predicts for patient `k` using model `i`.
+
+`prediction_matrix`variable explanation :
+
+-   Uses `mapply` to apply the prediction function to all combinations
+-   Creates a matrix where rows = patients, columns = different imputed models
+-   Each cell contains a prediction for that patient from that model
+
+`prediction` variable explanation :
+
+Takes the average prediction across all imputed models for each patient (row-wise mean). This follows multiple imputation methodology where results from different imputations are combined.
+
+If only one model is provided, makes predictions for each patient using that single model.
+
+**Overall Purpose**: This function implements a complete workflow for fitting GAMs to multiple imputed datasets and making robust predictions by averaging across all fitted models, which is the standard approach in multiple imputation analysis.
+
+Predict for completed data
+
+```{r}
+predicted.gam <- prediction.gam(complete.data, multiple.fit = fit.gam)
+```
+
+Predict for new patient :
+
+```{r}
+predicted.gam <- prediction.gam(new.patient, multiple.fit = fit.gam)
+predicted.gam
+```
+
+### Third Model : Ridge Regression
+
+```{r}
+lambdas <- 10^seq(2, -10, by = -0.3)
+```
+
+Creates a sequence of lambda (regularization parameter) values from 10² to 10⁻¹⁰, decreasing by steps of 0.3 on the log scale. This gives a range of regularization strengths to test.
+
+```{r}
+fit.ridge <- list()
+```
+
+Creates an empty list to store Ridge regression models - one for each imputed dataset.
+
+**Main loop for fitting Ridge models**
+
+```{r}
+for( i in 1:n.impute){
+  imp <- imputed1[[i]]
+  imp <- with(imp, data.frame(y, x1, x2, x3, x4, x5))
+  data_glmnet <- model.matrix(y ~.,data = imp)
+  data_glmnet <- data_glmnet[,-1]
+  
+  data_glmnet <- cbind(y = as.numeric(as.character(imp$y)), data_glmnet = data_glmnet)
+  
+  X <- as.matrix(data_glmnet[,-1])
+  colnames(X)[3:4] <- c("x3", "x4")
+  Y <- data_glmnet[,1]
+  X <- as.matrix(data_glmnet[,-1])
+
+  cvfit <- cv.glmnet(X,Y,family = "binomial",alpha=0, lambda = lambdas,nfolds=10)
+  lambda.min <- cvfit$lambda.min
+  fit.ridge[[i]] <- glmnet(X,Y,family = "binomial",alpha=0, lambda =lambda.min)
+}
+```
+
+-   Extracts the i-th imputed dataset
+-   Creates a clean data frame with only the needed variables (y and x1-x5)
+-   `model.matrix()` creates a design matrix, automatically handling categorical variables
+-   Removes the first column (intercept) since `glmnet` adds its own intercept
+-   Combines the numeric response variable with the predictor matrix.
+-   Creates predictor matrix `X` (excluding response)
+-   Renames columns 3 and 4 to "x3" and "x4"
+-   Creates response vector `Y`
+-   Performs 10-fold cross-validation to find the best lambda
+-   `alpha=0` specifies Ridge regression (L2 penalty)
+-   `family="binomial"` for logistic regression
+-   Extracts the lambda that minimizes cross-validation error
+-   Fits the Ridge regression model using the optimal lambda and stores it.
+
+Creates a prediction function similar to the GAM version, handling both single and multiple models.
+
+```{r}
+prediction.ridge <- function(new.patient, single.fit = NULL, multiple.fit = NULL) {
+  if (!is.null(multiple.fit)) {
+    mygrid <- expand.grid(k = 1:dim(new.patient)[1], i = 1:length(multiple.fit))
+    
+    ff <- function(k, i) {
+      imp <- with(new.patient, data.frame(
+        x1[k], x2[k], x3[k], x4[k],
+        x52 = x5[k] == 2,
+        x53 = x5[k] == 3,
+        x54 = x5[k] == 4
+      ))
+      imp[, 3:7] <- lapply(imp[, 3:7], as.numeric)
+      colnames(imp) <- c(paste0("x", 1:4), "x52", "x53", "x54")
+      predict(multiple.fit[[i]], newx = as.matrix(imp))
+    }
+    
+    prediction_matrix <- matrix(
+      mapply(ff, mygrid$k, mygrid$i),
+      nrow = dim(new.patient)[1],
+      ncol = length(multiple.fit)
+    )
+    prediction <- apply(prediction_matrix, 1, mean)
+    
+  } else if (!is.null(single.fit)) {
+    ff <- function(k) {
+      imp <- with(new.patient, data.frame(
+        x1[k], x2[k], x3[k], x4[k],
+        x52 = x5[k] == 2,
+        x53 = x5[k] == 3,
+        x54 = x5[k] == 4
+      ))
+      imp[, 3:7] <- lapply(imp[, 3:7], as.numeric)
+      colnames(imp) <- c(paste0("x", 1:4), "x52", "x53", "x54")
+      predict(single.fit, newx = as.matrix(imp))
+    }
+    prediction <- sapply(1:dim(new.patient)[1], ff)
+  }
+
+  return(prediction)
+}
+```
+
+`ff` function explanation :
+
+-   Takes patient `k` and model `i`
+-   Creates dummy variables for `x5` (assumes it's categorical with levels 1,2,3,4)
+-   `x52`, `x53`, `x54` are indicators for x5=2, x5=3, x5=4 respectively
+-   Converts to numeric and sets proper column names
+-   Makes prediction using the specified model
+
+Prediction Matrix :
+
+-   Creates matrix of predictions (patients × models)
+-   Averages across models for each patient (multiple imputation combining)
+
+Fit the ridge regression for completed data
+
+```{r}
+predicted.ridge <- prediction.ridge(complete.data, multiple.fit =fit.ridge)
+```
+
+Fit the ridge regression for new patient
+
+```{r}
+expit(prediction.ridge(new.patient, multiple.fit = fit.ridge))
+```
+
+### Model Comparison
+
+Creates comparison plots between three different modeling approaches.
+
+Defines the axis limits for all plots. Both x and y axes will range from -5 to 3, ensuring all plots have the same scale for fair comparison.
+
+**First plot: GAM vs Logistic Regression**
+
+This creates a scatter plot comparing:
+
+-   **X-axis**: Predictions from logistic regression (`predicted.lr`)
+-   **Y-axis**: Predictions from GAM (`predicted.gam`)
+-   **Points**: Each point represents one observation/patient
+-   **Diagonal line**: The dashed line with slope=1 and intercept=0 represents perfect agreement
+-   **Interpretation**: Points close to the diagonal line indicate similar predictions between methods
+
+**Second plot: Logistic Regression vs Ridge Regression**
+
+This creates a scatter plot comparing:
+
+-   **X-axis**: Predictions from Ridge regression (`predicted.ridge`)
+-   **Y-axis**: Predictions from logistic regression (`predicted.lr`)
+-   Same diagonal reference line for perfect agreement
+
+**Third plot: GAM vs Ridge Regression**
+
+This creates a scatter plot comparing:
+
+-   **X-axis**: Predictions from Ridge regression (`predicted.ridge`)
+-   **Y-axis**: Predictions from GAM (`predicted.gam`)
+-   Same diagonal reference line
+
+```{r}
+axislim1 <- c(-5, 3)
+
+p1 <- ggplot(data.frame(predicted.gam = predicted.gam,
+                        predicted.lr = predicted.lr),
+             aes(x = predicted.lr, y = predicted.gam)) +
+  geom_point(size = 1) +
+  geom_abline(intercept = 0, slope = 1,
+              color = "black", linetype = "dashed", size = 0.5) +
+  xlim(axislim1) + ylim(axislim1)
+
+p2 <- ggplot(data.frame(predicted.lr = predicted.lr,
+                        predicted.ridge = predicted.ridge),
+             aes(x = predicted.ridge, y = predicted.lr)) +
+  geom_point(size = 1) +
+  geom_abline(intercept = 0, slope = 1,
+              color = "black", linetype = "dashed", size = 0.5) +
+  xlim(axislim1) + ylim(axislim1)
+
+p3 <- ggplot(data.frame(predicted.gam = predicted.gam,
+                        predicted.ridge = predicted.ridge),
+             aes(x = predicted.ridge, y = predicted.gam)) +
+  geom_point(size = 1) +
+  geom_abline(intercept = 0, slope = 1,
+              color = "black", linetype = "dashed", size = 0.5) +
+  xlim(axislim1) + ylim(axislim1)
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+```
+
+## What to look for in the results:
+
+-   **High correlation**: Points tightly clustered around the diagonal line
+-   **Bias**: Points systematically above/below the diagonal
+-   **Outliers**: Points far from the diagonal where methods strongly disagree
+-   **Range differences**: Whether one method produces more extreme predictions than another
+
+This type of visualization is common in model validation to assess whether different statistical approaches yield consistent results, which can increase confidence in the findings.
