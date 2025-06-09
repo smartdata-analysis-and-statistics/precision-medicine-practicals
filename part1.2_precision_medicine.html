@@ -89,6 +89,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#model-comparison" id="toc-model-comparison" class="nav-link" data-scroll-target="#model-comparison">Model Comparison</a></li>
   </ul></li>
   <li><a href="#what-to-look-for-in-the-results" id="toc-what-to-look-for-in-the-results" class="nav-link" data-scroll-target="#what-to-look-for-in-the-results">What to look for in the results:</a></li>
+  <li><a href="#calculate-apparent-performance-of-the-models" id="toc-calculate-apparent-performance-of-the-models" class="nav-link" data-scroll-target="#calculate-apparent-performance-of-the-models">Calculate Apparent Performance of The Models</a>
+  <ul class="collapse">
+  <li><a href="#what-each-metric-means" id="toc-what-each-metric-means" class="nav-link" data-scroll-target="#what-each-metric-means">What Each Metric Means</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -334,10 +338,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Predict for new patient :</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>predicted.gam <span class="ot">&lt;-</span> <span class="fu">prediction.gam</span>(new.patient, <span class="at">multiple.fit =</span> fit.gam)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>predicted.gam</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">expit</span>(<span class="fu">prediction.gam</span>(new.patient, <span class="at">multiple.fit =</span> fit.gam))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -1.902057</code></pre>
+<pre><code>[1] 0.1298759</code></pre>
 </div>
 </div>
 </section>
@@ -450,7 +453,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">expit</span>(<span class="fu">prediction.ridge</span>(new.patient, <span class="at">multiple.fit =</span> fit.ridge))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.1711476</code></pre>
+<pre><code>[1] 0.1735898</code></pre>
 </div>
 </div>
 </section>
@@ -512,6 +515,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(axislim1) <span class="sc">+</span> <span class="fu">ylim</span>(axislim1)</span>
 <span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p1, p2, p3, <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 1 row containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 1 row containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -531,6 +542,144 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Range differences</strong>: Whether one method produces more extreme predictions than another</li>
 </ul>
 <p>This type of visualization is common in model validation to assess whether different statistical approaches yield consistent results, which can increase confidence in the findings.</p>
+</section>
+<section id="calculate-apparent-performance-of-the-models" class="level2">
+<h2 class="anchored" data-anchor-id="calculate-apparent-performance-of-the-models">Calculate Apparent Performance of The Models</h2>
+<p>For binary outcomes we need to assess performance in terms of discrimination and calibration. We will use the <strong>pROC</strong> package.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pROC)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>apparent.auc.LR <span class="ot">&lt;-</span><span class="fu">auc</span>(complete.data<span class="sc">$</span>y<span class="sc">~</span>predicted.lr)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>apparent.auc.gam <span class="ot">&lt;-</span><span class="fu">auc</span>(complete.data<span class="sc">$</span>y<span class="sc">~</span>predicted.gam)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>apparent.auc.ridge <span class="ot">&lt;-</span><span class="fu">auc</span>(complete.data<span class="sc">$</span>y<span class="sc">~</span>predicted.ridge)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co">#calibration in the large</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(complete.data<span class="sc">$</span>y<span class="sc">==</span><span class="st">"1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.26</code></pre>
+</div>
+</div>
+<p>These calculate the apparent AUC for each model using the predicted values against the actual outcomes (<code>y</code>). The term “apparent” suggests these are calculated on the same data used to train the models, which can lead to overly optimistic performance estimates.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">expit</span>(predicted.lr))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2474065</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">expit</span>(predicted.gam))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2464704</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">expit</span>(predicted.ridge))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2138849</code></pre>
+</div>
+</div>
+<p>We see that the mean estimated event rate by ridge is quite off. Next, we fit calibration lines and calculate AUC.</p>
+<p>Now, we would like to calculate and evaluate model performance by combining discrimination and calibration metrics into a single assessment.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>calculate_performance2 <span class="ot">&lt;-</span> <span class="cf">function</span>(observed, predicted){</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    auc <span class="ot">&lt;-</span> <span class="fu">auc</span>(observed<span class="sc">~</span>predicted)                                  <span class="co"># Discrimination</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    glm.fit <span class="ot">&lt;-</span> <span class="fu">summary</span>(<span class="fu">glm</span>(observed<span class="sc">~</span>predicted, <span class="at">family =</span> binomial))  <span class="co"># Calibration model</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    calibration.intercept <span class="ot">&lt;-</span> glm.fit<span class="sc">$</span>coef[<span class="dv">1</span>,<span class="dv">1</span>]                      <span class="co"># Calibration intercept</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    calibration.slope <span class="ot">&lt;-</span> glm.fit<span class="sc">$</span>coef[<span class="dv">2</span>,<span class="dv">1</span>]                          <span class="co"># Calibration slope</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    vec <span class="ot">&lt;-</span> <span class="fu">c</span>(auc, calibration.intercept, calibration.slope)</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(vec) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"auc"</span>, <span class="st">"calibration intercept"</span>, <span class="st">"calibration slope"</span>)</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(vec)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="what-each-metric-means" class="level3">
+<h3 class="anchored" data-anchor-id="what-each-metric-means">What Each Metric Means</h3>
+<p><strong>1. AUC (Area Under the Curve):</strong></p>
+<ul>
+<li>Measures discrimination - how well the model separates positive from negative cases</li>
+<li>Range: 0.5 (no discrimination) to 1.0 (perfect discrimination)</li>
+<li>Values &gt;0.7 generally considered acceptable, &gt;0.8 good</li>
+</ul>
+<p><strong>2. Calibration Intercept:</strong></p>
+<ul>
+<li>Measures “calibration-in-the-large”</li>
+<li>Ideally should be 0</li>
+<li>Positive values: model systematically under-predicts risk</li>
+<li>Negative values: model systematically over-predicts risk</li>
+</ul>
+<p><strong>3. Calibration Slope:</strong></p>
+<ul>
+<li>Measures how well predicted probabilities match observed frequencies across risk levels</li>
+<li>Ideally should be 1</li>
+<li>Slope &lt; 1: predictions are too extreme (overconfident)</li>
+<li>Slope &gt; 1: predictions are too conservative (underconfident)</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>apparent.lr <span class="ot">&lt;-</span> <span class="fu">calculate_performance2</span>(complete.data<span class="sc">$</span>y, predicted.lr)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>apparent.gam <span class="ot">&lt;-</span> <span class="fu">calculate_performance2</span>(complete.data<span class="sc">$</span>y, predicted.gam)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>apparent.ridge <span class="ot">&lt;-</span> <span class="fu">calculate_performance2</span>(complete.data<span class="sc">$</span>y, predicted.ridge)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(apparent.lr, apparent.gam, apparent.ridge),<span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                auc calibration intercept calibration slope
+apparent.lr    0.78                  0.16              1.07
+apparent.gam   0.79                  0.19              1.11
+apparent.ridge 0.77                  0.85              1.48</code></pre>
+</div>
+</div>
+<p>We can also assess performance using the val.prob function in <strong>rms</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">val.prob</span>(<span class="at">y=</span><span class="fu">as.numeric</span>(complete.data<span class="sc">$</span>y)<span class="sc">-</span><span class="dv">1</span>,<span class="at">p=</span><span class="fu">expit</span>(predicted.lr))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.2_precision_medicine_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Dxy       C (ROC)            R2             D      D:Chi-sq 
+ 5.550936e-01  7.775468e-01  2.933451e-01  2.182681e-01  4.465361e+01 
+          D:p             U      U:Chi-sq           U:p             Q 
+ 2.351630e-11 -8.128936e-03  3.742129e-01  8.293554e-01  2.263970e-01 
+        Brier     Intercept         Slope          Emax           E90 
+ 1.470492e-01  1.563125e-01  1.074939e+00  1.259499e-01  6.798496e-02 
+         Eavg           S:z           S:p 
+ 3.481609e-02 -7.197824e-02  9.426192e-01 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">val.prob</span>(<span class="at">y=</span><span class="fu">as.numeric</span>(complete.data<span class="sc">$</span>y)<span class="sc">-</span><span class="dv">1</span>,<span class="at">p=</span><span class="fu">expit</span>(predicted.gam))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.2_precision_medicine_files/figure-html/unnamed-chunk-27-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Dxy       C (ROC)            R2             D      D:Chi-sq 
+ 5.704262e-01  7.852131e-01  3.079401e-01  2.307924e-01  4.715847e+01 
+          D:p             U      U:Chi-sq           U:p             Q 
+ 6.547318e-12 -7.165347e-03  5.669307e-01  7.531692e-01  2.379577e-01 
+        Brier     Intercept         Slope          Emax           E90 
+ 1.451403e-01  1.948586e-01  1.107522e+00  1.457978e-01  7.329041e-02 
+         Eavg           S:z           S:p 
+ 3.436535e-02 -1.420079e-01  8.870738e-01 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">val.prob</span>(<span class="at">y=</span><span class="fu">as.numeric</span>(complete.data<span class="sc">$</span>y)<span class="sc">-</span><span class="dv">1</span>,<span class="at">p=</span><span class="fu">expit</span>(predicted.ridge))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.2_precision_medicine_files/figure-html/unnamed-chunk-27-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq          D:p 
+5.454782e-01 7.727391e-01 2.204166e-01 1.579341e-01 3.258683e+01 1.139848e-08 
+           U     U:Chi-sq          U:p            Q        Brier    Intercept 
+2.022951e-02 6.045902e+00 4.865742e-02 1.377046e-01 1.605656e-01 8.461691e-01 
+       Slope         Emax          E90         Eavg          S:z          S:p 
+1.483637e+00 3.790718e-01 1.721399e-01 5.163982e-02 5.181823e-01 6.043311e-01 </code></pre>
+</div>
+</div>
+</section>
 </section>
 </section>
 

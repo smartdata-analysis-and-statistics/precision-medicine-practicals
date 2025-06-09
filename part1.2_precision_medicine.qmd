@@ -39,6 +39,7 @@ library(reshape2)
 library(MASS)
 library(mgcv)
 library(glmnet)
+library(pROC)
 
 logit <- function(x){log(x/(1-x))}
 expit <- function(x){exp(x)/(1+exp(x))}
@@ -238,8 +239,7 @@ predicted.gam <- prediction.gam(complete.data, multiple.fit = fit.gam)
 Predict for new patient :
 
 ```{r}
-predicted.gam <- prediction.gam(new.patient, multiple.fit = fit.gam)
-predicted.gam
+expit(prediction.gam(new.patient, multiple.fit = fit.gam))
 ```
 
 ### Third Model : Ridge Regression
@@ -433,3 +433,155 @@ grid.arrange(p1, p2, p3, ncol = 3)
 -   **Range differences**: Whether one method produces more extreme predictions than another
 
 This type of visualization is common in model validation to assess whether different statistical approaches yield consistent results, which can increase confidence in the findings.
+
+## Calculate Apparent Performance of The Models
+
+For binary outcomes we need to assess performance in terms of discrimination and calibration. We will use the **pROC** package.
+
+```{r}
+#| message: false
+#| warning: false
+library(pROC)
+apparent.auc.LR <-auc(complete.data$y~predicted.lr)
+apparent.auc.gam <-auc(complete.data$y~predicted.gam)
+apparent.auc.ridge <-auc(complete.data$y~predicted.ridge)
+
+#calibration in the large
+mean(complete.data$y=="1")
+```
+
+These calculate the apparent AUC for each model using the predicted values against the actual outcomes (`y`). The term "apparent" suggests these are calculated on the same data used to train the models, which can lead to overly optimistic performance estimates.
+
+```{r}
+mean(expit(predicted.lr))
+```
+
+```{r}
+mean(expit(predicted.gam))
+```
+
+```{r}
+mean(expit(predicted.ridge))
+```
+
+We see that the mean estimated event rate by ridge is quite off. Next, we fit calibration lines and calculate AUC.
+
+Now, we would like to calculate and evaluate model performance by combining discrimination and calibration metrics into a single assessment.
+
+```{r}
+calculate_performance2 <- function(observed, predicted){
+    auc <- auc(observed~predicted)                                  # Discrimination
+    glm.fit <- summary(glm(observed~predicted, family = binomial))  # Calibration model
+    calibration.intercept <- glm.fit$coef[1,1]                      # Calibration intercept
+    calibration.slope <- glm.fit$coef[2,1]                          # Calibration slope
+    vec <- c(auc, calibration.intercept, calibration.slope)
+    names(vec) <- c("auc", "calibration intercept", "calibration slope")
+    return(vec)
+}
+```
+
+### What Each Metric Means
+
+**1. AUC (Area Under the Curve):**
+
+-   Measures discrimination - how well the model separates positive from negative cases
+-   Range: 0.5 (no discrimination) to 1.0 (perfect discrimination)
+-   Values \>0.7 generally considered acceptable, \>0.8 good
+
+**2. Calibration Intercept:**
+
+-   Measures "calibration-in-the-large"
+-   Ideally should be 0
+-   Positive values: model systematically under-predicts risk
+-   Negative values: model systematically over-predicts risk
+
+**3. Calibration Slope:**
+
+-   Measures how well predicted probabilities match observed frequencies across risk levels
+-   Ideally should be 1
+-   Slope \< 1: predictions are too extreme (overconfident)
+-   Slope \> 1: predictions are too conservative (underconfident)
+
+```{r}
+#| message: false
+#| warning: false
+apparent.lr <- calculate_performance2(complete.data$y, predicted.lr)
+apparent.gam <- calculate_performance2(complete.data$y, predicted.gam)
+apparent.ridge <- calculate_performance2(complete.data$y, predicted.ridge)
+round(rbind(apparent.lr, apparent.gam, apparent.ridge),2)
+```
+
+We can also assess performance using the val.prob function in **rms**
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: true
+val.prob(y=as.numeric(complete.data$y)-1,p=expit(predicted.lr))
+val.prob(y=as.numeric(complete.data$y)-1,p=expit(predicted.gam))
+val.prob(y=as.numeric(complete.data$y)-1,p=expit(predicted.ridge))
+```
+
+Then, we will create calibration plot. **Calibration plot** (also called a reliability diagram) to visually assess how well the logistic regression model's predicted probabilities match the observed event rates across different risk levels.
+
+Creates a dataframe with observed outcomes (`y`) and predicted probabilities (converted from log-odds using `expit()`)
+
+```{r}
+df.calibration <- data.frame(y = complete.data$y, predicted.lr = expit(predicted.lr))
+```
+
+-   Divides patients into 10 groups based on predicted risk (deciles)
+-   `d1` contains the quantile boundaries (0%, 10%, 20%, ..., 100%)
+
+```{r}
+Ngroups <- 10
+d1 <- quantile(df.calibration$predicted.lr, probs = seq(0, 1, 1/Ngroups))
+```
+
+Creates 10 groups where each contains patients with similar predicted risks.
+
+```{r}
+g1<-list()
+for (i in 1:Ngroups) {
+    g1[[i]] <- df.calibration[df.calibration$predicted.lr >= d1[i] & 
+                              df.calibration$predicted.lr < d1[i+1],]
+}
+```
+
+For each group, calculates:
+
+-   Average predicted probability
+-   Actual proportion of events that occurred
+
+```{r}
+predicted <- observed <- vector(mode = "numeric", length = Ngroups)
+for (i in 1:Ngroups) {
+    predicted[i] <- mean(g1[[i]]$predicted.lr)    # Mean predicted probability
+    observed[i] <- mean(g1[[i]]$y == 1)           # Observed event rate
+}
+```
+
+Then, we will create the calibration plot
+
+```{r}
+dat1 <- data.frame(pred = predicted, obs = observed)
+ggplot(dat1,aes(x=pred,y=obs))+
+    geom_point(size=3,shape=20)+                           # Data points
+    geom_abline(intercept=0,slope=1,linetype="dashed")+    # Perfect calibration line
+    geom_smooth(method="lm",colour="blue")+                # Fitted calibration line
+    theme(aspect.ratio=1)                                  # Square plot
+```
+
+## Interpretation
+
+-   **Perfect calibration**: Points lie on the diagonal dashed line (predicted = observed)
+-   **Systematic miscalibration**: Points consistently above/below diagonal
+-   **Blue fitted line**: Shows the calibration slope
+    -   Slope = 1: well calibrated
+
+    -   Slope \< 1: overconfident predictions (spread too wide)
+
+    -   Slope \> 1: underconfident predictions (too narro\
+
+
+

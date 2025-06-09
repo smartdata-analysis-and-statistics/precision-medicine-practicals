@@ -1,0 +1,265 @@
+---
+title: "Model Validation and Presentation (Binary Outcomes)"
+format: 
+  html :
+    toc: true 
+    toc-depth: 3    
+    toc-location: right
+    number-sections: false 
+editor: visual
+---
+
+## Model Validation
+
+**Model validation** is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the **reliability**, **robustness**, and **generalizability** of the model's predictions beyond the training dataset.
+
+There are two main types of validation:
+
+-   **Apparent validation**: Evaluates model performance on the same data used to fit the model. It often **overestimate s**performance.
+-   **Internal validation**: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.
+-   **External validation**: Tests the model on an **independent** dataset to assess **transportability**.
+
+## Optimism Correction
+
+**Optimism** = Performance on bootstrap sample - Performance on original data
+
+Models typically perform better on the data they were trained on (optimism bias). This method quantifies and corrects for that bias. This method is a sophisticated approach that combines bootstrapping with multiple imputation to get realistic performance estimates.
+
+First, we need to setup the matrics to store optimism estimates
+
+```{r}
+# Internal CV via bootstrapping
+# bootstrap in each multiply imputed dataset
+N.bootstrap <- 10
+optimism.lr.eachbootstrap <- optimism.gam.eachbootstrap <-
+optimism.ridge.eachbootstrap <- matrix(NA, N.bootstrap, 3)
+optimism.lr <- optimism.gam <- optimism.ridge <- matrix(NA, n.impute, 3)
+```
+
+For Each Imputed Dataset and Bootstrap Sample :
+
+The complete function are as follow
+
+```{r}
+#| message: false
+#| warning: false
+# Internal CV via bootstrapping -------------------
+# bootstrap in each multiply imputed dataset
+N.bootstrap <- 10
+optimism.lr.eachbootstrap <- optimism.gam.eachbootstrap <- optimism.ridge.eachbootstrap <- matrix(NA, N.bootstrap, 3)
+optimism.lr <- optimism.gam <- optimism.ridge <- matrix(NA, n.impute, 3)
+
+for (i in 1:n.impute) {
+  for (j in 1:N.bootstrap) {
+    boot.sample <- sample(length(imputed1[[i]]$y), replace = TRUE)
+    
+    # create bootstrap sample
+    imp.boot <- lapply(imputed1[[i]], function(x) { x[boot.sample] })
+    
+    # fit spline model in bootstrap sample
+    regression.splines.boot <- lrm(y ~ rcs(x1, 3) + rcs(x2, 3) + x3 + x4 + x5, data = imp.boot)
+    
+    # fit gam model in bootstrap sample
+    fit.gam.boot <- gam(y ~ x3 + x4 + x5 + s(x1) + s(x2), data = imp.boot, family = binomial)
+    
+    # fit ridge model in bootstrap sample
+    imp <- imp.boot
+    imp <- with(imp, data.frame(y, x1, x2, x3, x4, x5))
+    data_glmnet <- model.matrix(y ~ ., data = imp)
+    data_glmnet <- data_glmnet[, -1]
+    data_glmnet <- cbind(y = as.numeric(as.character(imp$y)), data_glmnet = data_glmnet)
+    
+    X <- as.matrix(data_glmnet[, -1])
+    colnames(X)[3:4] <- c("x3", "x4")
+    Y <- data_glmnet[, 1]
+    
+    cvfit <- cv.glmnet(X, Y, family = "binomial", alpha = 0, lambda = lambdas, nfolds = 10)
+    lambda.min <- cvfit$lambda.min
+    fit.ridge.boot <- glmnet(X, Y, family = "binomial", alpha = 0, lambda = lambda.min)
+    
+    # predict in bootstrap
+    f1 <- as.data.frame(do.call(cbind, lapply(imp.boot, function(x) { as.numeric(as.character(x)) })))
+    
+    boot.prediction.lr <- prediction.lr(f1, single.fit = regression.splines.boot)
+    boot.prediction.gam <- prediction.gam(f1, single.fit = fit.gam.boot)
+    boot.prediction.ridge <- prediction.ridge(f1, single.fit = fit.ridge.boot)
+    
+    lr.boot <- calculate_performance2(f1$y, boot.prediction.lr)
+    gam.boot <- calculate_performance2(f1$y, boot.prediction.gam)
+    ridge.boot <- calculate_performance2(f1$y, boot.prediction.ridge)
+    
+    # predict in test data
+    f2 <- as.data.frame(do.call(cbind, lapply(imputed1[[i]], function(x) { as.numeric(as.character(x)) })))
+    
+    test.prediction.lr <- prediction.lr(f2, single.fit = regression.splines.boot)
+    test.prediction.gam <- prediction.gam(f2, single.fit = fit.gam.boot)
+    test.prediction.ridge <- prediction.ridge(f2, single.fit = fit.ridge.boot)
+    
+    lr.test <- calculate_performance2(f2$y, test.prediction.lr)
+    gam.test <- calculate_performance2(f2$y, test.prediction.gam)
+    ridge.test <- calculate_performance2(f2$y, test.prediction.ridge)
+    
+    optimism.lr.eachbootstrap[j, ] <- lr.boot - lr.test
+    optimism.gam.eachbootstrap[j, ] <- gam.boot - gam.test
+    optimism.ridge.eachbootstrap[j, ] <- ridge.boot - ridge.test
+  }
+  
+  optimism.lr[i, ] <- apply(optimism.lr.eachbootstrap, 2, mean)
+  optimism.gam[i, ] <- apply(optimism.gam.eachbootstrap, 2, mean)
+  optimism.ridge[i, ] <- apply(optimism.ridge.eachbootstrap, 2, mean)
+  
+  print(paste0("imputation done: ", i))
+}
+
+mean.optimism.lr <- apply(optimism.lr, 2, mean)
+mean.optimism.gam <- apply(optimism.gam, 2, mean)
+mean.optimism.ridge <- apply(optimism.ridge, 2, mean)
+
+optimism.corrected.lr <- apparent.lr - mean.optimism.lr
+optimism.corrected.gam <- apparent.gam - mean.optimism.gam
+optimism.corrected.ridge <- apparent.ridge - mean.optimism.ridge
+
+round(rbind(optimism.corrected.lr, optimism.corrected.gam, optimism.corrected.ridge), 2)
+
+```
+
+**The full explanation of the code are as follows :**
+
+**A. Create Bootstrap Sample**
+
+```{r}
+boot.sample <- sample(length(imputed1[[i]]$y), replace = T)
+imp.boot <- lapply(imputed1[[i]], function(x){x[boot.sample]})
+```
+
+**B. Fit Models on Bootstrap Sample**
+
+-   Logistic regression with splines
+-   GAM with smoothing splines
+-   Ridge regression with cross-validated lambda
+
+**C. Calculate Performance**
+
+-   **Bootstrap performance**: Test models on the bootstrap sample itself
+-   **Test performance**: Test same models on the original imputed dataset
+
+**D. Calculate Optimism**
+
+```{r}
+#| eval: false
+#| include: false
+optimism.lr.eachbootstrap[j,] <- lr.boot - lr.test
+```
+
+**E. Average Across Bootstraps and Imputations**
+
+```{r}
+#| eval: false
+#| include: false
+optimism.lr[i,] <- apply(optimism.lr.eachbootstrap, 2, mean)  # Average across bootstraps
+mean.optimism.lr <- apply(optimism.lr, 2, mean)              # Average across imputations
+```
+
+**F. Apply Optimism Correction**
+
+```{r}
+#| eval: false
+#| include: false
+optimism.corrected.lr <- apparent.lr - mean.optimism.lr
+```
+
+## Why This Approach?
+
+1.  **Addresses overfitting**: Corrects for the overoptimistic performance when testing on training data
+2.  **Handles missing data**: Works with multiply imputed datasets
+3.  **Comprehensive**: Corrects AUC, calibration intercept, and calibration slope
+4.  **Realistic estimates**: Provides performance estimates closer to what you'd expect in new patients
+
+Based on these results, the logistic regression with splines model seems to be the best in both calibration and discrimination.
+
+## Perform Internal-External Cross-Validation
+
+**Internal-External Cross-Validation (IECV)**, a robust validation technique that tests how well models perform when applied to data from different clusters or groups.
+
+### **Section 1: Prepare cluster-based datasets**
+
+```{r}
+clusters <- unique(data.bin$clust)
+N.clust <- length(clusters)
+data.in <- data.leftout <- list()
+```
+
+This step will :
+
+-   Extracts all **unique clusters** in the dataset.
+-   Prepares `data.in` (training data) and `data.leftout` (testing data for left-out cluster).
+
+```{r}
+for(i in 1:N.clust){
+  data.in[[i]] <- data.bin[data.bin$clust != clusters[i],]     # All clusters except one
+  data.leftout[[i]] <- data.bin[data.bin$clust == clusters[i],] # The left-out cluster
+  complete.index <- complete.cases(data.leftout[[i]][,c(paste0("x", 1:5), "y")])
+  data.leftout[[i]] <- data.leftout[[i]][complete.index,]
+}
+```
+
+For each cluster `i`, we:
+
+-   Exclude it from training (`data.in`)
+-   Use it as a test set (`data.leftout`)
+-   Remove rows with missing values in predictors `x1` to `x5` or outcome `y`.
+
+### **Section 2: Model training and prediction (with multiple imputations)**
+
+```{r}
+n.impute <- 10
+imputed <- regression.splines.CV <- fit.gam.CV <- fit.ridge.CV <- list()
+leftout.prediction.lr <- leftout.prediction.gam <- leftout.prediction.ridge <- list()
+leftout.performance.lr <- leftout.performance.gam <- leftout.performance.ridge <- list()
+
+```
+
+-   Initializes lists to store:
+
+    -   Imputed datasets
+    -   Model fits (logistic regression with splines, GAM, ridge)
+    -   Predictions and performance on left-out data
+
+-   Loop over clusters
+
+    ```{r}
+    #| eval: false
+    #| message: false
+    #| warning: false
+    #| include: false
+    #| paged-print: true
+    # for (i in 1:N.clust){
+    #   a <- aregImpute(...)
+    # 
+    #   for (j in 1:n.impute){
+    #     imputed[[j]] <- impute.transcan(...)
+
+    ```
+
+For each cluster `i`, train on the remaining data:
+
+-   Perform **multiple imputation** with `aregImpute` (10 datasets).
+-   For each imputed dataset `j`, fit 3 models:
+
+We can also see the performance of a model when predicting in each of the left-out clusters, to get a sense about the expected heterogeneity of the performance of the prediction model in a new setting:
+
+```{r}
+# clusters <- unique(data.cont$clust)
+# N.clust <- length(clusters)
+# 
+# auc.clusters=data.frame(auc=rep(NA,N.clust), SE=NA, cluster=NA)
+# 
+# for(i in 1:N.clust){
+#   d.cl<-Int.ext.complete[Int.ext.complete$cluster==clusters[i],]
+#   roc1<-roc(d.cl$observed,d.cl$predicted.ridge)
+#   auc.clusters$auc[i]<-auc(roc1)
+#   auc.clusters$SE[i]<-(ci(roc1)[3]-ci(roc1)[1])/3.92
+#   auc.clusters$cluster[i]<-clusters[i]
+# }
+# round(auc.clusters,digits=2)
+```
