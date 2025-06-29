@@ -93,6 +93,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#what-each-metric-means" id="toc-what-each-metric-means" class="nav-link" data-scroll-target="#what-each-metric-means">What Each Metric Means</a></li>
   </ul></li>
+  <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">Interpretation</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -453,7 +454,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">expit</span>(<span class="fu">prediction.ridge</span>(new.patient, <span class="at">multiple.fit =</span> fit.ridge))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.1735898</code></pre>
+<pre><code>[1] 0.1728987</code></pre>
 </div>
 </div>
 </section>
@@ -574,7 +575,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">expit</span>(predicted.ridge))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2138849</code></pre>
+<pre><code>[1] 0.212549</code></pre>
 </div>
 </div>
 <p>We see that the mean estimated event rate by ridge is quite off. Next, we fit calibration lines and calculate AUC.</p>
@@ -621,7 +622,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>                auc calibration intercept calibration slope
 apparent.lr    0.78                  0.16              1.07
 apparent.gam   0.79                  0.19              1.11
-apparent.ridge 0.77                  0.85              1.48</code></pre>
+apparent.ridge 0.77                  0.86              1.48</code></pre>
 </div>
 </div>
 <p>We can also assess performance using the val.prob function in <strong>rms</strong></p>
@@ -672,14 +673,80 @@ apparent.ridge 0.77                  0.85              1.48</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq          D:p 
-5.454782e-01 7.727391e-01 2.204166e-01 1.579341e-01 3.258683e+01 1.139848e-08 
+5.449584e-01 7.724792e-01 2.191587e-01 1.569248e-01 3.238496e+01 1.264617e-08 
            U     U:Chi-sq          U:p            Q        Brier    Intercept 
-2.022951e-02 6.045902e+00 4.865742e-02 1.377046e-01 1.605656e-01 8.461691e-01 
+2.093316e-02 6.186632e+00 4.535132e-02 1.359916e-01 1.608297e-01 8.569123e-01 
        Slope         Emax          E90         Eavg          S:z          S:p 
-1.483637e+00 3.790718e-01 1.721399e-01 5.163982e-02 5.181823e-01 6.043311e-01 </code></pre>
+1.481701e+00 3.779620e-01 1.751923e-01 5.245168e-02 5.783124e-01 5.630532e-01 </code></pre>
+</div>
+</div>
+<p>Then, we will create calibration plot. <strong>Calibration plot</strong>&nbsp;(also called a reliability diagram) to visually assess how well the logistic regression model’s predicted probabilities match the observed event rates across different risk levels.</p>
+<p>Creates a dataframe with observed outcomes (<code>y</code>) and predicted probabilities (converted from log-odds using&nbsp;<code>expit()</code>)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>df.calibration <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">y =</span> complete.data<span class="sc">$</span>y, <span class="at">predicted.lr =</span> <span class="fu">expit</span>(predicted.lr))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>Divides patients into 10 groups based on predicted risk (deciles)</li>
+<li><code>d1</code>&nbsp;contains the quantile boundaries (0%, 10%, 20%, …, 100%)</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>Ngroups <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>d1 <span class="ot">&lt;-</span> <span class="fu">quantile</span>(df.calibration<span class="sc">$</span>predicted.lr, <span class="at">probs =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span><span class="sc">/</span>Ngroups))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Creates 10 groups where each contains patients with similar predicted risks.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>g1<span class="ot">&lt;-</span><span class="fu">list</span>()</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>Ngroups) {</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    g1[[i]] <span class="ot">&lt;-</span> df.calibration[df.calibration<span class="sc">$</span>predicted.lr <span class="sc">&gt;=</span> d1[i] <span class="sc">&amp;</span> </span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>                              df.calibration<span class="sc">$</span>predicted.lr <span class="sc">&lt;</span> d1[i<span class="sc">+</span><span class="dv">1</span>],]</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For each group, calculates:</p>
+<ul>
+<li>Average predicted probability</li>
+<li>Actual proportion of events that occurred</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>predicted <span class="ot">&lt;-</span> observed <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">"numeric"</span>, <span class="at">length =</span> Ngroups)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>Ngroups) {</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    predicted[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(g1[[i]]<span class="sc">$</span>predicted.lr)    <span class="co"># Mean predicted probability</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    observed[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(g1[[i]]<span class="sc">$</span>y <span class="sc">==</span> <span class="dv">1</span>)           <span class="co"># Observed event rate</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then, we will create the calibration plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>dat1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">pred =</span> predicted, <span class="at">obs =</span> observed)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat1,<span class="fu">aes</span>(<span class="at">x=</span>pred,<span class="at">y=</span>obs))<span class="sc">+</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>,<span class="at">shape=</span><span class="dv">20</span>)<span class="sc">+</span>                           <span class="co"># Data points</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="at">intercept=</span><span class="dv">0</span>,<span class="at">slope=</span><span class="dv">1</span>,<span class="at">linetype=</span><span class="st">"dashed"</span>)<span class="sc">+</span>    <span class="co"># Perfect calibration line</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_smooth</span>(<span class="at">method=</span><span class="st">"lm"</span>,<span class="at">colour=</span><span class="st">"blue"</span>)<span class="sc">+</span>                <span class="co"># Fitted calibration line</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">aspect.ratio=</span><span class="dv">1</span>)                                  <span class="co"># Square plot</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.2_precision_medicine_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
+</section>
+<section id="interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation">Interpretation</h2>
+<ul>
+<li><strong>Perfect calibration</strong>: Points lie on the diagonal dashed line (predicted = observed)</li>
+<li><strong>Systematic miscalibration</strong>: Points consistently above/below diagonal</li>
+<li><strong>Blue fitted line</strong>: Shows the calibration slope
+<ul>
+<li><p>Slope = 1: well calibrated</p></li>
+<li><p>Slope &lt; 1: overconfident predictions (spread too wide)</p></li>
+<li><p>Slope &gt; 1: underconfident predictions (too narro<br>
+</p></li>
+</ul></li>
+</ul>
 </section>
 </section>
 

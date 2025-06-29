@@ -582,6 +582,3 @@ ggplot(dat1,aes(x=pred,y=obs))+
     -   Slope \< 1: overconfident predictions (spread too wide)
 
     -   Slope \> 1: underconfident predictions (too narro\
-
-
-

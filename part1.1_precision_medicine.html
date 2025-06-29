@@ -81,15 +81,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#expected-background-knowledge" id="toc-expected-background-knowledge" class="nav-link active" data-scroll-target="#expected-background-knowledge">1. <strong>Expected Background Knowledge</strong></a></li>
-  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">2. <strong>Learning Objectives</strong></a></li>
-  <li><a href="#key-sections" id="toc-key-sections" class="nav-link" data-scroll-target="#key-sections"><strong>3. Key Sections</strong></a>
+  <li><a href="#expected-background-knowledge" id="toc-expected-background-knowledge" class="nav-link active" data-scroll-target="#expected-background-knowledge">1. Expected Background Knowledge</a></li>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link" data-scroll-target="#learning-objectives">2. Learning Objectives</a></li>
+  <li><a href="#key-sections" id="toc-key-sections" class="nav-link" data-scroll-target="#key-sections">3. Key Sections</a>
   <ul class="collapse">
-  <li><a href="#introduction-to-the-problem" id="toc-introduction-to-the-problem" class="nav-link" data-scroll-target="#introduction-to-the-problem"><strong>1. Introduction to The Problem</strong></a></li>
-  <li><a href="#data-simulation" id="toc-data-simulation" class="nav-link" data-scroll-target="#data-simulation"><strong>2. Data Simulation</strong></a></li>
-  <li><a href="#descriptive-statistics" id="toc-descriptive-statistics" class="nav-link" data-scroll-target="#descriptive-statistics"><strong>3. Descriptive Statistics</strong></a></li>
-  <li><a href="#handling-missing-data" id="toc-handling-missing-data" class="nav-link" data-scroll-target="#handling-missing-data"><strong>4. Handling Missing Data</strong></a></li>
-  <li><a href="#exploratory-data-analysis-eda" id="toc-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda"><strong>5. Exploratory Data Analysis (EDA)</strong></a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">1. Summary</a></li>
+  <li><a href="#preparation" id="toc-preparation" class="nav-link" data-scroll-target="#preparation">2. Preparation</a></li>
+  <li><a href="#descriptive-statistics-and-visualizations" id="toc-descriptive-statistics-and-visualizations" class="nav-link" data-scroll-target="#descriptive-statistics-and-visualizations">3. Descriptive Statistics and Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#descriptive-summary" id="toc-descriptive-summary" class="nav-link" data-scroll-target="#descriptive-summary">3.1 Descriptive Summary</a></li>
+  <li><a href="#missing-values" id="toc-missing-values" class="nav-link" data-scroll-target="#missing-values">3.2 Missing Values</a></li>
+  <li><a href="#distribution-of-numeric-variables" id="toc-distribution-of-numeric-variables" class="nav-link" data-scroll-target="#distribution-of-numeric-variables">3.3 Distribution of Numeric Variables</a></li>
+  <li><a href="#distribution-of-categorical-variables" id="toc-distribution-of-categorical-variables" class="nav-link" data-scroll-target="#distribution-of-categorical-variables">3.4 Distribution of Categorical Variables</a></li>
+  <li><a href="#correlation" id="toc-correlation" class="nav-link" data-scroll-target="#correlation">3.5 Correlation</a></li>
+  <li><a href="#relationship-between-predictors-and-response-variables" id="toc-relationship-between-predictors-and-response-variables" class="nav-link" data-scroll-target="#relationship-between-predictors-and-response-variables">3.6 Relationship between Predictors and Response Variables</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><strong>4. Conclusion</strong></a></li>
   </ul>
@@ -118,7 +124,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).</p>
 <section id="expected-background-knowledge" class="level1">
-<h1>1. <strong>Expected Background Knowledge</strong></h1>
+<h1>1. Expected Background Knowledge</h1>
 <ul>
 <li>Basic R programming</li>
 <li>Basic statistics (means, proportions, distribution)</li>
@@ -126,7 +132,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 </section>
 <section id="learning-objectives" class="level1">
-<h1>2. <strong>Learning Objectives</strong></h1>
+<h1>2. Learning Objectives</h1>
 <ul>
 <li>Understand the structure and content of the dataset</li>
 <li>Identify and handle missing data</li>
@@ -134,7 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 </section>
 <section id="key-sections" class="level1">
-<h1><strong>3. Key Sections</strong></h1>
+<h1>3. Key Sections</h1>
 <p>In this part, you will learn about :</p>
 <ol type="1">
 <li>Introduction to the problem</li>
@@ -143,389 +149,437 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Handling missing data</li>
 <li>Visualizations</li>
 </ol>
-<section id="introduction-to-the-problem" class="level2">
-<h2 class="anchored" data-anchor-id="introduction-to-the-problem"><strong>1. Introduction to The Problem</strong></h2>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">1. Summary</h2>
 <p>Clinical prediction models aim to forecast future health outcomes given a set of baseline predictors to facilitate medical decision making and improve people’s health outcomes.</p>
 <p>Ideally, prediction models are developed using individual participant data from prospective cohort studies designed for this purpose.</p>
 <p>We generated a realistic dataset of 200 patients with 10 predictor variables of mixed types (continuous, binary, and categorical) that exhibit complex relationships including quadratic effects and interactions, representative of real clinical data where variables like age, biomarkers, and treatment indicators are often correlated.</p>
 <p>Missing values were introduced randomly across approximately 10% of the data points, mimicking the incomplete data patterns frequently encountered in medical studies due to patient dropout, measurement failures, or administrative issues.&nbsp;</p>
 <p>The dataset also includes a clustering structure representing different clinical sites or treatment groups, and a binary outcome variable generated through a logistic regression model with known coefficients.&nbsp;</p>
 </section>
-<section id="data-simulation" class="level2">
-<h2 class="anchored" data-anchor-id="data-simulation"><strong>2. Data Simulation</strong></h2>
-<p>For the first step, we will simulate a data that is included :</p>
+<section id="preparation" class="level2">
+<h2 class="anchored" data-anchor-id="preparation">2. Preparation</h2>
+<p>After opening the R-Studio, we need to load some of the libraries that will be used.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(correlation)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The Dataset has been available with 200 rows of patient data that contains 5 predictors.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">readRDS</span>(<span class="st">'dataset.rds'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          x1          x2 x3 x4 x5 y
+1 -0.2920649 -0.03894024  0  0  3 0
+2  0.2585203 -1.10383191  0  0  3 0
+3 -0.3255838  0.02113777  1  1  3 0
+4  0.7591404  1.20456294  1  0  1 0
+5 -0.7619825  0.99184146  1  1  3 0
+6  0.3543335  0.74232912  0  0  3 0</code></pre>
+</div>
+</div>
+<p>The dataset included :</p>
 <ul>
 <li>Five predictors x1, x2, x3, x4, x5, of which x1, x2 are continuous, x3, x4 binary, and x5 categorical.</li>
-<li>The outcome y we want to predict.</li>
-<li>Five auxiliary variables z1, z2, z3, z4 and z5. ( Variables related to the predictors but will not be used in the model, but will be used for missing variables imputation)</li>
-<li>A clustering variable clust. ( Provides information about an important stratification of the patients in the data)</li>
+<li>The outcome y is binary variable ( 0 and 1)</li>
 </ul>
-<p>First we need to setup memory management, in order to clears all objects from R’s memory to start fresh</p>
-<p>Set some functions that will be used.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#useful functions</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="cf">function</span>(x){<span class="fu">log</span>(x<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>x))}</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>expit <span class="ot">&lt;-</span> <span class="cf">function</span>(x){<span class="fu">exp</span>(x)<span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(x))}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Data Generation setup</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">200</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Sigma <span class="ot">&lt;-</span> <span class="fu">outer</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, <span class="cf">function</span>(x,y) <span class="fl">0.5</span><span class="sc">^</span><span class="fu">abs</span>(x<span class="sc">-</span>y)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Generate correlated predictors, by generating 200 observations of 10 correlated variables from multivariate normal distribution. All variables have mean 0 and the correlation structure defined by Sigma</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(N, <span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">10</span>), Sigma)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Then transform the variables into different types :</p>
-<ul>
-<li><strong>x3, x4, x9</strong>: Binary variables (0/1)</li>
-<li><strong>x5, x10</strong>: Ordinal categorical variables (1,2,3,4 levels)</li>
-<li><strong>x8</strong>: Three-level variable (0, 0.5, 1)</li>
-<li><strong>x1, x2, x6, x7</strong>: Remain continuous</li>
-</ul>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(x[,<span class="dv">3</span>] <span class="sc">&gt;</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">4</span>] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(x[,<span class="dv">4</span>] <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">5</span>] <span class="ot">&lt;-</span> <span class="fu">cut</span>(x[,<span class="dv">5</span>], <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="cn">Inf</span>), <span class="at">labels =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">8</span>] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(x[,<span class="dv">8</span>] <span class="sc">&gt;</span> <span class="dv">1</span>, <span class="fl">0.5</span>, <span class="dv">0</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">9</span>] <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(x[,<span class="dv">9</span>] <span class="sc">&gt;</span> <span class="fl">1.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>x[,<span class="dv">10</span>] <span class="ot">&lt;-</span> <span class="fu">cut</span>(x[,<span class="dv">10</span>], <span class="at">breaks=</span><span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="cn">Inf</span>), <span class="at">labels =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Then convert the matrix into data frame. Names first 5 variables “x1” to “x5”, last 5 as “z1” to “z5”</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data.bin.complete <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(data.bin.complete) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">"x"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>), <span class="fu">paste0</span>(<span class="st">"z"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Then, we generate the binary outcome variables</p>
-<ul>
-<li>Creates a complex logistic regression model:
-<ul>
-<li>Intercept: -2</li>
-<li>Linear and quadratic terms for x1, x2</li>
-<li>Indicator variables for categorical predictors</li>
-<li>Random noise term</li>
-</ul></li>
-<li>Converts log-odds to probabilities using expit function</li>
-<li>Generates binary outcome y using these probabilities</li>
-</ul>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>logit.py <span class="ot">&lt;-</span> <span class="fu">with</span>(data.bin.complete,<span class="sc">-</span><span class="dv">2</span><span class="sc">+</span>x1<span class="fl">+0.2</span><span class="sc">*</span>x1<span class="sc">^</span><span class="dv">2</span><span class="sc">+</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fl">0.3</span><span class="sc">*</span>x2<span class="fl">+0.1</span><span class="sc">*</span>x2<span class="sc">^</span><span class="dv">2</span><span class="fl">+0.2</span><span class="sc">*</span>(x3<span class="sc">==</span><span class="dv">2</span>)<span class="sc">+</span><span class="fl">0.2</span><span class="sc">*</span>(x4<span class="sc">==</span><span class="dv">2</span>)<span class="sc">+</span><span class="fl">0.2</span><span class="sc">*</span>(x5<span class="sc">==</span><span class="dv">2</span>)<span class="sc">-</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fl">0.1</span><span class="sc">*</span>(x5<span class="sc">==</span><span class="dv">3</span>)<span class="sc">+</span><span class="fl">0.2</span><span class="sc">*</span>(x5<span class="sc">==</span><span class="dv">4</span>)<span class="sc">+</span><span class="fu">rnorm</span>(N,<span class="dv">0</span>,<span class="fl">0.1</span>))</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>py <span class="ot">&lt;-</span> <span class="fu">expit</span>(logit.py)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>data.bin.complete<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,py)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>As we have some categorical variables, we need to convert them into factors</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>data.bin.complete[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">8</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">11</span>)] <span class="ot">&lt;-</span> <span class="fu">lapply</span>(data.bin.complete[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">8</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">11</span>)], factor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Then, we introduce some missing data with 10% probability</p>
-<ul>
-<li>Creates a matrix same size as the data, initially filled with 0s</li>
-<li>Randomly assigns 1s with 10% probability (missing data indicators)</li>
-<li>Copies complete data to new dataset</li>
-</ul>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># introduce missing data</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>missing.matrix<span class="ot">=</span><span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow=</span><span class="fu">nrow</span>(data.bin.complete),</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                      </span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">ncol=</span><span class="fu">ncol</span>(data.bin.complete))</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>missing.matrix<span class="ot">=</span><span class="fu">matrix</span>(<span class="fu">rbinom</span>(<span class="fu">length</span>(missing.matrix),<span class="dv">1</span>, <span class="at">p=</span><span class="fl">0.1</span>),</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">nrow=</span><span class="fu">nrow</span>(data.bin.complete))</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>data.bin<span class="ot">=</span>data.bin.complete</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>data.bin[missing.matrix<span class="sc">==</span><span class="dv">1</span>]<span class="ot">=</span><span class="cn">NA</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The number of events will be :</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>data.bin <span class="sc">%&gt;%</span> <span class="fu">count</span>(data.bin<span class="sc">$</span>y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  data.bin$y   n
-1          0 134
-2          1  45
-3       &lt;NA&gt;  21</code></pre>
-</div>
-</div>
-<p>Then, we create a clustering variable that will provides information about an important stratification of the patients in the data. Each cluster has 20% probability.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## simulate data</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>data.bin<span class="sc">$</span>clust <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="at">size =</span> N, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(<span class="fl">0.2</span>,<span class="dv">5</span>)))</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>data.bin <span class="ot">&lt;-</span> data.bin[<span class="fu">order</span>(data.bin<span class="sc">$</span>clust),]</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data.bin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>           x1         x2   x3 x4 x5         z1          z2  z3 z4 z5 y clust
-11  0.1145885 -1.2601838    0  0  2         NA  1.18734162   0  0  2 0     1
-21  0.6705792  0.7661398    0  0  3         NA -0.98427143   0  0  4 0     1
-30  0.9088665         NA    1  1  3  0.3869922 -0.60442719   0  0  2 0     1
-31  0.5760474  0.4124591    0  0  1 -1.8592611 -0.08279744   0  0  4 0     1
-32 -0.6488458  0.1137889    0  1  2 -0.7216976          NA   0  0  2 0     1
-36  1.5415047  0.5503613 &lt;NA&gt;  0  4  1.3067392  0.53601209 0.5  0  3 0     1</code></pre>
-</div>
-</div>
 </section>
-<section id="descriptive-statistics" class="level2">
-<h2 class="anchored" data-anchor-id="descriptive-statistics"><strong>3. Descriptive Statistics</strong></h2>
-<p>Based on the data that still contain missing values, the summary of each variable will be look like this.</p>
+<section id="descriptive-statistics-and-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="descriptive-statistics-and-visualizations">3. Descriptive Statistics and Visualizations</h2>
+<p>Before we build any predictive model, it is crucial to thoroughly explore and understand the dataset. This section will guide you through essential descriptive statistics and visualizations to better comprehend the structure, distribution, and relationships within the data.</p>
+<section id="descriptive-summary" class="level3">
+<h3 class="anchored" data-anchor-id="descriptive-summary">3.1 Descriptive Summary</h3>
+<p>Begin by inspecting the structure of the dataset and summarizing its variables using the&nbsp;<code>summary()</code>&nbsp;function.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data.bin[, <span class="fu">c</span>(<span class="st">"x1"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span>, <span class="st">"x4"</span>, <span class="st">"x5"</span>, <span class="st">"y"</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>       x1                  x2              x3         x4        x5    
- Min.   :-3.239080   Min.   :-2.91740   0   :118   0   :92   1   :31  
- 1st Qu.:-0.637238   1st Qu.:-0.68184   1   : 58   1   :85   2   :59  
- Median : 0.092952   Median :-0.02983   NA's: 24   NA's:23   3   :54  
- Mean   :-0.001534   Mean   :-0.06562                        4   :37  
- 3rd Qu.: 0.577715   3rd Qu.: 0.59991                        NA's:19  
- Max.   : 2.695703   Max.   : 2.43189                                 
- NA's   :23          NA's   :18                                       
-    y      
- 0   :134  
- 1   : 45  
- NA's: 21  
-           
-           
-           
-           </code></pre>
+<pre><code>       x1                 x2           x3      x4      x5     y      
+ Min.   :-2.72626   Min.   :-3.58266   0:131   0:101   1:31   0:148  
+ 1st Qu.:-0.59029   1st Qu.:-0.59374   1: 69   1: 99   2:72   1: 52  
+ Median : 0.06844   Median : 0.05397                   3:61          
+ Mean   : 0.06697   Mean   : 0.06396                   4:36          
+ 3rd Qu.: 0.73247   3rd Qu.: 0.69973                                 
+ Max.   : 2.96170   Max.   : 2.31576                                 </code></pre>
 </div>
 </div>
-<p>To perform the Exploratory Data Analysis, we should handle the missing values first.</p>
+<p>Here are the insight breakdown of each variables :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 53%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Insight</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;have medians and means close to 0 ( Indicate Normal Distributions)</td>
+<td><p><code>x1</code>: from approximately -2.73 to 2.96<br>
+<code>x2</code>: from approximately -3.58 to 2.32</p>
+<p>The min and max suggest <strong>no extreme outliers</strong> on both variables</p></td>
+</tr>
+<tr class="even">
+<td><code>x3</code>&nbsp;is slightly imbalanced</td>
+<td><p>Has two levels and majority is level 0 :</p>
+<p><code>0</code>: 131 observations (65%)<br>
+<code>1</code>: 69 observations (35%)</p></td>
+</tr>
+<tr class="odd">
+<td><code>x4</code>&nbsp;is balanced</td>
+<td><p>Almost perfectly balanced between each class,</p>
+<p><code>0</code>: 101 observations (50%)<br>
+<code>1</code>: 99 observations (50%)</p></td>
+</tr>
+<tr class="even">
+<td><code>x5</code>&nbsp;has moderate imbalance</td>
+<td>Level 2 has the most frequent observations, and level 1 is the least.</td>
+</tr>
+<tr class="odd">
+<td><code>y (response variable)</code>is imbalanced</td>
+<td><p>The response variable has two classes (binary) :</p>
+<p>0 : 148 observations (74%)<br>
+1 : 52% observations (26%)</p></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="handling-missing-data" class="level2">
-<h2 class="anchored" data-anchor-id="handling-missing-data"><strong>4. Handling Missing Data</strong></h2>
-<p>This code performs&nbsp;<strong>multiple imputation</strong>&nbsp;to handle missing data using the&nbsp;<code>aregImpute</code>&nbsp;function from the Hmisc package.&nbsp;</p>
-<p>The&nbsp;<code>aregImpute</code>&nbsp;function is particularly powerful because it uses flexible regression splines rather than simple linear regression, allowing it to capture complex, non-linear relationships between variables when imputing missing values.</p>
-<p><strong>Arguments explained</strong>:</p>
-<ul>
-<li><code>data=data.bin</code>: The dataset with missing values</li>
-<li><strong>Formula</strong>:&nbsp;<code>I(y)~x1+x2+I(x3)+I(x4)+I(x5)+z1+z2+z3+z4+z5+clust</code>
-<ul>
-<li><code>I(y)</code>: Identity function for outcome variable y</li>
-<li><code>I(x3), I(x4), I(x5)</code>: Identity function for categorical variables (treats as is)</li>
-<li>All variables are included as predictors for imputing missing values</li>
-</ul></li>
-<li><code>n.impute=10</code>: Creates 10 different imputed datasets</li>
-<li><code>nk=3</code>: Uses 3 knots for regression splines (controls flexibility)</li>
-<li><code>match='closest'</code>: Uses closest predicted value for categorical variables</li>
-</ul>
-<p>Instead of just filling in missing values once (single imputation), it creates 10 different complete datasets, each with slightly different imputed values.</p>
+<section id="missing-values" class="level3">
+<h3 class="anchored" data-anchor-id="missing-values">3.2 Missing Values</h3>
+<p>Check for any missing values in the dataset, which could impact model performance if not handled properly. Use&nbsp;<code>is.na()</code>&nbsp;and&nbsp;<code>colSums()</code>&nbsp;or&nbsp;<code>summary()</code>&nbsp;to identify missing data.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get imputed datasets</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>imputed1<span class="ot">=</span><span class="fu">list</span>()</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n.impute){</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  imputed1[[i]] <span class="ot">&lt;-</span> <span class="fu">impute.transcan</span>(a, <span class="at">imputation=</span>i, <span class="at">data=</span>data.bin,<span class="at">list.out=</span><span class="cn">TRUE</span>,<span class="at">pr=</span><span class="cn">FALSE</span>, <span class="at">check=</span><span class="cn">FALSE</span>)}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>After running this code,&nbsp;<code>imputed1</code>&nbsp;will be a list containing 10 complete datasets:</p>
-<ul>
-<li><p><code>imputed1[[1]]</code>: First imputed dataset</p></li>
-<li><p><code>imputed1[[2]]</code>: Second imputed dataset</p></li>
-<li><p>…</p></li>
-<li><p><code>imputed1[[10]]</code>: Tenth imputed dataset</p></li>
-</ul>
-<p>Each dataset will have the same structure as the original but with all missing values filled in with plausible estimates. Here is the example of the first out of ten dataset generated.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">as.data.frame</span>(imputed1[[<span class="dv">1</span>]])</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  y         x1         x2 x3 x4 x5          z1          z2  z3 z4 z5 clust
-1 0  0.1145885 -1.2601838  0  0  2  0.26110540  1.18734162   0  0  2     1
-2 0  0.6705792  0.7661398  0  0  3 -0.09013217 -0.98427143   0  0  4     1
-3 0  0.9088665  0.7075909  1  1  3  0.38699219 -0.60442719   0  0  2     1
-4 0  0.5760474  0.4124591  0  0  1 -1.85926106 -0.08279744   0  0  4     1
-5 0 -0.6488458  0.1137889  0  1  2 -0.72169765 -1.37296563   0  0  2     1
-6 0  1.5415047  0.5503613  0  0  4  1.30673919  0.53601209 0.5  0  3     1</code></pre>
+<pre><code>x1 x2 x3 x4 x5  y 
+ 0  0  0  0  0  0 </code></pre>
 </div>
 </div>
+<p>This means:</p>
+<ul>
+<li>Every variable (<code>x1</code>&nbsp;to&nbsp;<code>x5</code>, and&nbsp;<code>y</code>) is fully observed.</li>
+<li>No imputation, removal, or special treatment for missing data is needed during preprocessing.</li>
+<li>We can proceed directly to data exploration, visualization, and modeling without concern for NA handling.</li>
+</ul>
 </section>
-<section id="exploratory-data-analysis-eda" class="level2">
-<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda"><strong>5. Exploratory Data Analysis (EDA)</strong></h2>
-<p>For the EDA Parts, we used the first bootstrap list. First we check if the missing values still persist or not.</p>
+<section id="distribution-of-numeric-variables" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-numeric-variables">3.3 Distribution of Numeric Variables</h3>
+<p>Visualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x1)) <span class="sc">+</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X1"</span>, <span class="at">x =</span> <span class="st">"X1"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x2)) <span class="sc">+</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"lightgreen"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X2"</span>, <span class="at">x =</span> <span class="st">"X2"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine plots</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p1, p2, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Distribution of Continuous Variables"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<ul>
+<li>Both&nbsp;<code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;have means and medians close to zero, and the data ranged from -3 to 3, the typical numerical data that follows <strong>Normal Distribution</strong></li>
+<li>Since the&nbsp;<strong>mean ≈ median</strong>&nbsp;for both, there’s&nbsp;<strong>no strong skew</strong>&nbsp;(neither left nor right). In addition, based on the plot there is no extreme values that considered <em>outliers</em>.</li>
+<li>Since both of them has normal distributions, there is no need to apply transformations before going into modelling.</li>
+</ul>
+</section>
+<section id="distribution-of-categorical-variables" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-categorical-variables">3.4 Distribution of Categorical Variables</h3>
+<p>Explore the frequency distribution of categorical variables <code>(x3,x4,x5 and y)</code> using bar plots.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>p5 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x3)) <span class="sc">+</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X3"</span>, <span class="at">x =</span> <span class="st">"X3"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>p6 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x4)) <span class="sc">+</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"darkgreen"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X4"</span>, <span class="at">x =</span> <span class="st">"X4"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>p7 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x5)) <span class="sc">+</span> </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"purple"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X5"</span>, <span class="at">x =</span> <span class="st">"X5"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>p8 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y)) <span class="sc">+</span> </span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"red"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p5, p6, p7, p8, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Distribution of Categorical Variables"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on the plot above, here are some key insights :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 29%">
+<col style="width: 22%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Balanced?</th>
+<th>Sparse Levels?</th>
+<th>Modelling Challanges</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x3</code></td>
+<td>Slightly imbalanced</td>
+<td>No</td>
+<td>Minor</td>
+</tr>
+<tr class="even">
+<td><code>x4</code></td>
+<td>Yes</td>
+<td>No</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<td><code>x5</code></td>
+<td>No</td>
+<td>Yes (<code>1</code>,&nbsp;<code>4</code>)</td>
+<td>Minor</td>
+</tr>
+<tr class="even">
+<td><code>y</code></td>
+<td>No (imbalanced)</td>
+<td>N/A</td>
+<td>Needs special handling</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="correlation" class="level3">
+<h3 class="anchored" data-anchor-id="correlation">3.5 Correlation</h3>
+<p>Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér’s V for categorical) and visualize them.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cor_result <span class="ot">=</span> rcompanion<span class="sc">::</span><span class="fu">correlation</span>(df)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>cor_result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    y    x1    x2    x3    x4    x5    z1    z2    z3    z4    z5 clust 
-    0     0     0     0     0     0     0     0     0     0     0     0 </code></pre>
+<pre><code>   Var1 Var2              Type   N Measure Statistic Lower.CL Upper.CL
+1    x1   x2 Numeric x Numeric 200 Pearson     0.486    0.372    0.585
+2    x1   x3  Numeric x Binary 200 Pearson     0.168    0.030    0.300
+3    x1   x4  Numeric x Binary 200 Pearson    -0.002   -0.141    0.137
+4    x1   x5 Numeric x Nominal 200     Eta     0.046    0.000    0.122
+5    x1    y  Numeric x Binary 200 Pearson     0.482    0.368    0.582
+6    x2   x3  Numeric x Binary 200 Pearson     0.419    0.298    0.527
+7    x2   x4  Numeric x Binary 200 Pearson     0.095   -0.044    0.231
+8    x2   x5 Numeric x Nominal 200     Eta     0.081    0.000    0.170
+9    x2    y  Numeric x Binary 200 Pearson     0.274    0.140    0.397
+10   x3   x4   Binary x Binary 200     Phi     0.228       NA       NA
+11   x3   x5  Binary x Nominal 200  Cramer     0.168       NA       NA
+12   x3    y   Binary x Binary 200     Phi     0.121       NA       NA
+13   x4   x5  Binary x Nominal 200  Cramer     0.333       NA       NA
+14   x4    y   Binary x Binary 200     Phi    -0.062       NA       NA
+15   x5    y  Nominal x Binary 200  Cramer     0.096       NA       NA
+         Test p.value Signif
+1    cor.test  0.0000   ****
+2    cor.test  0.0171      *
+3    cor.test  0.9789   n.s.
+4       Anova  0.9353   n.s.
+5    cor.test  0.0000   ****
+6    cor.test  0.0000   ****
+7    cor.test  0.1798   n.s.
+8       Anova  0.7291   n.s.
+9    cor.test  0.0001   ****
+10 chisq.test  0.0013     **
+11 chisq.test  0.1297   n.s.
+12 chisq.test  0.0862   n.s.
+13 chisq.test  0.0001   ****
+14 chisq.test  0.3770   n.s.
+15 chisq.test  0.6037   n.s.</code></pre>
 </div>
 </div>
-<p>Then we look at the summary for continuous variable :</p>
+<p>The correlation Plot :</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>continuous_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"x1"</span>, <span class="st">"x2"</span>, <span class="st">"z1"</span>, <span class="st">"z2"</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>categorical_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"x3"</span>, <span class="st">"x4"</span>, <span class="st">"x5"</span>, <span class="st">"z3"</span>, <span class="st">"z4"</span>, <span class="st">"z5"</span>, <span class="st">"y"</span>, <span class="st">"clust"</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>continuous_data <span class="ot">&lt;-</span> df[, continuous_vars]</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(continuous_data, <span class="cf">function</span>(x) {</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">Mean =</span> <span class="fu">mean</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Median =</span> <span class="fu">median</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">SD =</span> <span class="fu">sd</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Min =</span> <span class="fu">min</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Max =</span> <span class="fu">max</span>(x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Q1 =</span> <span class="fu">quantile</span>(x, <span class="fl">0.25</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Q3 =</span> <span class="fu">quantile</span>(x, <span class="fl">0.75</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">Missing =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(x)))</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                 x1          x2           z1          z2
-Mean    -0.04299155 -0.06394527  0.009353791  0.08006544
-Median   0.01721418 -0.02279583  0.083944905  0.11778108
-SD       0.99018823  1.00673286  0.978500360  0.95916411
-Min     -3.23907973 -2.91740147 -2.622877327 -2.55781251
-Max      2.69570300  2.43188740  2.447348583  2.87592135
-Q1.25%  -0.68108732 -0.68807959 -0.680973003 -0.59888965
-Q3.75%   0.56420817  0.61050810  0.620769343  0.69655319
-Missing  0.00000000  0.00000000  0.000000000  0.00000000</code></pre>
-</div>
-</div>
-<p>Then we would like to create some basic visualizations.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up plotting theme</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>theme_custom <span class="ot">&lt;-</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">size =</span> <span class="dv">12</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>),</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">11</span>))</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Histograms for continuous variables</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x1)) <span class="sc">+</span> </span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X1"</span>, <span class="at">x =</span> <span class="st">"X1"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x2)) <span class="sc">+</span> </span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"lightgreen"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X2"</span>, <span class="at">x =</span> <span class="st">"X2"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> z1)) <span class="sc">+</span> </span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"salmon"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Z1"</span>, <span class="at">x =</span> <span class="st">"Z1"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> z2)) <span class="sc">+</span> </span>
-<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"gold"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
-<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Z2"</span>, <span class="at">x =</span> <span class="st">"Z2"</span>, <span class="at">y =</span> <span class="st">"Frequency"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine plots</span></span>
-<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p1, p2, p3, p4, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Distribution of Continuous Variables"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cor_result)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Distribution of all continuous variables are typically similar, as they generated from the same distributions.</p>
-<p>The next plot is the distribution of categorical variables and target variable.</p>
+<p>Based on the summary and the plot above, there are some insights that will be useful for modelling :</p>
+<p><strong>🔸 Significance Legend:</strong></p>
+<ul>
+<li><code>****</code>&nbsp;= p &lt; 0.0001 → highly significant</li>
+<li><code>**</code>&nbsp;= p &lt; 0.01 → very significant</li>
+<li><code>*</code>&nbsp;= p &lt; 0.05 → significant</li>
+<li><code>n.s.</code>&nbsp;= not significant</li>
+</ul>
+<p>There are some variables that has significant correlations between each other :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 12%">
+<col style="width: 16%">
+<col style="width: 13%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pair</th>
+<th>Correlation</th>
+<th>Strength</th>
+<th>Significance</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x1</code>&nbsp;~&nbsp;<code>x2</code></td>
+<td>0.486</td>
+<td>Moderate</td>
+<td>****</td>
+<td>Moderate positive linear relationship</td>
+</tr>
+<tr class="even">
+<td><code>x1</code>&nbsp;~&nbsp;<code>y</code></td>
+<td>0.482</td>
+<td>Moderate</td>
+<td>****</td>
+<td><code>x1</code>&nbsp;is moderately predictive of the outcome</td>
+</tr>
+<tr class="odd">
+<td><code>x2</code>&nbsp;~&nbsp;<code>y</code></td>
+<td>0.274</td>
+<td>Weak-to-moderate</td>
+<td>****</td>
+<td>Some predictive power, less than&nbsp;<code>x1</code></td>
+</tr>
+<tr class="even">
+<td><code>x1</code>&nbsp;~&nbsp;<code>x3</code></td>
+<td>0.168</td>
+<td>Weak</td>
+<td>*</td>
+<td>Weak positive correlation</td>
+</tr>
+<tr class="odd">
+<td><code>x2</code>&nbsp;~&nbsp;<code>x3</code></td>
+<td>0.419</td>
+<td>Moderate</td>
+<td>****</td>
+<td><code>x2</code>&nbsp;and&nbsp;<code>x3</code>&nbsp;have moderate relationship</td>
+</tr>
+<tr class="even">
+<td><code>x4</code>&nbsp;~&nbsp;<code>x5</code></td>
+<td>0.333</td>
+<td>Moderate</td>
+<td>****</td>
+<td>Strongest categorical relationship in data</td>
+</tr>
+<tr class="odd">
+<td><code>x3</code>&nbsp;~&nbsp;<code>x4</code></td>
+<td>0.228</td>
+<td>Weak-to-moderate</td>
+<td>**</td>
+<td>Some association between&nbsp;<code>x3</code>&nbsp;and&nbsp;<code>x4</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="relationship-between-predictors-and-response-variables" class="level3">
+<h3 class="anchored" data-anchor-id="relationship-between-predictors-and-response-variables">3.6 Relationship between Predictors and Response Variables</h3>
+<p>Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.</p>
+<section id="numerical-predictors-vs-response-variables" class="level4">
+<h4 class="anchored" data-anchor-id="numerical-predictors-vs-response-variables">3.6.1 Numerical Predictors vs Response Variables</h4>
+<p>Use boxplots to assess the relationship between continuous predictors and the response variable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.2 Bar plots for categorical variables</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>p5 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x3)) <span class="sc">+</span> </span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X3"</span>, <span class="at">x =</span> <span class="st">"X3"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>p6 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x4)) <span class="sc">+</span> </span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"darkgreen"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X4"</span>, <span class="at">x =</span> <span class="st">"X4"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>p7 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x5)) <span class="sc">+</span> </span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"purple"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of X5"</span>, <span class="at">x =</span> <span class="st">"X5"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>p8 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y)) <span class="sc">+</span> </span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"red"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p5, p6, p7, p8, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Distribution of Categorical Variables"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>p10 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x1, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"X1 by Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"X1"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>p11 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x2, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"X2 by Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"X2"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p10, p11, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Continuous Predictors by Outcome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>The result showed that in the data target, outcome “0” is more dominant than outcome “1”.</p>
-<p>The next plot is the distribution of clusters.</p>
+<p>Here are some key takeaways from the plot :</p>
+<p>For X1 and Y :</p>
+<ul>
+<li>Median of <code>x1</code>is higher for <code>y = 1</code> compared to <code>y = 0</code>.</li>
+<li>Individuals with higher&nbsp;<code>x1</code>&nbsp;values are more likely to have&nbsp;<code>y = 1</code> (Indicate that there is <strong>moderate relationship between x1 and y</strong>, confirmed by the correlation value (0.482) with very high significance).</li>
+</ul>
+<p>For X2 and Y :</p>
+<ul>
+<li>Median of <code>x2</code>for <code>y = 1</code> is also higher than for <code>y = 0</code></li>
+<li>The <strong>trend is upward</strong>, indicating that <code>x2</code> may be somewhat predictive of <code>y</code>, confirmed by the positive correlation value (0.274) with high significance</li>
+</ul>
+</section>
+<section id="categorical-predictors-vs-response-variables" class="level4">
+<h4 class="anchored" data-anchor-id="categorical-predictors-vs-response-variables">3.6.2 Categorical Predictors vs Response Variables</h4>
+<p>Use grouped bar plots to explore how categorical predictors influence the response.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3 Cluster analysis</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>p9 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> clust)) <span class="sc">+</span> </span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribution of Clusters"</span>, <span class="at">x =</span> <span class="st">"Cluster"</span>, <span class="at">y =</span> <span class="st">"Count"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p9)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>p12 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes_string</span>(<span class="at">x =</span> <span class="st">"x3"</span>, <span class="at">fill =</span> <span class="st">"factor(y)"</span>)) <span class="sc">+</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"X3 by Outcome Y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>p13 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes_string</span>(<span class="at">x =</span> <span class="st">"x4"</span>, <span class="at">fill =</span> <span class="st">"factor(y)"</span>)) <span class="sc">+</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"X4 by Outcome Y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>p14 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes_string</span>(<span class="at">x =</span> <span class="st">"x5"</span>, <span class="at">fill =</span> <span class="st">"factor(y)"</span>)) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"X5 by Outcome Y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p12, p13, p14, <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">top =</span> <span class="st">"Categorical Predictors by Outcome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>The cluster is dominated by cluster 5 and 2, while cluster 1,3,4 has less value others.</p>
-<p>Additionally, we will also take a look at correlation in each variable by using correlation matrix.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.4 Correlation matrix for continuous variables</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>cont_data_complete <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(df[, continuous_vars])</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(cont_data_complete)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Correlation plot</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(cor_matrix, <span class="at">method =</span> <span class="st">"color"</span>, <span class="at">type =</span> <span class="st">"upper"</span>, </span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">order =</span> <span class="st">"hclust"</span>, <span class="at">tl.cex =</span> <span class="fl">0.8</span>, <span class="at">tl.col =</span> <span class="st">"black"</span>,</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Correlation Matrix of Continuous Variables"</span>,</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Some variables are highly correlated such as variables X2 and X1, Z2 and Z1. While others have relatively low correlation.</p>
-<p>The next plot will figure out the distribution of continuous predictors with outcome.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Outcome by continuous predictors (boxplots)</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>p10 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x1, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"X1 by Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"X1"</span>) <span class="sc">+</span> theme_custom <span class="sc">+</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>p11 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x2, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"X2 by Outcome Y"</span>, <span class="at">x =</span> <span class="st">"Y"</span>, <span class="at">y =</span> <span class="st">"X2"</span>) <span class="sc">+</span> theme_custom</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p10, p11, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Continuous Predictors by Outcome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>The results show that the distribution between X1 by Outcome Y is similar with X2 by Outcome Y.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"x3"</span>, <span class="st">"x4"</span>, <span class="st">"x5"</span>, <span class="st">"clust"</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>plot_list <span class="ot">&lt;-</span> <span class="fu">list</span>()  <span class="co"># to store plots</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (var <span class="cf">in</span> vars) {</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes_string</span>(<span class="at">x =</span> var, <span class="at">fill =</span> <span class="st">"factor(y)"</span>)) <span class="sc">+</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(var,<span class="st">" by Outcome Y"</span>)) <span class="sc">+</span> theme_custom</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  plot_list[[var]] <span class="ot">&lt;-</span> p</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Arrange all plots in a 2x2 grid</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(<span class="at">grobs =</span> plot_list, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Cetagorical Predictors by Outcome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>The plot shows that the distribution of categorical variables in each outcome has been proportional.</p>
+<p>From the bar plots titled&nbsp;<strong>“Categorical Predictors by Outcome”</strong>, we can analyze how the response variable&nbsp;<code>y</code>&nbsp;(0 or 1) is distributed across levels of the categorical predictors:&nbsp;<code>x3</code>,&nbsp;<code>x4</code>, and&nbsp;<code>x5</code>.</p>
+<ul>
+<li>in every variables, majority of cases have <code>y = 0</code> (orange) with smaller proportion of <code>y = 1</code> (blue)</li>
+<li>All the categorical variables have low correlations with the y. Thus, there is <strong>no categorical variables that has significant relationship with Y</strong>, indicated by high p-values and low correlation. That’s why no clear or strong association captured by the graph.</li>
+</ul>
+</section>
+</section>
 </section>
 </section>
 <section id="conclusion" class="level1">
 <h1><strong>4. Conclusion</strong></h1>
-<p>This comprehensive simulation study demonstrates a robust approach to prepare and understand clinical data. By generating a realistic dataset with mixed variable types, non-linear relationships, and clustered observations, we created a representative scenario that mirrors real-world clinical research challenges. We will also be able to handle missing data in complex biomedical datasets through multiple imputation techniques. The exploratory data analysis revealed the intricate structure of the data, including correlation patterns, distributional characteristics, and the impact of clustering on outcome variables.</p>
+<p>From the exploratory analysis, we found that the numeric predictors&nbsp;<code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;show meaningful relationships with the outcome&nbsp;<code>y</code>, with&nbsp;<code>x1</code>&nbsp;being the strongest predictor, as supported by both correlation coefficients and clear separation in boxplots. In contrast, the categorical variables&nbsp;<code>x3</code>,&nbsp;<code>x4</code>, and&nbsp;<code>x5</code>&nbsp;show weak or no significant associations with the outcome, with only&nbsp;<code>x3</code>&nbsp;displaying a mild visual trend that is not statistically significant. Additionally, all variables are complete with no missing values, and the data appears standardized. Overall,&nbsp;<code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;are likely the most valuable predictors for modeling&nbsp;<code>y</code>, while the categorical variables may contribute little to model performance.</p>
 </section>
 
 </main>

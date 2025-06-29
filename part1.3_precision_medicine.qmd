@@ -31,6 +31,7 @@ First, we need to setup the matrics to store optimism estimates
 # Internal CV via bootstrapping
 # bootstrap in each multiply imputed dataset
 N.bootstrap <- 10
+n.impute <- 10
 optimism.lr.eachbootstrap <- optimism.gam.eachbootstrap <-
 optimism.ridge.eachbootstrap <- matrix(NA, N.bootstrap, 3)
 optimism.lr <- optimism.gam <- optimism.ridge <- matrix(NA, n.impute, 3)

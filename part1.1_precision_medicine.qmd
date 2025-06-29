@@ -11,19 +11,19 @@ editor: visual
 
 The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
 
-# 1. **Expected Background Knowledge**
+# 1. Expected Background Knowledge
 
 -   Basic R programming
 -   Basic statistics (means, proportions, distribution)
 -   Familiarity with binary outcomes
 
-# 2. **Learning Objectives**
+# 2. Learning Objectives
 
 -   Understand the structure and content of the dataset
 -   Identify and handle missing data
 -   Prepare variables for modeling (e.g., correct formats, imputation)
 
-# **3. Key Sections**
+# 3. Key Sections
 
 In this part, you will learn about :
 
@@ -33,7 +33,7 @@ In this part, you will learn about :
 4.  Handling missing data
 5.  Visualizations
 
-## **1. Introduction to The Problem**
+## 1. Summary
 
 Clinical prediction models aim to forecast future health outcomes given a set of baseline predictors to facilitate medical decision making and improve people’s health outcomes.
 
@@ -45,366 +45,253 @@ Missing values were introduced randomly across approximately 10% of the data poi
 
 The dataset also includes a clustering structure representing different clinical sites or treatment groups, and a binary outcome variable generated through a logistic regression model with known coefficients. 
 
-## **2. Data Simulation**
+## 2. Preparation
 
-For the first step, we will simulate a data that is included :
-
--   Five predictors x1, x2, x3, x4, x5, of which x1, x2 are continuous, x3, x4 binary, and x5 categorical.
--   The outcome y we want to predict.
--   Five auxiliary variables z1, z2, z3, z4 and z5. ( Variables related to the predictors but will not be used in the model, but will be used for missing variables imputation)
--   A clustering variable clust. ( Provides information about an important stratification of the patients in the data)
-
-First we need to setup memory management, in order to clears all objects from R's memory to start fresh
+After opening the R-Studio, we need to load some of the libraries that will be used.
 
 ```{r}
-#| include: false
-remove(list=ls()) # empty memory
-set.seed(42) # the answer to life the universe and everything
-
+#| message: false
+#| warning: false
 library(ggplot2)
 library(dplyr)
 library(corrplot)
 library(gridExtra)
-library(reshape2)
-library(MASS)
+library(correlation)
 ```
 
-Set some functions that will be used.
+The Dataset has been available with 200 rows of patient data that contains 5 predictors.
 
 ```{r}
-#useful functions
-logit <- function(x){log(x/(1-x))}
-expit <- function(x){exp(x)/(1+exp(x))}
-```
-
-Data Generation setup
-
-```{r}
-N <- 200
-Sigma <- outer(1:10, 1:10, function(x,y) 0.5^abs(x-y)) 
-```
-
-Generate correlated predictors, by generating 200 observations of 10 correlated variables from multivariate normal distribution. All variables have mean 0 and the correlation structure defined by Sigma
-
-```{r}
-x <- mvrnorm(N, rep(0,10), Sigma)
-```
-
-Then transform the variables into different types :
-
--   **x3, x4, x9**: Binary variables (0/1)
--   **x5, x10**: Ordinal categorical variables (1,2,3,4 levels)
--   **x8**: Three-level variable (0, 0.5, 1)
--   **x1, x2, x6, x7**: Remain continuous
-
-```{r}
-x[,3] <- ifelse(x[,3] > 0.5, 1, 0)
-x[,4] <- ifelse(x[,4] > 0, 1, 0)
-x[,5] <- cut(x[,5], breaks=c(-Inf, -1, 0, 1, Inf), labels = FALSE)
-x[,8] <- ifelse(x[,8] > 1, 0.5, 0)
-x[,9] <- ifelse(x[,9] > 1.5, 1, 0)
-x[,10] <- cut(x[,10], breaks=c(-Inf, -1, 0.5, 1, Inf), labels = FALSE)
-```
-
-Then convert the matrix into data frame. Names first 5 variables "x1" to "x5", last 5 as "z1" to "z5"
-
-```{r}
-data.bin.complete <- data.frame(x)
-colnames(data.bin.complete) <- c(paste0("x", 1:5), paste0("z", 1:5))
-```
-
-Then, we generate the binary outcome variables
-
--   Creates a complex logistic regression model:
-    -   Intercept: -2
-    -   Linear and quadratic terms for x1, x2
-    -   Indicator variables for categorical predictors
-    -   Random noise term
--   Converts log-odds to probabilities using expit function
--   Generates binary outcome y using these probabilities
-
-```{r}
-logit.py <- with(data.bin.complete,-2+x1+0.2*x1^2+
-0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-
-0.1*(x5==3)+0.2*(x5==4)+rnorm(N,0,0.1))
-py <- expit(logit.py)
-data.bin.complete$y <- rbinom(N,1,py)
-```
-
-As we have some categorical variables, we need to convert them into factors
-
-```{r}
-data.bin.complete[,c(3:5, 8:10, 11)] <- lapply(data.bin.complete[,c(3:5, 8:10, 11)], factor)
-```
-
-Then, we introduce some missing data with 10% probability
-
--   Creates a matrix same size as the data, initially filled with 0s
--   Randomly assigns 1s with 10% probability (missing data indicators)
--   Copies complete data to new dataset
-
-```{r}
-# introduce missing data
-missing.matrix=matrix(0, nrow=nrow(data.bin.complete),
-                      
-ncol=ncol(data.bin.complete))
-missing.matrix=matrix(rbinom(length(missing.matrix),1, p=0.1),
-nrow=nrow(data.bin.complete))
-data.bin=data.bin.complete
-data.bin[missing.matrix==1]=NA
-```
-
-The number of events will be :
-
-```{r}
-data.bin %>% count(data.bin$y)
-```
-
-Then, we create a clustering variable that will provides information about an important stratification of the patients in the data. Each cluster has 20% probability.
-
-```{r}
-## simulate data
-data.bin$clust <- factor(sample(1:5, size = N, replace = TRUE, prob =
-rep(0.2,5)))
-data.bin <- data.bin[order(data.bin$clust),]
-head(data.bin)
-```
-
-## **3. Descriptive Statistics**
-
-Based on the data that still contain missing values, the summary of each variable will be look like this.
-
-```{r}
-summary(data.bin[, c("x1", "x2", "x3", "x4", "x5", "y")])
-```
-
-To perform the Exploratory Data Analysis, we should handle the missing values first.
-
-## **4. Handling Missing Data**
-
-This code performs **multiple imputation** to handle missing data using the `aregImpute` function from the Hmisc package. 
-
-The `aregImpute` function is particularly powerful because it uses flexible regression splines rather than simple linear regression, allowing it to capture complex, non-linear relationships between variables when imputing missing values.
-
-**Arguments explained**:
-
--   `data=data.bin`: The dataset with missing values
--   **Formula**: `I(y)~x1+x2+I(x3)+I(x4)+I(x5)+z1+z2+z3+z4+z5+clust`
-    -   `I(y)`: Identity function for outcome variable y
-    -   `I(x3), I(x4), I(x5)`: Identity function for categorical variables (treats as is)
-    -   All variables are included as predictors for imputing missing values
--   `n.impute=10`: Creates 10 different imputed datasets
--   `nk=3`: Uses 3 knots for regression splines (controls flexibility)
--   `match='closest'`: Uses closest predicted value for categorical variables
-
-```{r}
-#| message: false
-#| warning: false
-#| include: false
-library(Hmisc)
-
-# Perform imputation using areg
-n.impute <- 10
-a <- aregImpute(data=data.bin,I(y)~x1+x2+I(x3)+I(x4)+I(x5)+z1+z2+z3+z4+z5+clust,
-  n.impute=n.impute, nk=3, match='closest')
-```
-
-Instead of just filling in missing values once (single imputation), it creates 10 different complete datasets, each with slightly different imputed values.
-
-```{r}
-# get imputed datasets
-imputed1=list()
-for (i in 1:n.impute){
-  imputed1[[i]] <- impute.transcan(a, imputation=i, data=data.bin,list.out=TRUE,pr=FALSE, check=FALSE)}
-```
-
-After running this code, `imputed1` will be a list containing 10 complete datasets:
-
--   `imputed1[[1]]`: First imputed dataset
-
--   `imputed1[[2]]`: Second imputed dataset
-
--   ...
-
--   `imputed1[[10]]`: Tenth imputed dataset
-
-Each dataset will have the same structure as the original but with all missing values filled in with plausible estimates. Here is the example of the first out of ten dataset generated.
-
-```{r}
-df = as.data.frame(imputed1[[1]])
+df = readRDS('dataset.rds')
 head(df)
 ```
 
-Since this dataset will be used for the next step, modelling and validation. We need to save the data as rds files.
+The dataset included :
+
+-   Five predictors x1, x2, x3, x4, x5, of which x1, x2 are continuous, x3, x4 binary, and x5 categorical.
+-   The outcome y is binary variable ( 0 and 1)
+
+## 3. Descriptive Statistics and Visualizations
+
+Before we build any predictive model, it is crucial to thoroughly explore and understand the dataset. This section will guide you through essential descriptive statistics and visualizations to better comprehend the structure, distribution, and relationships within the data.
+
+### 3.1 Descriptive Summary
+
+Begin by inspecting the structure of the dataset and summarizing its variables using the `summary()` function.
 
 ```{r}
-# Save the entire imputed datasets list
-saveRDS(imputed1, "imputed_datasets.rds")
+summary(df)
 ```
 
-## **5. Exploratory Data Analysis (EDA)**
+Here are the insight breakdown of each variables :
 
-For the EDA Parts, we used the first bootstrap list. First we check if the missing values still persist or not.
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| Insight                                                                           | Explanation                                                            |
++===================================================================================+========================================================================+
+| `x1` and `x2` have medians and means close to 0 ( Indicate Normal Distributions)  | `x1`: from approximately -2.73 to 2.96\                                |
+|                                                                                   | `x2`: from approximately -3.58 to 2.32                                 |
+|                                                                                   |                                                                        |
+|                                                                                   | The min and max suggest **no extreme outliers** on both variables      |
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| `x3` is slightly imbalanced                                                       | Has two levels and majority is level 0 :                               |
+|                                                                                   |                                                                        |
+|                                                                                   | `0`: 131 observations (65%) \                                          |
+|                                                                                   | `1`: 69 observations (35%)                                             |
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| `x4` is balanced                                                                  | Almost perfectly balanced between each class,                          |
+|                                                                                   |                                                                        |
+|                                                                                   | `0`: 101 observations (50%) \                                          |
+|                                                                                   | `1`: 99 observations (50%)                                             |
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| `x5` has moderate imbalance                                                       | Level 2 has the most frequent observations, and level 1 is the least.  |
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+| `y (response variable)`is imbalanced                                              | The response variable has two classes (binary) :                       |
+|                                                                                   |                                                                        |
+|                                                                                   | 0 : 148 observations (74%)\                                            |
+|                                                                                   | 1 : 52% observations (26%)                                             |
++-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
+
+### 3.2 Missing Values
+
+Check for any missing values in the dataset, which could impact model performance if not handled properly. Use `is.na()` and `colSums()` or `summary()` to identify missing data.
 
 ```{r}
 colSums(is.na(df))
-
 ```
 
-Then we look at the summary for continuous variable :
+This means:
+
+-    Every variable (`x1` to `x5`, and `y`) is fully observed.
+-   No imputation, removal, or special treatment for missing data is needed during preprocessing.
+-   We can proceed directly to data exploration, visualization, and modeling without concern for NA handling.
+
+### 3.3 Distribution of Numeric Variables
+
+Visualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.
 
 ```{r}
-continuous_vars <- c("x1", "x2", "z1", "z2")
-categorical_vars <- c("x3", "x4", "x5", "z3", "z4", "z5", "y", "clust")
-
-continuous_data <- df[, continuous_vars]
-sapply(continuous_data, function(x) {
-  c(Mean = mean(x, na.rm = TRUE),
-    Median = median(x, na.rm = TRUE),
-    SD = sd(x, na.rm = TRUE),
-    Min = min(x, na.rm = TRUE),
-    Max = max(x, na.rm = TRUE),
-    Q1 = quantile(x, 0.25, na.rm = TRUE),
-    Q3 = quantile(x, 0.75, na.rm = TRUE),
-    Missing = sum(is.na(x)))
-})
-
-```
-
-Then we would like to create some basic visualizations.
-
-```{r}
-#| message: false
-#| warning: false
-# Set up plotting theme
-theme_custom <- theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5, size = 12, face = "bold"),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 11))
-
-# Histograms for continuous variables
 p1 <- ggplot(df, aes(x = x1)) + 
   geom_histogram(bins = 20, fill = "skyblue", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of X1", x = "X1", y = "Frequency") + theme_custom
+  labs(title = "Distribution of X1", x = "X1", y = "Frequency") + theme_minimal()
 
 p2 <- ggplot(df, aes(x = x2)) + 
   geom_histogram(bins = 20, fill = "lightgreen", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of X2", x = "X2", y = "Frequency") + theme_custom
-
-p3 <- ggplot(df, aes(x = z1)) + 
-  geom_histogram(bins = 20, fill = "salmon", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of Z1", x = "Z1", y = "Frequency") + theme_custom
-
-p4 <- ggplot(df, aes(x = z2)) + 
-  geom_histogram(bins = 20, fill = "gold", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of Z2", x = "Z2", y = "Frequency") + theme_custom
+  labs(title = "Distribution of X2", x = "X2", y = "Frequency") + theme_minimal()
 
 # Combine plots
-grid.arrange(p1, p2, p3, p4, ncol = 2, top = "Distribution of Continuous Variables")
+grid.arrange(p1, p2, ncol = 2, top = "Distribution of Continuous Variables")
 ```
 
-Distribution of all continuous variables are typically similar, as they generated from the same distributions.
+-   Both `x1` and `x2` have means and medians close to zero, and the data ranged from -3 to 3, the typical numerical data that follows **Normal Distribution**
+-   Since the **mean ≈ median** for both, there's **no strong skew** (neither left nor right). In addition, based on the plot there is no extreme values that considered *outliers*.
+-   Since both of them has normal distributions, there is no need to apply transformations before going into modelling.
 
-The next plot is the distribution of categorical variables and target variable.
+### 3.4 Distribution of Categorical Variables
+
+Explore the frequency distribution of categorical variables `(x3,x4,x5 and y)` using bar plots.
 
 ```{r}
-# 4.2 Bar plots for categorical variables
 p5 <- ggplot(df, aes(x = x3)) + 
   geom_bar(fill = "steelblue", alpha = 0.7) +
-  labs(title = "Distribution of X3", x = "X3", y = "Count") + theme_custom
+  labs(title = "Distribution of X3", x = "X3", y = "Count") + theme_minimal()
 
 p6 <- ggplot(df, aes(x = x4)) + 
   geom_bar(fill = "darkgreen", alpha = 0.7) +
-  labs(title = "Distribution of X4", x = "X4", y = "Count") + theme_custom
+  labs(title = "Distribution of X4", x = "X4", y = "Count") + theme_minimal()
 
 p7 <- ggplot(df, aes(x = x5)) + 
   geom_bar(fill = "purple", alpha = 0.7) +
-  labs(title = "Distribution of X5", x = "X5", y = "Count") + theme_custom
+  labs(title = "Distribution of X5", x = "X5", y = "Count") + theme_minimal()
 
 p8 <- ggplot(df, aes(x = y)) + 
   geom_bar(fill = "red", alpha = 0.7) +
-  labs(title = "Distribution of Outcome Y", x = "Y", y = "Count") + theme_custom
+  labs(title = "Distribution of Outcome Y", x = "Y", y = "Count") + theme_minimal()
 
 grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variables")
-
 ```
 
-The result showed that in the data target, outcome "0" is more dominant than outcome "1".
+Based on the plot above, here are some key insights :
 
-The next plot is the distribution of clusters.
+| Variable | Balanced            | Sparse Levels  | Modelling Challanges   |
+|----------|---------------------|----------------|------------------------|
+| `x3`     | Slightly imbalanced | No             | Minor                  |
+| `x4`     | Yes                 | No             | None                   |
+| `x5`     | No                  | Yes (`1`, `4`) | Minor                  |
+| `y`      | No (imbalanced)     | N/A            | Needs special handling |
 
-```{r}
-# 4.3 Cluster analysis
-p9 <- ggplot(df, aes(x = clust)) + 
-  geom_bar(fill = "orange", alpha = 0.7) +
-  labs(title = "Distribution of Clusters", x = "Cluster", y = "Count") + theme_custom
+### 3.5 Correlation
 
-print(p9)
-
-```
-
-The cluster is dominated by cluster 5 and 2, while cluster 1,3,4 has less value others.
-
-Additionally, we will also take a look at correlation in each variable by using correlation matrix.
-
-```{r}
-# 4.4 Correlation matrix for continuous variables
-cont_data_complete <- na.omit(df[, continuous_vars])
-cor_matrix <- cor(cont_data_complete)
-
-# Correlation plot
-corrplot(cor_matrix, method = "color", type = "upper", 
-         order = "hclust", tl.cex = 0.8, tl.col = "black",
-         title = "Correlation Matrix of Continuous Variables",
-         mar = c(0,0,1,0))
-
-```
-
-Some variables are highly correlated such as variables X2 and X1, Z2 and Z1. While others have relatively low correlation.
-
-The next plot will figure out the distribution of continuous predictors with outcome.
+Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér's V for categorical) and visualize them.
 
 ```{r}
 #| message: false
 #| warning: false
-# Outcome by continuous predictors (boxplots)
+#| fig-height: 3
+#| fig-width: 3
+#| paged-print: true
+cor_result = rcompanion::correlation(df)
+cor_result
+
+```
+
+The correlation Plot :
+
+```{r}
+plot(cor_result)
+
+```
+
+Based on the summary and the plot above, there are some insights that will be useful for modelling :
+
+**🔸 Significance Legend:**
+
+-   `****` = p \< 0.0001 → highly significant
+-   `**` = p \< 0.01 → very significant
+-   `*` = p \< 0.05 → significant
+-   `n.s.` = not significant
+
+There are some variables that has significant correlations between each other :
+
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| Pair         | Correlation | Strength         | Significance | Notes                                        |
++==============+=============+==================+==============+==============================================+
+| `x1` \~ `x2` | 0.486       | Moderate         | \*\*\*\*     | Moderate positive linear relationship        |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x1` \~ `y`  | 0.482       | Moderate         | \*\*\*\*     | `x1` is moderately predictive of the outcome |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x2` \~ `y`  | 0.274       | Weak-to-moderate | \*\*\*\*     | Some predictive power, less than `x1`        |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x1` \~ `x3` | 0.168       | Weak             | \*           | Weak positive correlation                    |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x2` \~ `x3` | 0.419       | Moderate         | \*\*\*\*     | `x2` and `x3` have moderate relationship     |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x4` \~ `x5` | 0.333       | Moderate         | \*\*\*\*     | Strongest categorical relationship in data   |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+| `x3` \~ `x4` | 0.228       | Weak-to-moderate | \*\*         | Some association between `x3` and `x4`       |
++--------------+-------------+------------------+--------------+----------------------------------------------+
+
+### 3.6 Relationship between Predictors and Response Variables
+
+Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
+
+#### 3.6.1 Numerical Predictors vs Response Variables
+
+Use boxplots to assess the relationship between continuous predictors and the response variable.
+
+```{r}
 p10 <- ggplot(df, aes(x = y, y = x1, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
-  labs(title = "X1 by Outcome Y", x = "Y", y = "X1") + theme_custom +
+  labs(title = "X1 by Outcome Y", x = "Y", y = "X1") + theme_minimal() +
   theme(legend.position = "none")
 
 p11 <- ggplot(df, aes(x = y, y = x2, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
-  labs(title = "X2 by Outcome Y", x = "Y", y = "X2") + theme_custom
+  labs(title = "X2 by Outcome Y", x = "Y", y = "X2") + theme_minimal()
 
 grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 ```
 
-The results show that the distribution between X1 by Outcome Y is similar with X2 by Outcome Y.
+Here are some key takeaways from the plot :
+
+For X1 and Y :
+
+-   Median of `x1`is higher for `y = 1` compared to `y = 0`.
+-   Individuals with higher `x1` values are more likely to have `y = 1` (Indicate that there is **moderate relationship between x1 and y**, confirmed by the correlation value (0.482) with very high significance).
+
+For X2 and Y :
+
+-   Median of `x2`for `y = 1` is also higher than for `y = 0`
+-   The **trend is upward**, indicating that `x2` may be somewhat predictive of `y`, confirmed by the positive correlation value (0.274) with high significance
+
+#### 3.6.2 Categorical Predictors vs Response Variables
+
+Use grouped bar plots to explore how categorical predictors influence the response.
 
 ```{r}
-#| message: false
-#| warning: false
-vars <- c("x3", "x4", "x5", "clust")
-plot_list <- list()  # to store plots
+p12 <- ggplot(df, aes_string(x = "x3", fill = "factor(y)")) +
+  geom_bar(position = "fill") +  # stacked proportion bars
+  ylab("Proportion") +
+  labs(fill = "y", title = paste("X3 by Outcome Y")) + theme_minimal()
 
-for (var in vars) {
-  p <- ggplot(df, aes_string(x = var, fill = "factor(y)")) +
-    geom_bar(position = "fill") +  # stacked proportion bars
-    ylab("Proportion") +
-    labs(fill = "y", title = paste(var," by Outcome Y")) + theme_custom
-  
-  plot_list[[var]] <- p
-}
+p13 <- ggplot(df, aes_string(x = "x4", fill = "factor(y)")) +
+  geom_bar(position = "fill") +  # stacked proportion bars
+  ylab("Proportion") +
+  labs(fill = "y", title = paste("X4 by Outcome Y")) + theme_minimal()
 
-# Arrange all plots in a 2x2 grid
-grid.arrange(grobs = plot_list, ncol = 2, top = "Cetagorical Predictors by Outcome")
+p14 <- ggplot(df, aes_string(x = "x5", fill = "factor(y)")) +
+  geom_bar(position = "fill") +  # stacked proportion bars
+  ylab("Proportion") +
+  labs(fill = "y", title = paste("X5 by Outcome Y")) + theme_minimal()
 
 
+grid.arrange(p12, p13, p14, ncol = 3, top = "Categorical Predictors by Outcome")
 ```
 
-The plot shows that the distribution of categorical variables in each outcome has been proportional.
+From the bar plots titled **"Categorical Predictors by Outcome"**, we can analyze how the response variable `y` (0 or 1) is distributed across levels of the categorical predictors: `x3`, `x4`, and `x5`.
 
-# **4. Conclusion** 
+-   in every variables, majority of cases have `y = 0` (orange) with smaller proportion of `y = 1` (blue)
+-   All the categorical variables have low correlations with the y. Thus, there is **no categorical variables that has significant relationship with Y**, indicated by high p-values and low correlation. That's why no clear or strong association captured by the graph.
 
-This comprehensive simulation study demonstrates a robust approach to prepare and understand clinical data. By generating a realistic dataset with mixed variable types, non-linear relationships, and clustered observations, we created a representative scenario that mirrors real-world clinical research challenges. We will also be able to handle missing data in complex biomedical datasets through multiple imputation techniques. The exploratory data analysis revealed the intricate structure of the data, including correlation patterns, distributional characteristics, and the impact of clustering on outcome variables.
+# **4. Conclusion**
+
+From the exploratory analysis, we found that the numeric predictors `x1` and `x2` show meaningful relationships with the outcome `y`, with `x1` being the strongest predictor, as supported by both correlation coefficients and clear separation in boxplots. In contrast, the categorical variables `x3`, `x4`, and `x5` show weak or no significant associations with the outcome, with only `x3` displaying a mild visual trend that is not statistically significant. Additionally, all variables are complete with no missing values, and the data appears standardized. Overall, `x1` and `x2` are likely the most valuable predictors for modeling `y`, while the categorical variables may contribute little to model performance.
