@@ -7,7 +7,9 @@ This practical is part of our comprehensive course An Introduction to Precision 
 
 👉 [https://sdas.thinkific.com/courses/precmedintro](https://sdas.thinkific.com/courses/precmedintro)
 
-The course provides in-depth instruction on simulation-based methods for pooling data across clinical trials, with hands-on examples implemented in R and Quarto. This repository offers selected materials to support learning and practice.
+The course introduces the core concepts and methods of precision medicine, with a focus on developing and validating prognostic and predictive models using data from both clinical trials and non-randomized sources. Through interactive tutorials and hands-on practicals in R, participants learn how to explore data, construct risk prediction models, evaluate model performance, and apply these models in clinical decision-making.
+
+This repository includes selected materials and practical exercises designed to support learning and implementation using R and Quarto.
 
 ## License
 
