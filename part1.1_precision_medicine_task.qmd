@@ -50,15 +50,9 @@ library(ggplot2)
 library(dplyr)
 ```
 
-## 1.4 Download Dataset
+# 2. Load Example Data
 
-We prepared a dataset that contain 200 patients, saved in rds files. Download 'dataset.rds' file and ensure that this file saved in your current working directory.
-
-<https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals>
-
-# 2. Load Data
-
-We will now load the dataset into R. This step is crucial as it allows us to work with the data in subsequent analyses. Ensure that you have set your working directory correctly to the location where you saved the dataset file.
+We will now load an example dataset representing an observational study into R. This dataset includes a variety of clinical and demographic variables, comprising both continuous and categorical predictors, along with a binary outcome variable. The data is stored in RDS format, which allows for efficient storage and retrieval of R objects while preserving their original structure.
 
 ```{r}
 #| eval: true
