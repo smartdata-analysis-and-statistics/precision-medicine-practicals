@@ -73,7 +73,7 @@ Here are the insight breakdown of each variables :
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 | Insight                                                                          | Explanation                                                           |
 +==================================================================================+=======================================================================+
-| x1 and x2 have means and medians close to 0                                      | Suggests approximately normal distributions:\                         |
+| `x1` and `x2` have means and medians close to 0                                  | Suggests approximately normal distributions:\                         |
 |                                                                                  | `x1`: range from approximately -2.73 to 2.96\                         |
 |                                                                                  | `x2`: range from approximately -3.58 to 2.32                          |
 |                                                                                  |                                                                       |
@@ -87,7 +87,7 @@ Here are the insight breakdown of each variables :
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 | `x5` has three levels with uneven distribution                                   | Level 2 is the most common; level 1 is the least frequent.            |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `y (response variable)`  is skewed toward 0                                      | 148 observations with value 0 (74%)\                                  |
+| `y` (response variable)  is skewed toward 0                                      | 148 observations with value 0 (74%)\                                  |
 |                                                                                  | 52 observations with value 1 (26%)                                    |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 
