@@ -28,6 +28,7 @@ Models typically perform better on the data they were trained on (optimism bias)
 First, we need to setup the matrics to store optimism estimates
 
 ```{r}
+#| eval: false
 # Internal CV via bootstrapping
 # bootstrap in each multiply imputed dataset
 N.bootstrap <- 10
@@ -44,6 +45,7 @@ The complete function are as follow
 ```{r}
 #| message: false
 #| warning: false
+#| eval: false
 # Internal CV via bootstrapping -------------------
 # bootstrap in each multiply imputed dataset
 N.bootstrap <- 10
@@ -129,6 +131,7 @@ round(rbind(optimism.corrected.lr, optimism.corrected.gam, optimism.corrected.ri
 **A. Create Bootstrap Sample**
 
 ```{r}
+#| eval: false
 boot.sample <- sample(length(imputed1[[i]]$y), replace = T)
 imp.boot <- lapply(imputed1[[i]], function(x){x[boot.sample]})
 ```
@@ -185,6 +188,7 @@ Based on these results, the logistic regression with splines model seems to be t
 ### **Section 1: Prepare cluster-based datasets**
 
 ```{r}
+#| eval: false
 clusters <- unique(data.bin$clust)
 N.clust <- length(clusters)
 data.in <- data.leftout <- list()
@@ -196,6 +200,7 @@ This step will :
 -   Prepares `data.in` (training data) and `data.leftout` (testing data for left-out cluster).
 
 ```{r}
+#| eval: false
 for(i in 1:N.clust){
   data.in[[i]] <- data.bin[data.bin$clust != clusters[i],]     # All clusters except one
   data.leftout[[i]] <- data.bin[data.bin$clust == clusters[i],] # The left-out cluster
@@ -213,6 +218,7 @@ For each cluster `i`, we:
 ### **Section 2: Model training and prediction (with multiple imputations)**
 
 ```{r}
+#| eval: false
 n.impute <- 10
 imputed <- regression.splines.CV <- fit.gam.CV <- fit.ridge.CV <- list()
 leftout.prediction.lr <- leftout.prediction.gam <- leftout.prediction.ridge <- list()
