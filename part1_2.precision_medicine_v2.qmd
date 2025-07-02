@@ -59,7 +59,7 @@ summary(model1)
 
 -   Strong and statistically significant association (p-value = `4.59e-09`).
 
-### 2. Univariate Model with Categorize Variable 
+### 2. Univariate Model with Categorize Variable
 
 ```{r}
 df$x1_bin <- cut(df$x1, 
