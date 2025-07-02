@@ -63,7 +63,7 @@ We will now load the dataset into R. This step is crucial as it allows us to wor
 ```{r}
 #| eval: false
 #| include: true
-df <- readRDS('dataset.rds')
+df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
 ```
 
 # 3. Descriptive Statistics and Visualizations
