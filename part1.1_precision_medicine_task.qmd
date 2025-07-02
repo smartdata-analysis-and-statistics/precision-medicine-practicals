@@ -1,5 +1,10 @@
 ---
 title: "Part 1.1 Data Preparation and Exploration (Computer Practical)"
+author: 
+  - name: "Aulia Kharis"
+    affiliation: "Smart Data Analysis & Statistics"
+  - name: "Thomas Debray"
+    affiliation: "Smart Data Analysis & Statistics"
 format: 
   html :
     toc: true 
