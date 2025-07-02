@@ -17,31 +17,11 @@ editor: visual
 
 The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
 
-# Key Sections
+# Preparation
 
-In this part, you will learn about :
+Before we begin, make sure you have **RStudio** open and your working directory set to the root of the project.
 
-1.  Introduction to the problem
-2.  Data Simulation
-3.  Descriptive statistics & Exploratory data analysis (EDA)
-4.  Handling missing data
-5.  Visualizations
-
-## 1. Summary
-
-Clinical prediction models aim to forecast future health outcomes given a set of baseline predictors to facilitate medical decision making and improve people’s health outcomes.
-
-Ideally, prediction models are developed using individual participant data from prospective cohort studies designed for this purpose.
-
-We generated a realistic dataset of 200 patients with 10 predictor variables of mixed types (continuous, binary, and categorical) that exhibit complex relationships including quadratic effects and interactions, representative of real clinical data where variables like age, biomarkers, and treatment indicators are often correlated.
-
-Missing values were introduced randomly across approximately 10% of the data points, mimicking the incomplete data patterns frequently encountered in medical studies due to patient dropout, measurement failures, or administrative issues. 
-
-The dataset also includes a clustering structure representing different clinical sites or treatment groups, and a binary outcome variable generated through a logistic regression model with known coefficients. 
-
-## 2. Preparation
-
-After opening the R-Studio, we need to load some of the libraries that will be used.
+We'll start by loading the necessary libraries that will be used throughout this practical:
 
 ```{r}
 #| message: false
@@ -53,23 +33,34 @@ library(gridExtra)
 library(correlation)
 ```
 
-The Dataset has been available with 200 rows of patient data that contains 5 predictors.
+Next, we’ll load the dataset. This example dataset contains clinical data for 200 patients, including five predictors and a binary outcome variable.
 
 ```{r}
-df = readRDS(file.path("data" ,'dataset.rds'))
+df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
 head(df)
 ```
 
-The dataset included :
+## About the Dataset
 
--   Five predictors x1, x2, x3, x4, x5, of which x1, x2 are continuous, x3, x4 binary, and x5 categorical.
--   The outcome y is binary variable ( 0 and 1)
+The dataset includes:
 
-## 3. Descriptive Statistics and Visualizations
+*	Five predictors:
+  * `x1` and `x2`: continuous variables
+  * `x3` and `x4`: binary variables
+  * `x5`: categorical variable (with more than two levels)
+* Outcome:
+  * `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
+
+This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.
+
+
+
+
+# Descriptive Statistics and Visualizations
 
 Before we build any predictive model, it is crucial to thoroughly explore and understand the dataset. This section will guide you through essential descriptive statistics and visualizations to better comprehend the structure, distribution, and relationships within the data.
 
-### 3.1 Descriptive Summary
+## Descriptive Summary
 
 Begin by inspecting the structure of the dataset and summarizing its variables using the `summary()` function.
 
@@ -105,7 +96,7 @@ Here are the insight breakdown of each variables :
 |                                                                                  | 1 : 52% observations (26%)                                            |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 
-### 3.2 Missing Values
+## Missing Values
 
 Check for any missing values in the dataset, which could impact model performance if not handled properly. Use `is.na()` and `colSums()` or `summary()` to identify missing data.
 
@@ -119,7 +110,7 @@ This means:
 -   No imputation, removal, or special treatment for missing data is needed during preprocessing.
 -   We can proceed directly to data exploration, visualization, and modeling without concern for NA handling.
 
-### 3.3 Distribution of Numeric Variables
+## Distribution of Numeric Variables
 
 Visualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.
 
@@ -140,7 +131,7 @@ grid.arrange(p1, p2, ncol = 2, top = "Distribution of Continuous Variables")
 -   Since the **mean ≈ median** for both, there's **no strong skew** (neither left nor right). In addition, based on the plot there is no extreme values that considered *outliers*.
 -   Since both of them has normal distributions, there is no need to apply transformations before going into modelling.
 
-### 3.4 Distribution of Categorical Variables
+## Distribution of Categorical Variables
 
 Explore the frequency distribution of categorical variables `(x3,x4,x5 and y)` using bar plots.
 
@@ -178,7 +169,7 @@ Based on the plot above, here are some key insights :
 | `y`          | No (imbalanced)     | N/A            | Needs special handling |
 +--------------+---------------------+----------------+------------------------+
 
-### 3.5 Correlation
+## Correlation
 
 Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér's V for categorical) and visualize them.
 
@@ -229,11 +220,11 @@ There are some variables that has significant correlations between each other :
 | `x3` \~ `x4` | 0.228       | Weak-to-moderate | \*\*         | Some association between `x3` and `x4`       |
 +--------------+-------------+------------------+--------------+----------------------------------------------+
 
-### 3.6 Relationship between Predictors and Response Variables
+## Univariate relationship between Predictors and Response Variables
 
 Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
 
-#### 3.6.1 Numerical Predictors vs Response Variables
+### Numerical Predictors vs Response Variables
 
 Use boxplots to assess the relationship between continuous predictors and the response variable.
 
@@ -262,7 +253,7 @@ For X2 and Y :
 -   Median of `x2`for `y = 1` is also higher than for `y = 0`
 -   The **trend is upward**, indicating that `x2` may be somewhat predictive of `y`, confirmed by the positive correlation value (0.274) with high significance
 
-#### 3.6.2 Categorical Predictors vs Response Variables
+### Categorical Predictors vs Response Variables
 
 Use grouped bar plots to explore how categorical predictors influence the response.
 
