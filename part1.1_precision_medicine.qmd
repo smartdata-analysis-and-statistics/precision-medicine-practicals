@@ -11,19 +11,7 @@ editor: visual
 
 The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
 
-# 1. Expected Background Knowledge
-
--   Basic R programming
--   Basic statistics (means, proportions, distribution)
--   Familiarity with binary outcomes
-
-# 2. Learning Objectives
-
--   Understand the structure and content of the dataset
--   Identify and handle missing data
--   Prepare variables for modeling (e.g., correct formats, imputation)
-
-# 3. Key Sections
+# Key Sections
 
 In this part, you will learn about :
 
@@ -297,6 +285,6 @@ From the bar plots titled **"Categorical Predictors by Outcome"**, we can analy
 -   in every variables, majority of cases have `y = 0` (orange) with smaller proportion of `y = 1` (blue)
 -   All the categorical variables have low correlations with the y. Thus, there is **no categorical variables that has significant relationship with Y**, indicated by high p-values and low correlation. That's why no clear or strong association captured by the graph.
 
-# **4. Conclusion**
+# Conclusion
 
 From the exploratory analysis, we found that the numeric predictors `x1` and `x2` show meaningful relationships with the outcome `y`, with `x1` being the strongest predictor, as supported by both correlation coefficients and clear separation in boxplots. In contrast, the categorical variables `x3`, `x4`, and `x5` show weak or no significant associations with the outcome, with only `x3` displaying a mild visual trend that is not statistically significant. Additionally, all variables are complete with no missing values, and the data appears standardized. Overall, `x1` and `x2` are likely the most valuable predictors for modeling `y`, while the categorical variables may contribute little to model performance.
