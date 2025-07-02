@@ -67,13 +67,20 @@ library(dplyr)
 
 ## 3.4. Load Example Data
 
-We will now load an example dataset representing an observational study into R. This dataset includes a variety of clinical and demographic variables, comprising both continuous and categorical predictors, along with a binary outcome variable. The data is stored in RDS format, which allows for efficient storage and retrieval of R objects while preserving their original structure.
+We will use an example dataset from an observational study on a short-term health outcome (e.g., 30-day mortality). The dataset contains both clinical and demographic baseline predictors and a binary outcome variable. It is stored in RDS format for efficient loading in R.
 
 ```{r}
 #| eval: true
 #| include: true
 df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
 ```
+
+The dataset includes:
+
+*	Five predictors `x1`, `x2`, `x3`, `x4` and `x5`, each assessed at baseline.
+* Outcome:`y` (binary; 1 = event, 0 = no event)
+
+We will use this dataset throughout the practical for data preparation, exploration, and prediction modeling.
 
 # 4. Descriptive Statistics and Visualizations
 

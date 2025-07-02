@@ -45,9 +45,9 @@ head(df)
 The dataset includes:
 
 *	Five predictors:
-  * `x1` and `x2`: continuous variables
-  * `x3` and `x4`: binary variables
-  * `x5`: categorical variable (with more than two levels)
+  - `x1` and `x2`: continuous variables
+  - `x3` and `x4`: binary variables
+  - `x5`: categorical variable (with more than two levels)
 * Outcome:
   * `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
 
