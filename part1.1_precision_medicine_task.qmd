@@ -61,7 +61,7 @@ We prepared a dataset that contain 200 patients, saved in rds files. Download 'd
 We will now load the dataset into R. This step is crucial as it allows us to work with the data in subsequent analyses. Ensure that you have set your working directory correctly to the location where you saved the dataset file.
 
 ```{r}
-#| eval: false
+#| eval: true
 #| include: true
 df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
 ```
