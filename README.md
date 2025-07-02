@@ -16,8 +16,14 @@ This repository includes selected materials and practical exercises designed to 
 All materials in this repository — including Quarto files, R code, and figures — are licensed under the 
 [Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/).
 
-You are welcome to use, adapt, and share these materials for non-commercial purposes, provided that proper attribution is given to the original authors.
+You are welcome to use, adapt, and share these materials for non-commercial purposes, provided you give appropriate credit to **Smart Data Analysis and Statistics**.
 
-Commercial use, including distribution, modification, or integration into commercial products or services, is strictly prohibited without prior written permission. If you wish to request permission for commercial use, please contact us directly.
+⚠️ **Commercial use** — including distribution, modification, or integration into commercial products or services — is **not allowed without prior written permission**. To request permission, please contact us directly. 
 
-We take unauthorized use, including commercial exploitation of these materials, **very seriously**. **Legal action may be pursued** against individuals or organizations that infringe upon these terms.
+We take copyright and license compliance seriously and are **prepared to pursue legal action** against individuals or organizations that use these materials in violation of the license terms.
+
+## How to cite us
+
+If you use or adapt this material, please include the following citation:
+
+> Smart Data Analysis and Statistics (SDAS). *Computer Practical Materials*. Available at: https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals
