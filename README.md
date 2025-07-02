@@ -11,7 +11,7 @@ The course provides in-depth instruction on simulation-based methods for pooling
 All materials in this repository — including Quarto files, R code, and figures — are licensed under the 
 [Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/).
 
-You are welcome to use, adapt, and share these materials for non-commercial purposes, provided that proper attribution is given to the original authors: **Thomas Debray and Smart Data Analysis and Statistics**.
+You are welcome to use, adapt, and share these materials for non-commercial purposes, provided that proper attribution is given to the original authors: **Thomas Debray, Aulia Kharis (Smart Data Analysis and Statistics)**.
 
 Commercial use, including distribution, modification, or integration into commercial products or services, is strictly prohibited without prior written permission. If you wish to request permission for commercial use, please contact us directly.
 
