@@ -39,7 +39,7 @@ library(mgcv)
 library(glmnet)
 library(pROC)
 
-df = readRDS('dataset.rds')
+df <- readRDS(file.path("data" ,'dataset.rds'))
 ```
 
 ### 1. Univariate Model
@@ -81,7 +81,7 @@ print(odds_ratios)
 ```
 
 | Bin | Coefficient | OR | p-value | Interpretation |
-|----|----|----|----|----|
+|---------------|---------------|---------------|---------------|---------------|
 | Intercept (Bottom 20%) | -2.51 | OR = 0.081 | \<0.001 | Odds of `y=1` in the **lowest 20% of x1** |
 | 20–40% | -0.4321 | OR = 0.649 | 0.646 | No significant difference from reference |
 | 40–60% | 0.5664 | OR = 1.76 | 0.460 | Not significant |
