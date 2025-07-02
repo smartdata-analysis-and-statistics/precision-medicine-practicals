@@ -24,6 +24,7 @@ We take copyright and license compliance seriously and are **prepared to pursue 
 
 ## How to cite us
 
-If you use or adapt this material, please include the following citation:
+If you use or adapt this material, please cite both the course and the practical materials:
 
-> Smart Data Analysis and Statistics (SDAS). *Computer Practical Materials*. Available at: https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals
+> Smart Data Analysis and Statistics (SDAS). (2025). *An Introduction to Precision Medicine* [Online course]. Available at: https://sdas.thinkific.com/courses/precmedintro
+> Smart Data Analysis and Statistics (SDAS). (2025). *Computer Practical Materials for "An Introduction to Precision Medicine"*. Available at: https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals
