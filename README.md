@@ -1,3 +1,6 @@
+![Build Status](https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals/actions/workflows/render-quarto.yml/badge.svg)
+
+
 # An Introduction to Precision Medicine
 
 This practical is part of our comprehensive course An Introduction to Precision Medicine, which is available at:
