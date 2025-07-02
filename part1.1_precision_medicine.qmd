@@ -73,27 +73,22 @@ Here are the insight breakdown of each variables :
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 | Insight                                                                          | Explanation                                                           |
 +==================================================================================+=======================================================================+
-| `x1` and `x2` have medians and means close to 0 ( Indicate Normal Distributions) | `x1`: from approximately -2.73 to 2.96\                               |
-|                                                                                  | `x2`: from approximately -3.58 to 2.32                                |
+| x1 and x2 have means and medians close to 0                                      | Suggests approximately normal distributions:\                         |
+|                                                                                  | `x1`: range from approximately -2.73 to 2.96\                         |
+|                                                                                  | `x2`: range from approximately -3.58 to 2.32                          |
 |                                                                                  |                                                                       |
 |                                                                                  | The min and max suggest **no extreme outliers** on both variables     |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x3` is slightly imbalanced                                                      | Has two levels and majority is level 0 :                              |
-|                                                                                  |                                                                       |
-|                                                                                  | `0`: 131 observations (65%)\                                          |
-|                                                                                  | `1`: 69 observations (35%)                                            |
+| `x3`has two levels; level 0 is more frequent                                     | 131 observations with value 0 (65%)\                                  |
+|                                                                                  | 69 observations with value 1 (35%)                                    |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x4` is balanced                                                                 | Almost perfectly balanced between each class,                         |
-|                                                                                  |                                                                       |
-|                                                                                  | `0`: 101 observations (50%)\                                          |
-|                                                                                  | `1`: 99 observations (50%)                                            |
+| `x4` is evenly distributed                                                       | 101 observations with value 0 (50%)\                                  |
+|                                                                                  | 99 observations with value 1 (50%)                                    |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x5` has moderate imbalance                                                      | Level 2 has the most frequent observations, and level 1 is the least. |
+| `x5` has three levels with uneven distribution                                   | Level 2 is the most common; level 1 is the least frequent.            |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `y (response variable)`is imbalanced                                             | The response variable has two classes (binary) :                      |
-|                                                                                  |                                                                       |
-|                                                                                  | 0 : 148 observations (74%)\                                           |
-|                                                                                  | 1 : 52% observations (26%)                                            |
+| `y (response variable)`  is skewed toward 0                                      | 148 observations with value 0 (74%)\                                  |
+|                                                                                  | 52 observations with value 1 (26%)                                    |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 
 ## Missing Values
