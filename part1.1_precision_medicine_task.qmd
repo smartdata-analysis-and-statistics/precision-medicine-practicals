@@ -1,28 +1,26 @@
 ---
-title: "Part 1.1 Data Preparation and Exploration (Computer Practical)"
+title: "Data Preparation and Exploration"
+subtitle: "Computer Practical"
 author: 
   - name: "Aulia Kharis"
-    affiliation: "Smart Data Analysis & Statistics"
+    affiliation: "Smart Data Analysis and Statistics"
   - name: "Thomas Debray"
-    affiliation: "Smart Data Analysis & Statistics"
+    affiliation: "Smart Data Analysis and Statistics"
 format: 
   html :
     toc: true 
     toc-depth: 3    
     toc-location: right
     number-sections: false 
-editor: visual
 ---
 
-# Summary
+# Introduction
 
-Clinical prediction models are statistical or machine learning tools designed to estimate the likelihood of future health outcomes for individuals based on a set of baseline characteristics, such as demographic information, clinical measurements, or laboratory results. 
+Clinical prediction models are statistical or machine learning tools used to estimate an individual's risk of developing a specific health outcome based on their baseline characteristics—such as demographic details, clinical history, physical measurements, or laboratory results. These models play a critical role in precision medicine by supporting risk stratification, early diagnosis, and personalized treatment decisions.
 
-Ideally, these models should be developed using high-quality individual participant data collected from prospective cohort studies that are specifically designed for prediction purposes. 
+In this computer practical, we start from the premise that high-quality individual-level data are already available. Your first task will be to explore this dataset as a foundation for developing a clinical prediction model.
 
-The use of prospective cohorts allows researchers to accurately assess the relationship between predictors and future health events, which is essential for building reliable and generalizable models.
-
-In this vignette, you will engage in hands-on tasks designed to deepen your understanding of how clinical prediction modeling works in practice. You will begin with **Part 1: Data Preparation and Exploration**, which is a critical phase in the modeling process. This stage involves examining the dataset, understanding the nature of the variables, checking distributions, and visualize some of the variables.
+You will begin with **Data Preparation and Exploration**, a critical initial step in the modeling process. This phase focuses on understanding the structure and content of the dataset, examining variable types and distributions, identifying potential issues (such as missing data), and visualizing key features. These activities are essential for informing subsequent modeling decisions and ensuring the reliability of the prediction model.
 
 # 1. Preparation
 
@@ -30,8 +28,8 @@ Please complete these following setups on your computer :
 
 ## 1.1 Install R and Rstudio
 
--   Download and install R from: <https://cran.r-project.org/>
--   Download and install RStudio (Desktop version) from: <https://posit.co/download/rstudio-desktop/>
+-   Download and install R from: <https://cran.r-project.org/>
+-   Download and install RStudio (Desktop version) from: <https://posit.co/download/rstudio-desktop/>
 
 ## 1.2 Install Required R Packages
 
@@ -39,35 +37,33 @@ Open RStudio and run the following code to install the necessary packages (skip 
 
 ```{r}
 #| eval: false
-#| include: true
-install.packages(c('ggplot2','dplyr','correlation'))
+install.packages(c('ggplot2','dplyr'))
 ```
 
-## 1.3 Download Dataset
-
-There is already pre-built dataset that contain 200 patients, saved in rds files. Download 'dataset.rds' file and ensure that this file saved in your current working directory.
-
-<https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals>
-
-# 2. Load Data
-
-To start the hands-on practical, open R-Studio and load the required packages.
+## 1.3 Load Required R Packages
+After installing the packages, load them into your R session using the following code:
 
 ```{r}
 #| eval: false
 #| include: true
 library(ggplot2)
 library(dplyr)
-library(corrplot)
-library(gridExtra)
 ```
 
-After the package has been successfully loaded, then load the required dataset that has been downloaded.
+## 1.4 Download Dataset
+
+We prepared a dataset that contain 200 patients, saved in rds files. Download 'dataset.rds' file and ensure that this file saved in your current working directory.
+
+<https://github.com/smartdata-analysis-and-statistics/precision-medicine-practicals>
+
+# 2. Load Data
+
+We will now load the dataset into R. This step is crucial as it allows us to work with the data in subsequent analyses. Ensure that you have set your working directory correctly to the location where you saved the dataset file.
 
 ```{r}
 #| eval: false
 #| include: true
-df = readRDS('dataset.rds')
+df <- readRDS('dataset.rds')
 ```
 
 # 3. Descriptive Statistics and Visualizations

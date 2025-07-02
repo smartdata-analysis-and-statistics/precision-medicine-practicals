@@ -62,7 +62,7 @@ library(correlation)
 The Dataset has been available with 200 rows of patient data that contains 5 predictors.
 
 ```{r}
-df = readRDS('dataset.rds')
+df = readRDS(file.path("data" ,'dataset.rds'))
 head(df)
 ```
 
@@ -85,31 +85,31 @@ summary(df)
 
 Here are the insight breakdown of each variables :
 
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| Insight                                                                           | Explanation                                                            |
-+===================================================================================+========================================================================+
-| `x1` and `x2` have medians and means close to 0 ( Indicate Normal Distributions)  | `x1`: from approximately -2.73 to 2.96\                                |
-|                                                                                   | `x2`: from approximately -3.58 to 2.32                                 |
-|                                                                                   |                                                                        |
-|                                                                                   | The min and max suggest **no extreme outliers** on both variables      |
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| `x3` is slightly imbalanced                                                       | Has two levels and majority is level 0 :                               |
-|                                                                                   |                                                                        |
-|                                                                                   | `0`: 131 observations (65%) \                                          |
-|                                                                                   | `1`: 69 observations (35%)                                             |
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| `x4` is balanced                                                                  | Almost perfectly balanced between each class,                          |
-|                                                                                   |                                                                        |
-|                                                                                   | `0`: 101 observations (50%) \                                          |
-|                                                                                   | `1`: 99 observations (50%)                                             |
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| `x5` has moderate imbalance                                                       | Level 2 has the most frequent observations, and level 1 is the least.  |
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
-| `y (response variable)`is imbalanced                                              | The response variable has two classes (binary) :                       |
-|                                                                                   |                                                                        |
-|                                                                                   | 0 : 148 observations (74%)\                                            |
-|                                                                                   | 1 : 52% observations (26%)                                             |
-+-----------------------------------------------------------------------------------+------------------------------------------------------------------------+
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
+| Insight                                                                          | Explanation                                                           |
++==================================================================================+=======================================================================+
+| `x1` and `x2` have medians and means close to 0 ( Indicate Normal Distributions) | `x1`: from approximately -2.73 to 2.96\                               |
+|                                                                                  | `x2`: from approximately -3.58 to 2.32                                |
+|                                                                                  |                                                                       |
+|                                                                                  | The min and max suggest **no extreme outliers** on both variables     |
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
+| `x3` is slightly imbalanced                                                      | Has two levels and majority is level 0 :                              |
+|                                                                                  |                                                                       |
+|                                                                                  | `0`: 131 observations (65%)\                                          |
+|                                                                                  | `1`: 69 observations (35%)                                            |
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
+| `x4` is balanced                                                                 | Almost perfectly balanced between each class,                         |
+|                                                                                  |                                                                       |
+|                                                                                  | `0`: 101 observations (50%)\                                          |
+|                                                                                  | `1`: 99 observations (50%)                                            |
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
+| `x5` has moderate imbalance                                                      | Level 2 has the most frequent observations, and level 1 is the least. |
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
+| `y (response variable)`is imbalanced                                             | The response variable has two classes (binary) :                      |
+|                                                                                  |                                                                       |
+|                                                                                  | 0 : 148 observations (74%)\                                           |
+|                                                                                  | 1 : 52% observations (26%)                                            |
++----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 
 ### 3.2 Missing Values
 
@@ -121,7 +121,7 @@ colSums(is.na(df))
 
 This means:
 
--    Every variable (`x1` to `x5`, and `y`) is fully observed.
+-   Every variable (`x1` to `x5`, and `y`) is fully observed.
 -   No imputation, removal, or special treatment for missing data is needed during preprocessing.
 -   We can proceed directly to data exploration, visualization, and modeling without concern for NA handling.
 
@@ -172,12 +172,17 @@ grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variab
 
 Based on the plot above, here are some key insights :
 
-| Variable | Balanced            | Sparse Levels  | Modelling Challanges   |
-|----------|---------------------|----------------|------------------------|
-| `x3`     | Slightly imbalanced | No             | Minor                  |
-| `x4`     | Yes                 | No             | None                   |
-| `x5`     | No                  | Yes (`1`, `4`) | Minor                  |
-| `y`      | No (imbalanced)     | N/A            | Needs special handling |
++--------------+---------------------+----------------+------------------------+
+| Variable     | Balanced            | Sparse Levels  | Modelling Challanges   |
++==============+=====================+================+========================+
+| `x3`         | Slightly imbalanced | No             | Minor                  |
++--------------+---------------------+----------------+------------------------+
+| `x4`         | Yes                 | No             | None                   |
++--------------+---------------------+----------------+------------------------+
+| `x5`         | No                  | Yes (`1`, `4`) | Minor                  |
++--------------+---------------------+----------------+------------------------+
+| `y`          | No (imbalanced)     | N/A            | Needs special handling |
++--------------+---------------------+----------------+------------------------+
 
 ### 3.5 Correlation
 
