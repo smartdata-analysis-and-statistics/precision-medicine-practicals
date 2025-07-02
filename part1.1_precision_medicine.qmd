@@ -1,5 +1,11 @@
 ---
-title: "Part 1.1 Data Preparation and Exploration (Binary Outcomes)"
+title: "Data Preparation and Exploration"
+subtitle: "Computer Practical Solutions"
+author: 
+  - name: "Aulia Kharis"
+    affiliation: "Smart Data Analysis and Statistics"
+  - name: "Thomas Debray"
+    affiliation: "Smart Data Analysis and Statistics"
 format: 
   html :
     toc: true 
