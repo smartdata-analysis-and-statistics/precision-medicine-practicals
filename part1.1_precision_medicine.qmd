@@ -1,5 +1,5 @@
 ---
-title: "Data Preparation and Exploration"
+  title: "Data Preparation and Exploration"
 subtitle: "Computer Practical Solutions"
 author: 
   - name: "Aulia Kharis"
@@ -12,10 +12,9 @@ format:
     toc-depth: 3    
     toc-location: right
     number-sections: false 
-editor: visual
 ---
-
-The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
+  
+  The foundation of any prediction model is understanding and preparing your data. This lesson focuses on cleaning, exploring, and structuring the dataset — particularly when the outcome is binary (e.g., disease: yes/no).
 
 # Preparation
 
@@ -44,15 +43,26 @@ head(df)
 
 The dataset includes:
 
-*	Five predictors:
-  - `x1` and `x2`: continuous variables
-  - `x3` and `x4`: binary variables
+- **Five predictors:**
+  - `x1` and `x2`: continuous variables  
+  - `x3` and `x4`: binary variables  
   - `x5`: categorical variable (with more than two levels)
-* Outcome:
-  * `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
 
+- **Outcome:**
+  - `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
+  
+
+The outcome in this dataset is defined as a **binary variable** indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). Although the exact follow-up time or context isn’t fully described, we assume that the outcome reflects mortality status within a predefined window.
+
+To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:
+
+1.	**Equal follow-up time**: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.
+2.	**Complete outcome data**: The outcome must be known for all patients -- that is, there should be no loss to follow-up. 
+3.	**Well-defined time window**: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.
+
+If these assumptions don’t hold, a **time-to-event (survival) analysis** would be more appropriate, as it can account for varying follow-up times and censoring.  
+  
 This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.
-
 
 
 
@@ -91,44 +101,57 @@ Here are the insight breakdown of each variables :
 |                                                                                  | 52 observations with value 1 (26%)                                    |
 +----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
 
-## Missing Values
-
-Check for any missing values in the dataset, which could impact model performance if not handled properly. Use `is.na()` and `colSums()` or `summary()` to identify missing data.
-
-```{r}
-colSums(is.na(df))
-```
-
-This means:
-
--   Every variable (`x1` to `x5`, and `y`) is fully observed.
--   No imputation, removal, or special treatment for missing data is needed during preprocessing.
--   We can proceed directly to data exploration, visualization, and modeling without concern for NA handling.
-
 ## Distribution of Numeric Variables
 
-Visualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.
+To explore the distribution of the numeric predictors, we first visualize their **shapes, spread, and central tendency** using histograms.
 
 ```{r}
 p1 <- ggplot(df, aes(x = x1)) + 
   geom_histogram(bins = 20, fill = "skyblue", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of X1", x = "X1", y = "Frequency") + theme_minimal()
+  labs(title = "Distribution of x1", x = "x1", y = "Frequency") + theme_minimal()
 
 p2 <- ggplot(df, aes(x = x2)) + 
   geom_histogram(bins = 20, fill = "lightgreen", alpha = 0.7, color = "black") +
-  labs(title = "Distribution of X2", x = "X2", y = "Frequency") + theme_minimal()
+  labs(title = "Distribution of x2", x = "X2", y = "Frequency") + theme_minimal()
 
 # Combine plots
 grid.arrange(p1, p2, ncol = 2, top = "Distribution of Continuous Variables")
 ```
 
--   Both `x1` and `x2` have means and medians close to zero, and the data ranged from -3 to 3, the typical numerical data that follows **Normal Distribution**
--   Since the **mean ≈ median** for both, there's **no strong skew** (neither left nor right). In addition, based on the plot there is no extreme values that considered *outliers*.
--   Since both of them has normal distributions, there is no need to apply transformations before going into modelling.
+To assess whether the continuous variables are approximately normally distributed, we use **Q-Q plots (quantile-quantile plots)**. In these plots, deviations from the diagonal line indicate departures from normality.
+
+```{r}
+qq1 <- ggplot(df, aes(sample = x1)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Q-Q Plot of x1", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+qq2 <- ggplot(df, aes(sample = x2)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# Combine plots
+grid.arrange(qq1, qq2, ncol = 2, 
+             top = "Q-Q Plots for Assessing Normality of Continuous Variables")
+
+```
+
+The exploratory analysis of the continuous predictors `x1` and `x2` indicates that both variables are approximately normally distributed. This is supported by:
+
+* Symmetric, bell-shaped histograms
+* Q-Q plots showing close alignment with the theoretical normal distribution
+* No apparent outliers or strong skew
+
+These characteristics suggest that `x1` and `x2` are reasonably well-behaved and **do not require transformation** at this stage. While normality of predictors is not a strict requirement for regression models, their approximate symmetry and lack of extreme outliers support stable estimation and interpretation.
+
+We will now proceed to explore the remaining variables and begin constructing a predictive model.
 
 ## Distribution of Categorical Variables
 
-Explore the frequency distribution of categorical variables `(x3,x4,x5 and y)` using bar plots.
+Explore the frequency distribution of categorical variables (`x3`,`x4`, and `x5`) using bar plots.
 
 ```{r}
 p5 <- ggplot(df, aes(x = x3)) + 
@@ -143,11 +166,7 @@ p7 <- ggplot(df, aes(x = x5)) +
   geom_bar(fill = "purple", alpha = 0.7) +
   labs(title = "Distribution of X5", x = "X5", y = "Count") + theme_minimal()
 
-p8 <- ggplot(df, aes(x = y)) + 
-  geom_bar(fill = "red", alpha = 0.7) +
-  labs(title = "Distribution of Outcome Y", x = "Y", y = "Count") + theme_minimal()
-
-grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variables")
+grid.arrange(p5, p6, p7, ncol = 3, top = "Distribution of Categorical Variables")
 ```
 
 Based on the plot above, here are some key insights :
@@ -180,44 +199,44 @@ cor_result
 ```
 
 The correlation Plot :
-
-```{r}
+  
+  ```{r}
 plot(cor_result)
 
 ```
 
 Based on the summary and the plot above, there are some insights that will be useful for modelling :
-
-**🔸 Significance Legend:**
-
--   `****` = p \< 0.0001 → highly significant
+  
+  **🔸 Significance Legend:**
+  
+  -   `****` = p \< 0.0001 → highly significant
 -   `**` = p \< 0.01 → very significant
 -   `*` = p \< 0.05 → significant
 -   `n.s.` = not significant
 
 There are some variables that has significant correlations between each other :
-
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| Pair         | Correlation | Strength         | Significance | Notes                                        |
-+==============+=============+==================+==============+==============================================+
-| `x1` \~ `x2` | 0.486       | Moderate         | \*\*\*\*     | Moderate positive linear relationship        |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x1` \~ `y`  | 0.482       | Moderate         | \*\*\*\*     | `x1` is moderately predictive of the outcome |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x2` \~ `y`  | 0.274       | Weak-to-moderate | \*\*\*\*     | Some predictive power, less than `x1`        |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x1` \~ `x3` | 0.168       | Weak             | \*           | Weak positive correlation                    |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x2` \~ `x3` | 0.419       | Moderate         | \*\*\*\*     | `x2` and `x3` have moderate relationship     |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x4` \~ `x5` | 0.333       | Moderate         | \*\*\*\*     | Strongest categorical relationship in data   |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x3` \~ `x4` | 0.228       | Weak-to-moderate | \*\*         | Some association between `x3` and `x4`       |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-
-## Univariate relationship between Predictors and Response Variables
-
-Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
+  
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | Pair         | Correlation | Strength         | Significance | Notes                                        |
+  +==============+=============+==================+==============+==============================================+
+  | `x1` \~ `x2` | 0.486       | Moderate         | \*\*\*\*     | Moderate positive linear relationship        |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x1` \~ `y`  | 0.482       | Moderate         | \*\*\*\*     | `x1` is moderately predictive of the outcome |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x2` \~ `y`  | 0.274       | Weak-to-moderate | \*\*\*\*     | Some predictive power, less than `x1`        |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x1` \~ `x3` | 0.168       | Weak             | \*           | Weak positive correlation                    |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x2` \~ `x3` | 0.419       | Moderate         | \*\*\*\*     | `x2` and `x3` have moderate relationship     |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x4` \~ `x5` | 0.333       | Moderate         | \*\*\*\*     | Strongest categorical relationship in data   |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  | `x3` \~ `x4` | 0.228       | Weak-to-moderate | \*\*         | Some association between `x3` and `x4`       |
+  +--------------+-------------+------------------+--------------+----------------------------------------------+
+  
+  ## Univariate relationship between Predictors and Response Variables
+  
+  Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
 
 ### Numerical Predictors vs Response Variables
 
@@ -237,15 +256,15 @@ grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 ```
 
 Here are some key takeaways from the plot :
-
-For X1 and Y :
-
--   Median of `x1`is higher for `y = 1` compared to `y = 0`.
+  
+  For X1 and Y :
+  
+  -   Median of `x1`is higher for `y = 1` compared to `y = 0`.
 -   Individuals with higher `x1` values are more likely to have `y = 1` (Indicate that there is **moderate relationship between x1 and y**, confirmed by the correlation value (0.482) with very high significance).
 
 For X2 and Y :
-
--   Median of `x2`for `y = 1` is also higher than for `y = 0`
+  
+  -   Median of `x2`for `y = 1` is also higher than for `y = 0`
 -   The **trend is upward**, indicating that `x2` may be somewhat predictive of `y`, confirmed by the positive correlation value (0.274) with high significance
 
 ### Categorical Predictors vs Response Variables

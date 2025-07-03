@@ -69,6 +69,8 @@ library(dplyr)
 
 We will use an example dataset from an observational study on a short-term health outcome (e.g., 30-day mortality). The dataset contains both clinical and demographic baseline predictors and a binary outcome variable. It is stored in RDS format for efficient loading in R.
 
+> Note: The dataset is complete and contains no missing values, allowing us to focus on core steps in data exploration and modeling without the need for imputation or data cleaning.
+
 ```{r}
 #| eval: true
 #| include: true
@@ -86,7 +88,7 @@ We will use this dataset throughout the practical for data preparation, explorat
 
 Before we build any predictive model, it is crucial to thoroughly explore and understand the dataset. This section will guide you through essential descriptive statistics and visualizations to better comprehend the structure, distribution, and relationships within the data.
 
-## 3.1 Descriptive Summary
+## 3.1 Descriptive Summaries
 
 Begin by inspecting the structure of the dataset and summarizing its variables using the `summary()` function.
 
@@ -103,28 +105,12 @@ summary(df)
 
 **Questions for Discussion:**
 
--   How many variables are included in the dataset?
--   Are all variables of the same type, or do they differ?
--   Are there any variables that appear irrelevant or redundant?
+- How many variables are included in the dataset?
+- What types of variables are present (e.g., continuous, binary, categorical), and how might these affect your choice of analysis methods?
+- Are there any variables that seem irrelevant, redundant, or highly correlated with others? How would you identify and handle them?
+- How is the outcome defined in this dataset? In what ways could this outcome be analyzed - and what assumptions would those approaches require?
 
-## 3.2 Missing Values
-
-Check for any missing values in the dataset, which could impact model performance if not handled properly. Use `is.na()` and `colSums()` or `summary()` to identify missing data.
-
-```{r}
-#| eval: false
-#| include: true
-colSums(is.na(df))
-```
-
-**Questions for Discussion:**
-
--   Are there any missing values in the dataset?
--   Which variables have missing values?
--   What proportion of data is missing?
--   How might we handle the missing data (e.g., imputation, removal)?
-
-## 3.3 Distribution of Numeric Variables
+## 3.2 Distribution of Numeric Variables
 
 Visualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.
 
@@ -151,7 +137,7 @@ grid.arrange(p1, p2, ncol = 2, top = "Distribution of Continuous Variables")
 -   Are there any skewed distributions or outliers?
 -   Should any transformations (e.g., log, square root) be applied before modeling?
 
-## 3.4 Distribution of Categorical Variables
+## 3.3 Distribution of Categorical Variables
 
 Explore the frequency distribution of categorical variables using bar plots.
 
@@ -171,11 +157,7 @@ p7 <- ggplot(df, aes(x = x5)) +
   geom_bar(fill = "purple", alpha = 0.7) +
   labs(title = "Distribution of X5", x = "X5", y = "Count") + theme_minimal()
 
-p8 <- ggplot(df, aes(x = y)) + 
-  geom_bar(fill = "red", alpha = 0.7) +
-  labs(title = "Distribution of Outcome Y", x = "Y", y = "Count") + theme_minimal()
-
-grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variables")
+grid.arrange(p5, p6, p7, ncol = 3, top = "Distribution of Categorical Variables")
 ```
 
 **Questions for Discussion:**
@@ -185,7 +167,7 @@ grid.arrange(p5, p6, p7, p8, ncol = 2, top = "Distribution of Categorical Variab
 -   Could any variables benefit from combining sparse levels?
 -   Do any imbalances suggest potential bias or modeling challenges?
 
-## 3.5 Correlation
+## 3.4 Correlation
 
 Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér's V for categorical) and visualize them.
 
@@ -210,11 +192,11 @@ The correlation plot will help to visualize the correlation of each variables.
 plot(cor_result)
 ```
 
-## 3.6 Relationship between Predictors and Response Variables
+## 3.5 Relationship between Predictors and Response Variables
 
 Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
 
-### 3.6.1 Numerical Predictors vs Response Variables
+### 3.5.1 Numerical Predictors vs Response Variables
 
 Use boxplots to assess the relationship between continuous predictors and the response variable.
 
@@ -237,7 +219,7 @@ grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 
 -   Is there a visible trend or pattern between numeric predictors and the response?
 
-### 3.6.2 Categorical Predictors vs Response Variables
+### 3.5.2 Categorical Predictors vs Response Variables
 
 Use grouped bar plots to explore how categorical predictors influence the response.
 
