@@ -68,9 +68,8 @@ This dataset will be used throughout the practical to illustrate key steps in da
 
 Before building any predictive models, it is important to first explore and understand the dataset. This section provides a step-by-step guide to generating descriptive statistics and visualizations that will help you examine the structure, distribution, and relationships among the variables.
 
-To improve interpretability and maintain consistency across plots, we assign a distinct color to each predictor:
-
 ```{r}
+#| echo: false
 # Define colors for each predictor variable
 var_colors <- c(
   x1 = "#56B4E9",   # Sky Blue – continuous
@@ -81,7 +80,6 @@ var_colors <- c(
 )
 ```
 
-You can use these colors in `ggplot2` with `scale_color_manual()` or `scale_fill_manual()` when plotting, to ensure consistent and intuitive visual representation throughout your analysis.
 
 We begin by examining the structure and summary statistics of the dataset using the `summary()` function:
 
@@ -117,37 +115,66 @@ Here are the insight breakdown of each variables :
 To explore the distribution of the numeric predictors, we first visualize their **shapes, spread, and central tendency** using histograms.
 
 ```{r}
-p1 <- ggplot(df, aes(x = x1)) + 
-  geom_histogram(bins = 20, fill = var_colors["x1"], alpha = 0.7, color = "black") +
-  labs(x = "x1", y = "Frequency") + theme_minimal()
+#| eval: false
+ggplot(df, aes(x = x1)) + 
+  geom_histogram(bins = 20, alpha = 0.7, color = "black") +
+  labs(x = "x1", y = "Frequency")
 
-p2 <- ggplot(df, aes(x = x2)) + 
-  geom_histogram(bins = 20, fill = var_colors["x2"], alpha = 0.7, color = "black") +
-  labs(x = "x2", y = "Frequency") + theme_minimal()
-
-# Combine plots
-grid.arrange(p1, p2, ncol = 2, top = "Distribution of Continuous Variables")
+ggplot(df, aes(x = x2)) + 
+  geom_histogram(bins = 20, alpha = 0.7, color = "black") +
+  labs(x = "x2", y = "Frequency")
 ```
 
 To assess whether the continuous variables are approximately normally distributed, we use **Q-Q plots (quantile-quantile plots)**. In these plots, deviations from the diagonal line indicate departures from normality.
 
 ```{r}
+#| eval: false
+ggplot(df, aes(sample = x1)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Q-Q Plot of x1", x = "Theoretical Quantiles", y = "Sample Quantiles")
+
+ggplot(df, aes(sample = x2)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles")
+```
+
+
+```{r}
+#| echo: false
+
+# Histogram and Q-Q plot for x1
+p1 <- ggplot(df, aes(x = x1)) + 
+  geom_histogram(bins = 20, fill = var_colors["x1"], alpha = 0.7, color = "black") +
+  labs(title = "Histogram of x1", x = "x1", y = "Frequency") +
+  theme_minimal()
+
 qq1 <- ggplot(df, aes(sample = x1)) +
   stat_qq(color = var_colors["x1"]) +
-  stat_qq_line() +
+  stat_qq_line(color =  "black") +
   labs(title = "Q-Q Plot of x1", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+# Histogram and Q-Q plot for x2
+p2 <- ggplot(df, aes(x = x2)) + 
+  geom_histogram(bins = 20, fill = var_colors["x2"], alpha = 0.7, color = "black") +
+  labs(title = "Histogram of x2", x = "x2", y = "Frequency") +
   theme_minimal()
 
 qq2 <- ggplot(df, aes(sample = x2)) +
   stat_qq(color = var_colors["x2"]) +
-  stat_qq_line() +
+  stat_qq_line(color = "black") +
   labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   theme_minimal()
 
-# Combine plots
-grid.arrange(qq1, qq2, ncol = 2, 
-             top = "Q-Q Plots for Assessing Normality of Continuous Variables")
+# Create rows with each variable’s histogram and Q-Q plot
+row1 <- arrangeGrob(p1, qq1, ncol = 2)
+row2 <- arrangeGrob(p2, qq2, ncol = 2)
 
+# Stack the rows
+grid.arrange(row1, row2, ncol = 1, 
+             top = "Distribution and Normality Assessment of Continuous Variables")
 ```
 
 The exploratory analysis of the continuous predictors `x1` and `x2` indicates that both variables are approximately normally distributed. This is supported by:
