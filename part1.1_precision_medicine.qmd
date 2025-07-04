@@ -185,13 +185,13 @@ grid.arrange(p5, p6, p7, ncol = 3, top = "Distribution of Categorical Variables"
 Summary of Categorical Predictors
 
 - **`x3` (Binary)**  
-  Most participants have a value of `0`, with fewer having `1`. While both categories are sufficiently represented, the class sizes are moderately unequal. This may have a minor impact in models sensitive to class proportions.
+  Most participants have a value of `0`, with fewer having `1`. Both categories are well represented, so no specific adjustments are needed for modeling.
 
 - **`x4` (Binary)**  
-  Near-equal representation of both levels (`0` and `1`), which is ideal for evaluating associations with the outcome and for inclusion in regression models without adjustment for prevalence.
+  Values `0` and `1` occur with approximately equal frequency, offering good representation across categories for modeling and interpretation.
 
 - **`x5` (Ordinal or Categorical with 4 Levels)**  
-  Levels `2` and `3` occur most frequently, while `1` and `4` are less common. This skew in frequency may affect model stability for level-specific estimates, especially if included as dummy variables. Combining adjacent low-frequency levels might be considered if sparsity becomes problematic.
+  Levels `2` and `3` are most frequent, while `1` and `4` are less common. All levels are represented in the dataset, but if `x5` is modeled using indicator (dummy) variables, estimates for the less common levels may be less precise due to smaller sample sizes.
   
 
 ## Correlation
