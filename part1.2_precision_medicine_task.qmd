@@ -1,0 +1,215 @@
+---
+title: "Data Modelling"
+subtitle: "Computer Practical"
+author: 
+  - name: "Aulia Kharis"
+    affiliation: "Smart Data Analysis and Statistics"
+  - name: "Thomas Debray"
+    affiliation: "Smart Data Analysis and Statistics"
+format: 
+  html :
+    toc: true 
+    toc-depth: 3    
+    toc-location: right
+    number-sections: false 
+---
+
+# 1. Summary
+
+In this section, we proceed to the second major phase following data preparation: **data modelling**. This phase is critical, as it involves developing statistical models to explore and quantify the relationships between predictors and the outcome of interest. We will begin by constructing models using both univariate and multivariate approaches, allowing us to understand the isolated effects of individual variables as well as their combined influence when considered together.
+
+Special attention will be given to the application of **splines model** to detect potential non-linear relationships in both univariate and multivariate settings. For univariate modelling, we will also address how to appropriately handle **categorical predictors**, including their encoding and interpretation within the logistic regression framework.
+
+By the end of this section, you will gain a deeper understanding of the modelling process, including how to build, interpret, and evaluate models that account for both simple and complex variable structures
+
+# 2. Learning Objectives
+
+By completing this practical, you will be able to:
+
+-   Build and interpret logistic regression models using both univariate and multivariate predictors
+-   Apply restricted cubic splines to model non-linear relationships
+-   Handle and incorporate categorical variables into regression models effectively
+-   Validate models and assess their performance using appropriate evaluation metrics
+
+# 3. Practical Modelling Steps
+
+## 1) Load the Libarary and Datasets
+
+Before starting the modelling workflow, first we have to load the library and also the datasets.
+
+```{r}
+#| include: false
+library(survival)
+library(lattice)
+library(Formula)
+library(ggplot2)
+library(Hmisc)
+library(rms)
+library(gridExtra)
+library(reshape2)
+library(MASS)
+library(mgcv)
+library(glmnet)
+library(pROC)
+library(broom)
+
+
+df <- readRDS(file.path("data" ,'dataset.rds'))
+```
+
+## 1) Univariate Variable
+
+Begin by using the univariate model, the model contain only one variable. Tha variable that we will use here is variable `x1`.
+
+```{r}
+model1 = lrm(y ~ x1, data = df, x = TRUE, y = TRUE)
+
+print(model1)
+```
+
+**Questions for Discussion:**
+
+-   How do you interpret the coefficient estimate for **x1** in terms of **log-odds**?
+-   Is the association between **x1** and the outcome statistically significant? What evidence supports your answer?
+
+## 2. Categorized Univariate Variable
+
+The second part is we would like to categorize univariate variable so that it will turn out from numeric variable into categorized variable. We will divide this variable into 5 parts based on the quantil of data.
+
+```{r}
+df$x1_bin <- cut(df$x1, 
+                 breaks = quantile(df$x1, probs = seq(0, 1, 0.2), na.rm = TRUE),
+                 labels = c("Bottom 20%", "20-40%", "40-60%", "60-80%", "Top 20%"),
+                 include.lowest = TRUE)
+df$x1_bin <- factor(df$x1_bin) 
+```
+
+The next part, we would like to do modelling on this categorized variable
+
+```{r}
+model2 <-  lrm(y ~ x1_bin, data = df, x = TRUE, y = TRUE)
+print(model2)
+```
+
+we would like to also explore the odds ratio of each category.
+
+```{r}
+odds_ratios <- exp(coef(model2))
+print(odds_ratios)
+```
+
+**Questions for disscussion :**
+
+-   How do you interpret the coefficients in this model?
+-   How does categorizing variables change the model’s predictions or interpretation?
+
+## 3. Regression Spline
+
+A regression spline is a flexible statistical method that fits piecewise polynomials to data, making it particularly valuable for modeling complex, non-linear relationships in medical data where simple linear models fall short.
+
+Instead of fitting a single polynomial across the entire dataset, regression splines divide the data into segments at specific points called "knots" and fit separate polynomial functions to each segment. 
+
+**Restricted Cubic Splines (RCS),** also known as natural splines, are the most widely used spline method in medical research due to their excellent balance of flexibility and stability.
+
+```{r}
+dd <- datadist(df)
+options(datadist = "dd")
+
+model3 <- lrm(y ~ rcs(x1, 3), data = df, y = TRUE, x = TRUE)
+summary(model3)
+```
+
+-   How do you interpret the **model output**, given that x1 is now modeled non-linearly?
+-   How do you interpret the **odds ratio** or effect of x1 in this model?
+-   Does the model appear to be **overfitting or underfitting**?
+
+## 4) Multivariate Variable
+
+```{r}
+model4 = glm(y~x1+x2+x3+x4+x5, df, family='binomial')
+summary(model4)
+```
+
+**Questions for discussion :**
+
+-   How do you interpret each coefficient or odds ratio in this multivariable model?
+-   Is this multivariable model better than the univariate model? How do you know?
+-   Are any predictors **statistically insignificant**? What might that imply?
+
+## 5) Multivariate Variable with Spline Regression
+
+```{r}
+model5 = lrm(y~rcs(x1,3)+rcs(x2,3)+x3+x4+x5, data = df, y = TRUE, x = TRUE)
+summary(model5)
+```
+
+**Questions for discussion :**
+
+-   How do you interpret this model given that both x1 and x2 are modeled with **restricted cubic splines**
+-   How do you interpret the **odds ratios** or non-linear effects?
+-   Is this model more flexible than Model 4?
+
+# 4. Assessing Model Performance
+
+## A. AIC 
+
+AIC is a measure of the **relative quality of a model**, balancing **goodness of fit** and **model complexity**. **Lower AIC values indicate a better model**. It penalizes models with more parameters to avoid overfitting.
+
+```{r}
+AIC(model1)
+AIC(model2)
+AIC(model3)
+AIC(model4)
+AIC(model5)
+```
+
+How do the AIC compare to the other models? Which model has the better AIC?
+
+## B. **AUC (Area Under the ROC Curve)**
+
+AUC measures the model’s **discriminative ability**, i.e., how well it distinguishes between the two classes (e.g., 1 vs 0).
+
+```{r}
+model1$stats["C"]
+model2$stats["C"]
+model3$stats["C"]
+model4$stats["C"]
+model5$stats["C"]
+```
+
+How do the AUC compare to the other models? Which model has the better AUC?
+
+## C. **Calibration Plot**
+
+The calibration plot is used to detect if the model is producing **well-calibrated probabilities**, which is important for decision-making
+
+```{r}
+cal_model1 <- calibrate(model1, method="boot", B=200)
+cal_model2 <- calibrate(model2, method="boot", B=200)
+cal_model3 <- calibrate(model3, method="boot", B=200)
+cal_model4 <- calibrate(model4, method="boot", B=200)
+cal_model5 <- calibrate(model5, method="boot", B=200)
+par(mfrow = c(2, 3)) 
+
+plot(cal_model1)
+```
+
+Each plot includes the **Median Absolute Error**, which reflects the model's **calibration quality**. How does the calibration performance compare across the models based on this value?
+
+## C. R-Square
+
+R² estimates the proportion of variance in the outcome explained by the model.
+
+```{r}
+model1$stats["R2"]
+model2$stats["R2"]
+model3$stats["R2"]
+model4$stats["R2"]
+model5$stats["R2"]
+```
+
+How do the **R² values** compare across the models, and what do they tell you about each model’s ability to explain the outcome?
+
+## **Summary of Model Comparison**
+
+Considering the AIC, AUC, calibration plots, and R² values, which model appears to offer the best overall performance?

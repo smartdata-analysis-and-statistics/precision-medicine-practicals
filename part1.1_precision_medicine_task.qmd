@@ -56,6 +56,7 @@ install.packages(c('ggplot2','dplyr'))
 ```
 
 ## 3.3 Load Required R Packages
+
 After installing the packages, load them into your R session using the following code:
 
 ```{r}
@@ -79,8 +80,8 @@ df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-stat
 
 The dataset includes:
 
-*	Five predictors `x1`, `x2`, `x3`, `x4` and `x5`, each assessed at baseline.
-* Outcome:`y` (binary; 1 = event, 0 = no event)
+-   Five predictors `x1`, `x2`, `x3`, `x4` and `x5`, each assessed at baseline.
+-   Outcome:`y` (binary; 1 = event, 0 = no event)
 
 We will use this dataset throughout the practical for data preparation, exploration, and prediction modeling.
 
@@ -105,10 +106,10 @@ summary(df)
 
 **Questions for Discussion:**
 
-- How many variables are included in the dataset?
-- What types of variables are present (e.g., continuous, binary, categorical), and how might these affect your choice of analysis methods?
-- Are there any variables that seem irrelevant, redundant, or highly correlated with others? How would you identify and handle them?
-- How is the outcome defined in this dataset? In what ways could this outcome be analyzed - and what assumptions would those approaches require?
+-   How many variables are included in the dataset?
+-   What types of variables are present (e.g., continuous, binary, categorical), and how might these affect your choice of analysis methods?
+-   Are there any variables that seem irrelevant, redundant, or highly correlated with others? How would you identify and handle them?
+-   How is the outcome defined in this dataset? In what ways could this outcome be analyzed - and what assumptions would those approaches require?
 
 ## 3.2 Distribution of Numeric Variables
 

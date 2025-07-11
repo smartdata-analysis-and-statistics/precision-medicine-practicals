@@ -13,7 +13,7 @@ format:
     toc-location: right
     number-sections: false 
 ---
-  
+
 # Preparation
 
 Before we begin, make sure you have **RStudio** open and your working directory set to the root of the project.
@@ -41,28 +41,24 @@ head(df)
 
 The dataset includes:
 
-- **Five predictors:**
-  - `x1` and `x2`: continuous variables  
-  - `x3` and `x4`: binary variables  
-  - `x5`: categorical variable (with more than two levels)
-
-- **Outcome:**
-  - `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
-  
+-   **Five predictors:**
+    -   `x1` and `x2`: continuous variables\
+    -   `x3` and `x4`: binary variables\
+    -   `x5`: categorical variable (with more than two levels)
+-   **Outcome:**
+    -   `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
 
 The outcome in this dataset is defined as a **binary variable** indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). Although the exact follow-up time or context isn’t fully described, we assume that the outcome reflects mortality status within a predefined window.
 
 To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:
 
-1.	**Equal follow-up time**: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.
-2.	**Complete outcome data**: The outcome must be known for all patients -- that is, there should be no loss to follow-up. 
-3.	**Well-defined time window**: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.
+1.  **Equal follow-up time**: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.
+2.  **Complete outcome data**: The outcome must be known for all patients -- that is, there should be no loss to follow-up.
+3.  **Well-defined time window**: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.
 
-If these assumptions don’t hold, a **time-to-event (survival) analysis** would be more appropriate, as it can account for varying follow-up times and censoring.  
-  
+If these assumptions don’t hold, a **time-to-event (survival) analysis** would be more appropriate, as it can account for varying follow-up times and censoring.
+
 This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.
-
-
 
 # Descriptive Statistics and Visualizations
 
@@ -80,7 +76,6 @@ var_colors <- c(
 )
 ```
 
-
 We begin by examining the structure and summary statistics of the dataset using the `summary()` function:
 
 ```{r}
@@ -89,26 +84,26 @@ summary(df)
 
 Here are the insight breakdown of each variables :
 
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| Insight                                                                          | Explanation                                                           |
-+==================================================================================+=======================================================================+
-| `x1` and `x2` have means and medians close to 0                                  | Suggests approximately normal distributions:\                         |
-|                                                                                  | `x1`: range from approximately -2.73 to 2.96\                         |
-|                                                                                  | `x2`: range from approximately -3.58 to 2.32                          |
-|                                                                                  |                                                                       |
-|                                                                                  | The min and max suggest **no extreme outliers** on both variables     |
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x3`has two levels; level 0 is more frequent                                     | 131 observations with value 0 (65%)\                                  |
-|                                                                                  | 69 observations with value 1 (35%)                                    |
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x4` is evenly distributed                                                       | 101 observations with value 0 (50%)\                                  |
-|                                                                                  | 99 observations with value 1 (50%)                                    |
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `x5` has three levels with uneven distribution                                   | Level 2 is the most common; level 1 is the least frequent.            |
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
-| `y` (response variable)  is skewed toward 0                                      | 148 observations with value 0 (74%)\                                  |
-|                                                                                  | 52 observations with value 1 (26%)                                    |
-+----------------------------------------------------------------------------------+-----------------------------------------------------------------------+
++-------------------------------------------------+-------------------------------------------------------------------+
+| Insight                                         | Explanation                                                       |
++=================================================+===================================================================+
+| `x1` and `x2` have means and medians close to 0 | Suggests approximately normal distributions:\                     |
+|                                                 | `x1`: range from approximately -2.73 to 2.96\                     |
+|                                                 | `x2`: range from approximately -3.58 to 2.32                      |
+|                                                 |                                                                   |
+|                                                 | The min and max suggest **no extreme outliers** on both variables |
++-------------------------------------------------+-------------------------------------------------------------------+
+| `x3`has two levels; level 0 is more frequent    | 131 observations with value 0 (65%)\                              |
+|                                                 | 69 observations with value 1 (35%)                                |
++-------------------------------------------------+-------------------------------------------------------------------+
+| `x4` is evenly distributed                      | 101 observations with value 0 (50%)\                              |
+|                                                 | 99 observations with value 1 (50%)                                |
++-------------------------------------------------+-------------------------------------------------------------------+
+| `x5` has three levels with uneven distribution  | Level 2 is the most common; level 1 is the least frequent.        |
++-------------------------------------------------+-------------------------------------------------------------------+
+| `y` (response variable) is skewed toward 0      | 148 observations with value 0 (74%)\                              |
+|                                                 | 52 observations with value 1 (26%)                                |
++-------------------------------------------------+-------------------------------------------------------------------+
 
 ## Distribution of Numeric Variables
 
@@ -139,7 +134,6 @@ ggplot(df, aes(sample = x2)) +
   stat_qq_line() +
   labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles")
 ```
-
 
 ```{r}
 #| echo: false
@@ -179,9 +173,9 @@ grid.arrange(row1, row2, ncol = 1,
 
 The exploratory analysis of the continuous predictors `x1` and `x2` indicates that both variables are approximately normally distributed. This is supported by:
 
-* Symmetric, bell-shaped histograms
-* Q-Q plots showing close alignment with the theoretical normal distribution
-* No apparent outliers or strong skew
+-   Symmetric, bell-shaped histograms
+-   Q-Q plots showing close alignment with the theoretical normal distribution
+-   No apparent outliers or strong skew
 
 These characteristics suggest that `x1` and `x2` are reasonably well-behaved and **do not require transformation** at this stage. While normality of predictors is not a strict requirement for regression models, their approximate symmetry and lack of extreme outliers support stable estimation and interpretation.
 
@@ -209,17 +203,12 @@ grid.arrange(p5, p6, p7, ncol = 3, top = "Distribution of Categorical Variables"
 
 Based on the plot above, here are some key insights :
 
-+--------------+---------------------+----------------+------------------------+
-| Variable     | Balanced            | Sparse Levels  | Modelling Challanges   |
-+==============+=====================+================+========================+
-| `x3`         | Slightly imbalanced | No             | Minor                  |
-+--------------+---------------------+----------------+------------------------+
-| `x4`         | Yes                 | No             | None                   |
-+--------------+---------------------+----------------+------------------------+
-| `x5`         | No                  | Yes (`1`, `4`) | Minor                  |
-+--------------+---------------------+----------------+------------------------+
-| `y`          | No (imbalanced)     | N/A            | Needs special handling |
-+--------------+---------------------+----------------+------------------------+
+| Variable | Balanced            | Sparse Levels  | Modelling Challanges   |
+|----------|---------------------|----------------|------------------------|
+| `x3`     | Slightly imbalanced | No             | Minor                  |
+| `x4`     | Yes                 | No             | None                   |
+| `x5`     | No                  | Yes (`1`, `4`) | Minor                  |
+| `y`      | No (imbalanced)     | N/A            | Needs special handling |
 
 ## Correlation
 
@@ -237,42 +226,34 @@ cor_result
 ```
 
 The correlation Plot :
-  
+
 ```{r}
 plot(cor_result)
 ```
 
 Based on the summary and the plot above, there are some insights that will be useful for modelling :
-  
-  **🔸 Significance Legend:**
-  
-  -   `****` = p \< 0.0001 → highly significant
+
+**🔸 Significance Legend:**
+
+-   `****` = p \< 0.0001 → highly significant
 -   `**` = p \< 0.01 → very significant
 -   `*` = p \< 0.05 → significant
 -   `n.s.` = not significant
 
 There are some variables that has significant correlations between each other :
-  
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| Pair         | Correlation | Strength         | Significance | Notes                                        |
-+==============+=============+==================+==============+==============================================+
-| `x1` \~ `x2` | 0.486       | Moderate         | \*\*\*\*     | Moderate positive linear relationship        |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x1` \~ `y`  | 0.482       | Moderate         | \*\*\*\*     | `x1` is moderately predictive of the outcome |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x2` \~ `y`  | 0.274       | Weak-to-moderate | \*\*\*\*     | Some predictive power, less than `x1`        |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x1` \~ `x3` | 0.168       | Weak             | \*           | Weak positive correlation                    |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x2` \~ `x3` | 0.419       | Moderate         | \*\*\*\*     | `x2` and `x3` have moderate relationship     |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x4` \~ `x5` | 0.333       | Moderate         | \*\*\*\*     | Strongest categorical relationship in data   |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-| `x3` \~ `x4` | 0.228       | Weak-to-moderate | \*\*         | Some association between `x3` and `x4`       |
-+--------------+-------------+------------------+--------------+----------------------------------------------+
-  
+
+| Pair | Correlation | Strength | Significance | Notes |
+|----|----|----|----|----|
+| `x1` \~ `x2` | 0.486 | Moderate | \*\*\*\* | Moderate positive linear relationship |
+| `x1` \~ `y` | 0.482 | Moderate | \*\*\*\* | `x1` is moderately predictive of the outcome |
+| `x2` \~ `y` | 0.274 | Weak-to-moderate | \*\*\*\* | Some predictive power, less than `x1` |
+| `x1` \~ `x3` | 0.168 | Weak | \* | Weak positive correlation |
+| `x2` \~ `x3` | 0.419 | Moderate | \*\*\*\* | `x2` and `x3` have moderate relationship |
+| `x4` \~ `x5` | 0.333 | Moderate | \*\*\*\* | Strongest categorical relationship in data |
+| `x3` \~ `x4` | 0.228 | Weak-to-moderate | \*\* | Some association between `x3` and `x4` |
+
 ## Univariate relationship between Predictors and Response Variables
-  
+
 Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
 
 ### Numerical Predictors vs Response Variables
@@ -293,15 +274,15 @@ grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 ```
 
 Here are some key takeaways from the plot :
-  
-  For X1 and Y :
-  
-  -   Median of `x1`is higher for `y = 1` compared to `y = 0`.
+
+For X1 and Y :
+
+-   Median of `x1`is higher for `y = 1` compared to `y = 0`.
 -   Individuals with higher `x1` values are more likely to have `y = 1` (Indicate that there is **moderate relationship between x1 and y**, confirmed by the correlation value (0.482) with very high significance).
 
 For X2 and Y :
-  
-  -   Median of `x2`for `y = 1` is also higher than for `y = 0`
+
+-   Median of `x2`for `y = 1` is also higher than for `y = 0`
 -   The **trend is upward**, indicating that `x2` may be somewhat predictive of `y`, confirmed by the positive correlation value (0.274) with high significance
 
 ### Categorical Predictors vs Response Variables
