@@ -1,12 +1,17 @@
 ---
-title: "Model Validation and Presentation (Binary Outcomes)"
+title: "Model Validation"
+subtitle: "Computer Practical Solutions"
+author: 
+  - name: "Aulia Kharis"
+    affiliation: "Smart Data Analysis and Statistics"
+  - name: "Thomas Debray"
+    affiliation: "Smart Data Analysis and Statistics"
 format: 
   html :
     toc: true 
     toc-depth: 3    
     toc-location: right
     number-sections: false 
-editor: visual
 ---
 
 ## Model Validation
@@ -19,254 +24,280 @@ There are two main types of validation:
 -   **Internal validation**: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.
 -   **External validation**: Tests the model on an **independent** dataset to assess **transportability**.
 
-## Optimism Correction
+# Key Sections :
 
-**Optimism** = Performance on bootstrap sample - Performance on original data
+This part 1.3 Model Validation will consist of some sections :
 
-Models typically perform better on the data they were trained on (optimism bias). This method quantifies and corrects for that bias. This method is a sophisticated approach that combines bootstrapping with multiple imputation to get realistic performance estimates.
+-   Learn about Apparent Validation vs Internal Validation
+-   Learn about Internal Validation via Bootstrap
+-   Learn about Validation by using split-sample, cross-validation, and Bootstrap validation
+-   Learn about internal vs external validation
 
-First, we need to setup the matrics to store optimism estimates
+Keywords for table summary :
 
-```{r}
-#| eval: false
-# Internal CV via bootstrapping
-# bootstrap in each multiply imputed dataset
-N.bootstrap <- 10
-n.impute <- 10
-optimism.lr.eachbootstrap <- optimism.gam.eachbootstrap <-
-optimism.ridge.eachbootstrap <- matrix(NA, N.bootstrap, 3)
-optimism.lr <- optimism.gam <- optimism.ridge <- matrix(NA, n.impute, 3)
-```
+| Fields | Definition |
+|----|----|
+| **Dxy** | How well your model separates good cases from bad cases. Higher is better.  |
+| **R²** | How much of the variation in your outcome your model explains. |
+| **Intercept** | Should be close to 0.  |
+| **Slope** | How spread out your predictions are compared to reality. Should be close to 1. |
+| **Emax** | The biggest calibration error the model makes. |
+| **D** | Another measure of how well your model discriminates between outcomes. Similar to Dxy but on a different scale. |
+| **U** | A measure of how much the model's predictions deviate from perfect calibration. |
+| **Q** | Combines discrimination and calibration into one score.  |
+| **B** | Measures how well-calibrated your predictions are.  |
+| **g** | How much your model's predictions vary.  |
+| **gp** | A adjusted version of g that accounts for the number of predictors in your model. |
 
-For Each Imputed Dataset and Bootstrap Sample :
+| Method | Trains on | Tests on | Generalization Level | Best For |
+|----|----|----|----|----|
+| **Bootstrap** | Resampled dataset | Out-of-bag data | Internal (with optimism correction) | Small datasets |
+| **K-Fold CV** | K-1 folds | 1 held-out fold | Internal | Medium–large datasets |
+| **Cross-validation** | Varies (e.g., LOOCV, repeated CV) | Left-out part | Internal | Hyperparameter tuning |
+| **External Validation** | Original data | Completely new data | External (real-world test) | Final model evaluation |
 
-The complete function are as follow
+**Load the library**
 
 ```{r}
 #| message: false
 #| warning: false
-#| eval: false
-# Internal CV via bootstrapping -------------------
-# bootstrap in each multiply imputed dataset
-N.bootstrap <- 10
-optimism.lr.eachbootstrap <- optimism.gam.eachbootstrap <- optimism.ridge.eachbootstrap <- matrix(NA, N.bootstrap, 3)
-optimism.lr <- optimism.gam <- optimism.ridge <- matrix(NA, n.impute, 3)
-
-for (i in 1:n.impute) {
-  for (j in 1:N.bootstrap) {
-    boot.sample <- sample(length(imputed1[[i]]$y), replace = TRUE)
-    
-    # create bootstrap sample
-    imp.boot <- lapply(imputed1[[i]], function(x) { x[boot.sample] })
-    
-    # fit spline model in bootstrap sample
-    regression.splines.boot <- lrm(y ~ rcs(x1, 3) + rcs(x2, 3) + x3 + x4 + x5, data = imp.boot)
-    
-    # fit gam model in bootstrap sample
-    fit.gam.boot <- gam(y ~ x3 + x4 + x5 + s(x1) + s(x2), data = imp.boot, family = binomial)
-    
-    # fit ridge model in bootstrap sample
-    imp <- imp.boot
-    imp <- with(imp, data.frame(y, x1, x2, x3, x4, x5))
-    data_glmnet <- model.matrix(y ~ ., data = imp)
-    data_glmnet <- data_glmnet[, -1]
-    data_glmnet <- cbind(y = as.numeric(as.character(imp$y)), data_glmnet = data_glmnet)
-    
-    X <- as.matrix(data_glmnet[, -1])
-    colnames(X)[3:4] <- c("x3", "x4")
-    Y <- data_glmnet[, 1]
-    
-    cvfit <- cv.glmnet(X, Y, family = "binomial", alpha = 0, lambda = lambdas, nfolds = 10)
-    lambda.min <- cvfit$lambda.min
-    fit.ridge.boot <- glmnet(X, Y, family = "binomial", alpha = 0, lambda = lambda.min)
-    
-    # predict in bootstrap
-    f1 <- as.data.frame(do.call(cbind, lapply(imp.boot, function(x) { as.numeric(as.character(x)) })))
-    
-    boot.prediction.lr <- prediction.lr(f1, single.fit = regression.splines.boot)
-    boot.prediction.gam <- prediction.gam(f1, single.fit = fit.gam.boot)
-    boot.prediction.ridge <- prediction.ridge(f1, single.fit = fit.ridge.boot)
-    
-    lr.boot <- calculate_performance2(f1$y, boot.prediction.lr)
-    gam.boot <- calculate_performance2(f1$y, boot.prediction.gam)
-    ridge.boot <- calculate_performance2(f1$y, boot.prediction.ridge)
-    
-    # predict in test data
-    f2 <- as.data.frame(do.call(cbind, lapply(imputed1[[i]], function(x) { as.numeric(as.character(x)) })))
-    
-    test.prediction.lr <- prediction.lr(f2, single.fit = regression.splines.boot)
-    test.prediction.gam <- prediction.gam(f2, single.fit = fit.gam.boot)
-    test.prediction.ridge <- prediction.ridge(f2, single.fit = fit.ridge.boot)
-    
-    lr.test <- calculate_performance2(f2$y, test.prediction.lr)
-    gam.test <- calculate_performance2(f2$y, test.prediction.gam)
-    ridge.test <- calculate_performance2(f2$y, test.prediction.ridge)
-    
-    optimism.lr.eachbootstrap[j, ] <- lr.boot - lr.test
-    optimism.gam.eachbootstrap[j, ] <- gam.boot - gam.test
-    optimism.ridge.eachbootstrap[j, ] <- ridge.boot - ridge.test
-  }
-  
-  optimism.lr[i, ] <- apply(optimism.lr.eachbootstrap, 2, mean)
-  optimism.gam[i, ] <- apply(optimism.gam.eachbootstrap, 2, mean)
-  optimism.ridge[i, ] <- apply(optimism.ridge.eachbootstrap, 2, mean)
-  
-  print(paste0("imputation done: ", i))
-}
-
-mean.optimism.lr <- apply(optimism.lr, 2, mean)
-mean.optimism.gam <- apply(optimism.gam, 2, mean)
-mean.optimism.ridge <- apply(optimism.ridge, 2, mean)
-
-optimism.corrected.lr <- apparent.lr - mean.optimism.lr
-optimism.corrected.gam <- apparent.gam - mean.optimism.gam
-optimism.corrected.ridge <- apparent.ridge - mean.optimism.ridge
-
-round(rbind(optimism.corrected.lr, optimism.corrected.gam, optimism.corrected.ridge), 2)
+#| paged-print: false
+library(survival)
+library(lattice)
+library(Formula)
+library(ggplot2)
+library(Hmisc)
+library(rms)
+library(gridExtra)
+library(reshape2)
+library(MASS)
+library(mgcv)
+library(glmnet)
+library(pROC)
+library(caret)
 
 ```
 
-**The full explanation of the code are as follows :**
-
-**A. Create Bootstrap Sample**
+**Load Datasets and Saved Model**
 
 ```{r}
-#| eval: false
-boot.sample <- sample(length(imputed1[[i]]$y), replace = T)
-imp.boot <- lapply(imputed1[[i]], function(x){x[boot.sample]})
+#| message: false
+#| warning: false
+#| paged-print: false
+df <- readRDS(file.path("data" ,"dataset.rds"))
+model4 = readRDS(file.path("model", "model4.rds"))
+
 ```
 
-**B. Fit Models on Bootstrap Sample**
+## 1) Apparent Validation
 
--   Logistic regression with splines
--   GAM with smoothing splines
--   Ridge regression with cross-validated lambda
-
-**C. Calculate Performance**
-
--   **Bootstrap performance**: Test models on the bootstrap sample itself
--   **Test performance**: Test same models on the original imputed dataset
-
-**D. Calculate Optimism**
+Apparent validation in `lrm` refers to evaluating model performance on the same data used to fit the model.
 
 ```{r}
-#| eval: false
-#| include: false
-optimism.lr.eachbootstrap[j,] <- lr.boot - lr.test
+#| message: false
+#| warning: false
+#| paged-print: false
+print(model4)
 ```
-
-**E. Average Across Bootstraps and Imputations**
 
 ```{r}
-#| eval: false
-#| include: false
-optimism.lr[i,] <- apply(optimism.lr.eachbootstrap, 2, mean)  # Average across bootstraps
-mean.optimism.lr <- apply(optimism.lr, 2, mean)              # Average across imputations
+#| message: false
+#| warning: false
+#| paged-print: false
+cal_apparent <- calibrate(model4, B = 0)
+plot(cal_apparent)
 ```
-
-**F. Apply Optimism Correction**
 
 ```{r}
-#| eval: false
-#| include: false
-optimism.corrected.lr <- apparent.lr - mean.optimism.lr
+#| message: false
+#| warning: false
+#| paged-print: false
+validate(model4, "boot",0)
 ```
 
-## Why This Approach?
+-   **AUC = 0.831**, R² = 0.368 → Strong performance.
+-   But: This uses the same data the model was trained on → likely **overestimates performance**.
+-   By using the validate and set the bootstrap into 0 ( mean likely similar with current datasets, the test of Slope is near 1 (0.098)
 
-1.  **Addresses overfitting**: Corrects for the overoptimistic performance when testing on training data
-2.  **Handles missing data**: Works with multiply imputed datasets
-3.  **Comprehensive**: Corrects AUC, calibration intercept, and calibration slope
-4.  **Realistic estimates**: Provides performance estimates closer to what you'd expect in new patients
+**Apparent validation** evaluates model performance using the **same data** it was trained on. This might seem convenient, but it’s **overly optimistic and misleading** for several reasons:
 
-Based on these results, the logistic regression with splines model seems to be the best in both calibration and discrimination.
+1.  The model may learn patterns that are specific to the training data (noise), and these won’t generalize. Apparent validation can’t detect this.
+2.  Accuracy, AUC, and R² often appear **much higher** than they really are — because the model is tested on data it has already "seen."
+3.  Relying on apparent validation may lead to deploying models that **fail** when exposed to new data.
 
-## Perform Internal-External Cross-Validation
+## 2) Boostrap Validation
 
-**Internal-External Cross-Validation (IECV)**, a robust validation technique that tests how well models perform when applied to data from different clusters or groups.
+Bootstrap validation involves repeatedly **sampling with replacement** from the original dataset, fitting the model on each sample, and evaluating it on the "left-out" data.
 
-### **Section 1: Prepare cluster-based datasets**
+**How it works:**
+
+-   Create "bootstrap samples" (e.g., 200 samples of the same size as the original dataset).
+-   Fit the model on each bootstrap sample.
+-   Evaluate the model on the data **not included** in that sample (called "out-of-bag").
+-   Measure the **optimism** in performance (e.g., AUC, R²), and subtract it from the original score.
 
 ```{r}
-#| eval: false
-clusters <- unique(data.bin$clust)
-N.clust <- length(clusters)
-data.in <- data.leftout <- list()
+#| message: false
+#| warning: false
+#| paged-print: false
+validate(model4, "boot",50)
 ```
-
-This step will :
-
--   Extracts all **unique clusters** in the dataset.
--   Prepares `data.in` (training data) and `data.leftout` (testing data for left-out cluster).
 
 ```{r}
-#| eval: false
-for(i in 1:N.clust){
-  data.in[[i]] <- data.bin[data.bin$clust != clusters[i],]     # All clusters except one
-  data.leftout[[i]] <- data.bin[data.bin$clust == clusters[i],] # The left-out cluster
-  complete.index <- complete.cases(data.leftout[[i]][,c(paste0("x", 1:5), "y")])
-  data.leftout[[i]] <- data.leftout[[i]][complete.index,]
-}
+#| message: false
+#| warning: false
+#| paged-print: false
+cal <- calibrate(model4, B = 200)
+plot(cal, xlab = "Predicted Probability", ylab = "Observed Probability")
 ```
 
-For each cluster `i`, we:
+-   AUC (approx from Dxy/2) ≈ **0.613 + 0.5 = 0.8065**, R² = 0.305 → slight optimism corrected.
+-   Calibration slope drops to **0.869** → indicates **some overfitting**.
+-   Intercept shifts to **-0.109** → tendency to **overpredict** risk.
+-   Emax = 0.051 → modest miscalibration at some points.
 
--   Exclude it from training (`data.in`)
--   Use it as a test set (`data.leftout`)
--   Remove rows with missing values in predictors `x1` to `x5` or outcome `y`.
+## 3) Cross Validation
 
-### **Section 2: Model training and prediction (with multiple imputations)**
+Cross-validation involves splitting the dataset into parts, training the model on some parts, and testing it on the others — repeating this multiple times.
+
+**How it works (general):**
+
+-   Divide the data into **K subsets** (e.g., 5 or 10).
+-   In each round, use **K-1 folds** for training and **1 fold** for validation.
+-   Rotate so each fold is used as validation once.
+-   Average the results (AUC, accuracy, etc.) across all folds.
 
 ```{r}
-#| eval: false
-n.impute <- 10
-imputed <- regression.splines.CV <- fit.gam.CV <- fit.ridge.CV <- list()
-leftout.prediction.lr <- leftout.prediction.gam <- leftout.prediction.ridge <- list()
-leftout.performance.lr <- leftout.performance.gam <- leftout.performance.ridge <- list()
-
+#| message: false
+#| warning: false
+#| paged-print: false
+validate(model4, "crossvalidation", B = 10)
 ```
 
--   Initializes lists to store:
+-   Reasonable discrimination (Dxy \~0.61), means good discrimination
+-   Corrected R² (0.3677) suggests the model explains \~37% of variance
+-   Emax Maximum Calibration Error : 0.2611
 
-    -   Imputed datasets
-    -   Model fits (logistic regression with splines, GAM, ridge)
-    -   Predictions and performance on left-out data
+## 4) Split Sample Validation
 
--   Loop over clusters
-
-    ```{r}
-    #| eval: false
-    #| message: false
-    #| warning: false
-    #| include: false
-    #| paged-print: true
-    # for (i in 1:N.clust){
-    #   a <- aregImpute(...)
-    # 
-    #   for (j in 1:n.impute){
-    #     imputed[[j]] <- impute.transcan(...)
-
-    ```
-
-For each cluster `i`, train on the remaining data:
-
--   Perform **multiple imputation** with `aregImpute` (10 datasets).
--   For each imputed dataset `j`, fit 3 models:
-
-We can also see the performance of a model when predicting in each of the left-out clusters, to get a sense about the expected heterogeneity of the performance of the prediction model in a new setting:
+Randomly split the dataset into training and testing subsets. In this practice, we divide into 70% train data and 30% test data.
 
 ```{r}
-# clusters <- unique(data.cont$clust)
-# N.clust <- length(clusters)
-# 
-# auc.clusters=data.frame(auc=rep(NA,N.clust), SE=NA, cluster=NA)
-# 
-# for(i in 1:N.clust){
-#   d.cl<-Int.ext.complete[Int.ext.complete$cluster==clusters[i],]
-#   roc1<-roc(d.cl$observed,d.cl$predicted.ridge)
-#   auc.clusters$auc[i]<-auc(roc1)
-#   auc.clusters$SE[i]<-(ci(roc1)[3]-ci(roc1)[1])/3.92
-#   auc.clusters$cluster[i]<-clusters[i]
-# }
-# round(auc.clusters,digits=2)
+#| message: false
+#| warning: false
+#| paged-print: false
+train_size = 0.7
+len_df = nrow(df)
+train_end = floor(train_size*len_df)
+
+df_train = df[1:train_end, ]
+df_test = df[(train_end + 1):len_df, ]
+
+
+
 ```
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+train_model <- lrm(y ~ x1 + x2 + x3 + x4 + x5, 
+                   data = df_train, x = TRUE, y = TRUE)
+```
+
+Do prediction on new data.
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+pred_probs <- predict(train_model, newdata = df_test, type = "fitted")
+auc(roc(df_test$y, pred_probs))
+```
+
+-   AUC = **0.8326**, close to apparent → may be **unstable** due to small sample size. The model correctly ranks pairs of cases 83.26% of the time.
+
+## 5) K-Fold Cross-Validation
+
+K-fold cross-validation is a type of cross-validation where the dataset is split into **K equal parts**, and the process is repeated **K times**.
+
+**Example (5-fold CV):**
+
+-   Data is split into 5 parts (folds).
+-   Train on 4 folds, validate on 1 fold.
+-   Repeat this process 5 times so each fold is used once for validation.
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+ctrl <- trainControl(method = "cv", number = 5)
+train_cv <- train(as.factor(y) ~ x1 + x2 + x3 + x4 + x5,
+                  data = df,
+                  method = "glm",
+                  family = binomial,
+                  trControl = ctrl)
+
+train_cv
+```
+
+-   **Accuracy = 0.7751**: The model correctly predicted the outcome **77.5%** of the time
+-   **Kappa = 0.3134**: This measures agreement beyond chance
+-   Confirms similar performance to bootstrap.
+
+## 6) Internal vs External Validation
+
+External validation tests the model on a **completely independent dataset** that was **not used at all during model development**.
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+set.seed(123)
+
+logit <- function(x){log(x/(1-x))}
+expit <- function(x){exp(x)/(1+exp(x))}
+
+# Simulate a dataset
+n = 300
+
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+x3 <- rbinom(n, 1, prob = 0.35) 
+x4 <- rbinom(n, 1, prob = 0.5 ) 
+x5 <- sample(1:4, size = n, replace = TRUE, prob =c(0.3,0.3,0.2,0.2))
+
+logit.py <- -2+x1+0.2*x1^2+0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-
+                   0.1*(x5==3)+0.2*(x5==4)+rnorm(n,0,0.1)
+
+
+py <- expit(logit.py)
+y <- rbinom(n,1,py)
+
+df_test_external <- data.frame(y = factor(y), x1, x2, x3 = factor(x3), x4 = factor(x4), x5 = factor(x5))
+```
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+pred_probs_external <- predict(model4, newdata = df_test_external, type = "fitted")
+auc(roc(df_test_external$y, pred_probs_external))
+
+```
+
+**0.7969** means the model correctly ranks pairs of cases **79.69%** of the time.
+
+## Summary of Validation Method
+
+| Metric | Apparent Validation | Bootstrap (Internal) | 5-Fold CV | Split-Sample | External Validation |
+|----|----|----|----|----|----|
+| **AUC / C-index** | 0.831 | 0.613 (corrected Dxy) → AUC ≈ 0.8065 | — | 0.8326 | 0.7969 |
+| **R²** | 0.368 | 0.305 (corrected) | — | — | — |
+| **Calibration Slope** | 1.000 | 0.869 | — | — | — |
+| **Intercept** | 0.000 | -0.109 (bias) | — | — | — |
+| **Emax** | 0.000 | 0.051 | — | — | — |
+| **Accuracy** | — | — | 0.775 | — | — |
+| **Kappa** | — | — | 0.313 | — | — |
+
+The model shows strong performance in apparent validation, but bootstrap and external validation reveal **some overfitting**, especially in calibration. After correcting for optimism, **AUC remains strong (\~0.80)** and **R² is solid (\~0.31)**, making the model acceptable for use, but not perfect.

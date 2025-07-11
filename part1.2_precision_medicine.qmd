@@ -100,7 +100,7 @@ Based on the summary and odds ratio, we can infer that :
 
 Being in the **Top 20% of x1_bin** increases the odds of the event occurring by **\~20.6x** compared to the reference group, and this effect is highly significant. The model shows **good discrimination and calibration**, making it a reliable classifier.
 
-### **3. Un**ivariate Variable : Regression Spline
+### **3. Univariate Variable : Regression Spline**
 
 The third model uses the formula `y ~ rcs(x1, 3)`, which applies a **restricted cubic spline** with 3 knots to the variable **x1**. This allows the model to flexibly capture potential **non-linear relationships** between **x1** and the binary outcome, without imposing a strict linear assumption.
 
@@ -140,7 +140,7 @@ From the model, we can infer that :
 -   Other variables (`x2` to `x5`) **do not significantly contribute** to the prediction of `y` in this mode
 
 | Variable | Effect (Estimate) | Significance | Interpretation |
-|--------------|--------------|--------------|------------------------------|
+|----|----|----|----|
 | (Intercept) | -1.4740 | **p = 0.00339** | Baseline log-odds of `y = 1` when all predictors = 0 |
 | **x1** | **+1.5514** | **p \< 0.001** | **Strong, significant positive association** with `y = 1` |
 | x2 | +0.1240 | p = 0.612 | Not significant |
@@ -170,7 +170,7 @@ print(model5)
 Here is the complete interpretation for each variable :
 
 | Variable | Effect (log-odds) | Odds Ratio | Interpretation |
-|--------------|--------------|--------------|------------------------------|
+|----|----|----|----|
 | **x1** | **+1.846** | **6.33×** | **Strong positive effect**: higher x1 increases chance of `y = 1` |
 | x2 | +0.135 | 1.14× | Not significant |
 | x3 (1 vs 0) | +0.453 | 1.57× | Not significant |
@@ -254,7 +254,7 @@ plot(cal_model5)
 ```
 
 | Model | Median Absolute Error | Calibration Quality |
-|-------------|-------------|---------------------------------------------|
+|----|----|----|
 | 1 | 0.023 | Good calibration. Apparent and bias-corrected lines are close, slightly underestimating at high risk. |
 | 2 | 0.019 | Best calibration among all models. Very close to ideal line with minimal optimism. |
 | 3 | 0.024 | Slight over-prediction at higher probabilities; acceptable calibration overall. |
@@ -294,4 +294,10 @@ All models explained a similar proportion of the variance in the outcome, with p
 -   **Model 4** (standard multivariable logistic regression) performs **consistently well** across all metrics and shows **good calibration** with **lower AIC** than simpler models.
 -   **Model 5** (using restricted cubic splines for x1 and x2) slightly improves AIC but shows **mild overfitting** in the calibration plot, suggesting a trade-off between flexibility and generalizability.
 
-**Model 4** (Multivariate model) is recommended as the **best balance** of discrimination, calibration, parsimony, and gene
+**Model 4** (Multivariate model) is recommended as the **best balance** of discrimination, calibration, and stability.
+
+In order to use the model for the third part, we will save the model in .rds extension
+
+```{r}
+saveRDS(model4, "model/model4.rds")
+```

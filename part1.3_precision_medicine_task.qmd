@@ -1,0 +1,218 @@
+---
+title: "Model Validation"
+subtitle: "Computer Practical"
+author: 
+  - name: "Aulia Kharis"
+    affiliation: "Smart Data Analysis and Statistics"
+  - name: "Thomas Debray"
+    affiliation: "Smart Data Analysis and Statistics"
+format: 
+  html :
+    toc: true 
+    toc-depth: 3    
+    toc-location: right
+    number-sections: false 
+---
+
+**Model validation** is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the **reliability**, **robustness**, and **generalizability** of the model's predictions beyond the training dataset.
+
+There are two main types of validation:
+
+-   **Apparent validation**: Evaluates model performance on the same data used to fit the model. It often **overestimate s**performance.
+-   **Internal validation**: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.
+-   **External validation**: Tests the model on an **independent** dataset to assess **transportability**.
+
+# Key Sections :
+
+This part 1.3 Model Validation will consist of some sections :
+
+-   Learn about Apparent Validation vs Internal Validation
+-   Learn about Internal Validation via Bootstrap
+-   Learn about Validation by using split-sample, cross-validation, and Bootstrap validation
+-   Learn about internal vs external validation
+
+**Load the library**
+
+```{r}
+#| eval: false
+#| include: true
+library(survival)
+library(lattice)
+library(Formula)
+library(ggplot2)
+library(Hmisc)
+library(rms)
+library(gridExtra)
+library(reshape2)
+library(MASS)
+library(mgcv)
+library(glmnet)
+library(pROC)
+library(caret)
+
+```
+
+**Load Datasets and Saved Model**
+
+```{r}
+#| eval: false
+#| include: true
+df <- readRDS(file.path("data" ,"dataset.rds"))
+model4 = readRDS(file.path("model", "model4.rds"))
+```
+
+## 1) Apparent Validation
+
+Apparent validation in `lrm` refers to evaluating model performance on the same data used to fit the model.
+
+```{r}
+#| eval: false
+#| include: true
+print(model4)
+
+cal_apparent <- calibrate(model_val, B = 0)
+plot(cal_apparent)
+```
+
+```{r}
+#| eval: false
+#| include: true
+validate(model4, "boot",0)
+```
+
+-   What metrics (e.g., AUC, R², calibration) does this approach report?
+-   Why might this evaluation be overly optimistic?
+-   How can overfitting affect apparent performance?
+-   Should we trust a model that only shows good performance on training data?
+-   When (if ever) is apparent validation acceptable to report?
+
+## 2) Boostrap Validation
+
+Bootstrap validation involves repeatedly **sampling with replacement** from the original dataset, fitting the model on each sample, and evaluating it on the "left-out" data.
+
+```{r}
+#| eval: false
+#| include: true
+validate(model4, "boot",50)
+```
+
+```{r}
+#| eval: false
+#| include: true
+cal <- calibrate(model4, B = 200)
+plot(cal, xlab = "Predicted Probability", ylab = "Observed Probability")
+```
+
+-   What does bootstrap validation help us correct for?
+-   What is optimism in model performance? How is it estimated?
+-   Why is bootstrap more reliable than split-sample validation in small datasets?
+-   How do you interpret the calibration slope and intercept from bootstrap output?
+
+## 3) Cross Validation
+
+Cross-validation involves splitting the dataset into parts, training the model on some parts, and testing it on the others — repeating this multiple times.
+
+```{r}
+#| eval: false
+#| include: true
+validate(model4, "crossvalidation", B = 15)
+```
+
+-   Why is cross-validation more reliable than apparent validation?
+-   What might happen if you use too few folds or too many folds?
+
+## 4) Split Sample Validation
+
+Randomly split the dataset into training and testing subsets. In this practice, we divide into 70% train data and 30% test data.
+
+```{r}
+#| eval: false
+#| include: true
+train_size = 0.7
+len_df = nrow(df)
+train_end = floor(train_size*len_df)
+
+df_train = df[1:train_end, ]
+df_test = df[(train_end + 1):len_df, ]
+```
+
+```{r}
+#| eval: false
+#| include: true
+train_model <- lrm(y ~ x1 + x2 + x3 + x4 + x5, 
+                   data = df_train, x = TRUE, y = TRUE)
+```
+
+```{r}
+#| eval: false
+#| include: true
+pred_probs <- predict(train_model, newdata = df_test, type = "fitted")
+auc(roc(df_test$y, pred_probs))
+```
+
+-   What are the risks of using split-sample validation with small data?
+-   How does performance on the test set compare to the training set?
+
+## 5) K-Fold Cross-Validation
+
+K-fold cross-validation is a type of cross-validation where the dataset is split into **K equal parts**, and the process is repeated **K times**.
+
+```{r}
+#| eval: false
+#| include: true
+ctrl <- trainControl(method = "cv", number = 5)
+train_cv <- train(as.factor(y) ~ x1 + x2 + x3 + x4 + x5,
+                  data = df,
+                  method = "glm",
+                  family = binomial,
+                  trControl = ctrl)
+
+train_cv
+```
+
+-   What does “K” represent in K-fold cross-validation?
+-   What happens if K is too small? Too large?
+-   How does the performance improves by using K-fold Cross Validation?
+
+## 6) Internal vs External Validation
+
+External validation tests the model on a **completely independent dataset** that was **not used at all during model development**.
+
+```{r}
+#| eval: false
+#| include: true
+set.seed(123)
+
+logit <- function(x){log(x/(1-x))}
+expit <- function(x){exp(x)/(1+exp(x))}
+
+# Simulate a dataset
+n = 300
+
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+x3 <- rbinom(n, 1, prob = 0.35) 
+x4 <- rbinom(n, 1, prob = 0.5 ) 
+x5 <- sample(1:4, size = n, replace = TRUE, prob =c(0.3,0.3,0.2,0.2))
+
+logit.py <- -2+x1+0.2*x1^2+0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-
+                   0.1*(x5==3)+0.2*(x5==4)+rnorm(n,0,0.1)
+
+
+py <- expit(logit.py)
+y <- rbinom(n,1,py)
+
+df_test_external <- data.frame(y = factor(y), x1, x2, x3 = factor(x3), x4 = factor(x4), x5 = factor(x5))
+```
+
+```{r}
+#| eval: false
+#| include: true
+pred_probs_external <- predict(model4, newdata = df_test_external, type = "fitted")
+auc(roc(df_test_external$y, pred_probs_external))
+```
+
+-   Why is external validation considered the “gold standard”?
+-   What happens if performance drops significantly in external validation?
+
+Based on the results from all validation methods, which validation approach is the most appropriate for this dataset, given that it only contains 200 observations? Why?

@@ -38,7 +38,8 @@ By completing this practical, you will be able to:
 Before starting the modelling workflow, first we have to load the library and also the datasets.
 
 ```{r}
-#| include: false
+#| eval: false
+#| include: true
 library(survival)
 library(lattice)
 library(Formula)
@@ -62,6 +63,8 @@ df <- readRDS(file.path("data" ,'dataset.rds'))
 Begin by using the univariate model, the model contain only one variable. Tha variable that we will use here is variable `x1`.
 
 ```{r}
+#| eval: false
+#| include: true
 model1 = lrm(y ~ x1, data = df, x = TRUE, y = TRUE)
 
 print(model1)
@@ -77,6 +80,8 @@ print(model1)
 The second part is we would like to categorize univariate variable so that it will turn out from numeric variable into categorized variable. We will divide this variable into 5 parts based on the quantil of data.
 
 ```{r}
+#| eval: false
+#| include: true
 df$x1_bin <- cut(df$x1, 
                  breaks = quantile(df$x1, probs = seq(0, 1, 0.2), na.rm = TRUE),
                  labels = c("Bottom 20%", "20-40%", "40-60%", "60-80%", "Top 20%"),
@@ -87,6 +92,8 @@ df$x1_bin <- factor(df$x1_bin)
 The next part, we would like to do modelling on this categorized variable
 
 ```{r}
+#| eval: false
+#| include: true
 model2 <-  lrm(y ~ x1_bin, data = df, x = TRUE, y = TRUE)
 print(model2)
 ```
@@ -94,6 +101,8 @@ print(model2)
 we would like to also explore the odds ratio of each category.
 
 ```{r}
+#| eval: false
+#| include: true
 odds_ratios <- exp(coef(model2))
 print(odds_ratios)
 ```
@@ -112,6 +121,8 @@ Instead of fitting a single polynomial across the entire dataset, regression spl
 **Restricted Cubic Splines (RCS),** also known as natural splines, are the most widely used spline method in medical research due to their excellent balance of flexibility and stability.
 
 ```{r}
+#| eval: false
+#| include: true
 dd <- datadist(df)
 options(datadist = "dd")
 
@@ -126,6 +137,8 @@ summary(model3)
 ## 4) Multivariate Variable
 
 ```{r}
+#| eval: false
+#| include: true
 model4 = glm(y~x1+x2+x3+x4+x5, df, family='binomial')
 summary(model4)
 ```
@@ -139,6 +152,8 @@ summary(model4)
 ## 5) Multivariate Variable with Spline Regression
 
 ```{r}
+#| eval: false
+#| include: true
 model5 = lrm(y~rcs(x1,3)+rcs(x2,3)+x3+x4+x5, data = df, y = TRUE, x = TRUE)
 summary(model5)
 ```
@@ -151,11 +166,13 @@ summary(model5)
 
 # 4. Assessing Model Performance
 
-## A. AIC 
+## A. AIC
 
 AIC is a measure of the **relative quality of a model**, balancing **goodness of fit** and **model complexity**. **Lower AIC values indicate a better model**. It penalizes models with more parameters to avoid overfitting.
 
 ```{r}
+#| eval: false
+#| include: true
 AIC(model1)
 AIC(model2)
 AIC(model3)
@@ -170,6 +187,8 @@ How do the AIC compare to the other models? Which model has the better AIC?
 AUC measures the model’s **discriminative ability**, i.e., how well it distinguishes between the two classes (e.g., 1 vs 0).
 
 ```{r}
+#| eval: false
+#| include: true
 model1$stats["C"]
 model2$stats["C"]
 model3$stats["C"]
@@ -184,6 +203,8 @@ How do the AUC compare to the other models? Which model has the better AUC?
 The calibration plot is used to detect if the model is producing **well-calibrated probabilities**, which is important for decision-making
 
 ```{r}
+#| eval: false
+#| include: true
 cal_model1 <- calibrate(model1, method="boot", B=200)
 cal_model2 <- calibrate(model2, method="boot", B=200)
 cal_model3 <- calibrate(model3, method="boot", B=200)
@@ -201,6 +222,8 @@ Each plot includes the **Median Absolute Error**, which reflects the model's *
 R² estimates the proportion of variance in the outcome explained by the model.
 
 ```{r}
+#| eval: false
+#| include: true
 model1$stats["R2"]
 model2$stats["R2"]
 model3$stats["R2"]
