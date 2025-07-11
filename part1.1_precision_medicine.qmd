@@ -13,31 +13,45 @@ format:
     toc-location: right
     number-sections: false 
 ---
+<<<<<<< HEAD
 
 # Preparation
 
 Before we begin, make sure you have **RStudio** open and your working directory set to the root of the project.
 
 We'll start by loading the necessary libraries that will be used throughout this practical:
+=======
+  
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 
 ```{r}
 #| message: false
 #| warning: false
+#| echo: false
 library(ggplot2)
 library(dplyr)
 library(corrplot)
 library(gridExtra)
 library(correlation)
+library(kableExtra)
 ```
 
-Next, we’ll load the dataset. This example dataset contains clinical data for 200 patients, including five predictors and a binary outcome variable.
+# Introduction
 
-```{r}
-df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
-head(df)
-```
+In this practical, we will explore a dataset derived from an observational study focusing on short-term outcomes in a clinical context (e.g., 30-day mortality). The aim is to guide you through the key steps in data preparation, exploration, and predictive model development using R.
+
+We begin by loading and inspecting the dataset, understanding its structure, and identifying the types of variables available for analysis.
 
 ## About the Dataset
+
+To begin, we load the dataset and display the first few rows to get an overview of its structure and contents:
+
+```{r}
+#| label: tbl-headdata
+#| echo: false
+df <- readRDS(file.path("data", "dataset.rds"))
+kable(head(df))
+```
 
 The dataset includes:
 
@@ -48,9 +62,7 @@ The dataset includes:
 -   **Outcome:**
     -   `y`: a binary variable indicating the presence (1) or absence (0) of a health outcome
 
-The outcome in this dataset is defined as a **binary variable** indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). Although the exact follow-up time or context isn’t fully described, we assume that the outcome reflects mortality status within a predefined window.
-
-To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:
+The outcome in this dataset is defined as a **binary variable** indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:
 
 1.  **Equal follow-up time**: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.
 2.  **Complete outcome data**: The outcome must be known for all patients -- that is, there should be no loss to follow-up.
@@ -60,6 +72,10 @@ If these assumptions don’t hold, a **time-to-event (survival) analysis** would
 
 This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 # Descriptive Statistics and Visualizations
 
 Before building any predictive models, it is important to first explore and understand the dataset. This section provides a step-by-step guide to generating descriptive statistics and visualizations that will help you examine the structure, distribution, and relationships among the variables.
@@ -76,12 +92,40 @@ var_colors <- c(
 )
 ```
 
+<<<<<<< HEAD
 We begin by examining the structure and summary statistics of the dataset using the `summary()` function:
+=======
+
+We begin by examining the structure and summary statistics of the dataset. This will help us understand the types of variables present and their basic characteristics.
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 
 ```{r}
-summary(df)
+#| echo: false
+library(tableone)
+
+# Define variables
+vars <- c("x1", "x2", "x3", "x4", "x5")
+factorVars <- c("x3", "x4", "x5")
+
+# Create the summary table
+tab1 <- CreateTableOne(vars = vars, data = df, factorVars = factorVars)
+
+# Convert to data frame for kable
+tab_df <- print(tab1, printToggle = FALSE, noSpaces = TRUE) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("Variable")
+
+# Identify rows to indent: factor levels (not variable names)
+rows_to_indent <- grep("^\\s", tab_df$Variable)
+
+# Display with indentation
+tab_df %>%
+  kable("html", escape = FALSE, caption = "Summary of Variables") %>%
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE) %>%
+  add_indent(rows_to_indent)
 ```
 
+<<<<<<< HEAD
 Here are the insight breakdown of each variables :
 
 +-------------------------------------------------+-------------------------------------------------------------------+
@@ -135,6 +179,12 @@ ggplot(df, aes(sample = x2)) +
   labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles")
 ```
 
+=======
+## Distribution of Continuous Variables
+
+To explore the distribution of the numeric predictors, we first visualize their **shapes, spread, and central tendency** using histograms. To assess whether the continuous variables are approximately normally distributed, we use **Q-Q plots (quantile-quantile plots)**. In these plots, deviations from the diagonal line indicate departures from normality.
+
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 ```{r}
 #| echo: false
 
@@ -146,7 +196,7 @@ p1 <- ggplot(df, aes(x = x1)) +
 
 qq1 <- ggplot(df, aes(sample = x1)) +
   stat_qq(color = var_colors["x1"]) +
-  stat_qq_line(color =  "black") +
+  stat_qq_line(color =  "black", linetype = "dashed") +
   labs(title = "Q-Q Plot of x1", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   theme_minimal()
 
@@ -158,7 +208,7 @@ p2 <- ggplot(df, aes(x = x2)) +
 
 qq2 <- ggplot(df, aes(sample = x2)) +
   stat_qq(color = var_colors["x2"]) +
-  stat_qq_line(color = "black") +
+  stat_qq_line(color = "black", linetype = "dashed") +
   labs(title = "Q-Q Plot of x2", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   theme_minimal()
 
@@ -171,13 +221,19 @@ grid.arrange(row1, row2, ncol = 1,
              top = "Distribution and Normality Assessment of Continuous Variables")
 ```
 
-The exploratory analysis of the continuous predictors `x1` and `x2` indicates that both variables are approximately normally distributed. This is supported by:
+The exploratory analysis suggests that both variables are approximately normally distributed, supported by the following observations:
 
+<<<<<<< HEAD
 -   Symmetric, bell-shaped histograms
 -   Q-Q plots showing close alignment with the theoretical normal distribution
 -   No apparent outliers or strong skew
+=======
+-	The histograms show approximately symmetric, bell-shaped distributions centered around zero.
+- The Q-Q plots confirm close alignment with the theoretical normal distribution.
+- The means and medians are similar for both `x1` and `x2`,  further supporting the absence of skew or extreme values.
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 
-These characteristics suggest that `x1` and `x2` are reasonably well-behaved and **do not require transformation** at this stage. While normality of predictors is not a strict requirement for regression models, their approximate symmetry and lack of extreme outliers support stable estimation and interpretation.
+These characteristics indicate that both `x1` and `x2` are reasonably well-behaved and do not require transformation at this stage.  While normality of predictors is not a strict requirement for regression models, having approximately symmetric and outlier-free variables supports model stability and interpretability.
 
 We will now proceed to explore the remaining variables and begin constructing a predictive model.
 
@@ -186,6 +242,7 @@ We will now proceed to explore the remaining variables and begin constructing a 
 Explore the frequency distribution of categorical variables (`x3`,`x4`, and `x5`) using bar plots.
 
 ```{r}
+#| echo: false
 p5 <- ggplot(df, aes(x = x3)) + 
   geom_bar(fill = var_colors["x3"], alpha = 0.7) +
   labs(x = "x3", y = "Count") + theme_minimal()
@@ -201,14 +258,26 @@ p7 <- ggplot(df, aes(x = x5)) +
 grid.arrange(p5, p6, p7, ncol = 3, top = "Distribution of Categorical Variables")
 ```
 
-Based on the plot above, here are some key insights :
+Summary of Categorical Predictors
 
+<<<<<<< HEAD
 | Variable | Balanced            | Sparse Levels  | Modelling Challanges   |
 |----------|---------------------|----------------|------------------------|
 | `x3`     | Slightly imbalanced | No             | Minor                  |
 | `x4`     | Yes                 | No             | None                   |
 | `x5`     | No                  | Yes (`1`, `4`) | Minor                  |
 | `y`      | No (imbalanced)     | N/A            | Needs special handling |
+=======
+- **`x3` (Binary)**  
+  Most participants have a value of `0`, with fewer having `1`. Both categories are well represented, so no specific adjustments are needed for modeling.
+
+- **`x4` (Binary)**  
+  Values `0` and `1` occur with approximately equal frequency, offering good representation across categories for modeling and interpretation.
+
+- **`x5` (Ordinal or Categorical with 4 Levels)**  
+  Levels `2` and `3` are most frequent, while `1` and `4` are less common. All levels are represented in the dataset, but if `x5` is modeled using indicator (dummy) variables, estimates for the less common levels may be less precise due to smaller sample sizes.
+  
+>>>>>>> 0c68d9f3fcf3de089cf3ddbb78c63049b6f987f0
 
 ## Correlation
 
