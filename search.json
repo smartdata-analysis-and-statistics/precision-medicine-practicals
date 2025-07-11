@@ -1,0 +1,366 @@
+[
+  {
+    "objectID": "part1.2_precision_medicine_task.html",
+    "href": "part1.2_precision_medicine_task.html",
+    "title": "Data Modelling",
+    "section": "",
+    "text": "In this section, we proceed to the second major phase following data preparation: data modelling. This phase is critical, as it involves developing statistical models to explore and quantify the relationships between predictors and the outcome of interest. We will begin by constructing models using both univariate and multivariate approaches, allowing us to understand the isolated effects of individual variables as well as their combined influence when considered together.\nSpecial attention will be given to the application of splines model to detect potential non-linear relationships in both univariate and multivariate settings. For univariate modelling, we will also address how to appropriately handle categorical predictors, including their encoding and interpretation within the logistic regression framework.\nBy the end of this section, you will gain a deeper understanding of the modelling process, including how to build, interpret, and evaluate models that account for both simple and complex variable structures"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#load-the-libarary-and-datasets",
+    "href": "part1.2_precision_medicine_task.html#load-the-libarary-and-datasets",
+    "title": "Data Modelling",
+    "section": "1) Load the Libarary and Datasets",
+    "text": "1) Load the Libarary and Datasets\nBefore starting the modelling workflow, first we have to load the library and also the datasets.\n\nlibrary(survival)\nlibrary(lattice)\nlibrary(Formula)\nlibrary(ggplot2)\nlibrary(Hmisc)\nlibrary(rms)\nlibrary(gridExtra)\nlibrary(reshape2)\nlibrary(MASS)\nlibrary(mgcv)\nlibrary(glmnet)\nlibrary(pROC)\nlibrary(broom)\n\n\ndf &lt;- readRDS(file.path(\"data\" ,'dataset.rds'))"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#univariate-variable",
+    "href": "part1.2_precision_medicine_task.html#univariate-variable",
+    "title": "Data Modelling",
+    "section": "1) Univariate Variable",
+    "text": "1) Univariate Variable\nBegin by using the univariate model, the model contain only one variable. Tha variable that we will use here is variable x1.\n\nmodel1 = lrm(y ~ x1, data = df, x = TRUE, y = TRUE)\n\nprint(model1)\n\nQuestions for Discussion:\n\nHow do you interpret the coefficient estimate for x1 in terms of log-odds?\nIs the association between x1 and the outcome statistically significant? What evidence supports your answer?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#categorized-univariate-variable",
+    "href": "part1.2_precision_medicine_task.html#categorized-univariate-variable",
+    "title": "Data Modelling",
+    "section": "2. Categorized Univariate Variable",
+    "text": "2. Categorized Univariate Variable\nThe second part is we would like to categorize univariate variable so that it will turn out from numeric variable into categorized variable. We will divide this variable into 5 parts based on the quantil of data.\n\ndf$x1_bin &lt;- cut(df$x1, \n                 breaks = quantile(df$x1, probs = seq(0, 1, 0.2), na.rm = TRUE),\n                 labels = c(\"Bottom 20%\", \"20-40%\", \"40-60%\", \"60-80%\", \"Top 20%\"),\n                 include.lowest = TRUE)\ndf$x1_bin &lt;- factor(df$x1_bin) \n\nThe next part, we would like to do modelling on this categorized variable\n\nmodel2 &lt;-  lrm(y ~ x1_bin, data = df, x = TRUE, y = TRUE)\nprint(model2)\n\nwe would like to also explore the odds ratio of each category.\n\nodds_ratios &lt;- exp(coef(model2))\nprint(odds_ratios)\n\nQuestions for disscussion :\n\nHow do you interpret the coefficients in this model?\nHow does categorizing variables change the model’s predictions or interpretation?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#regression-spline",
+    "href": "part1.2_precision_medicine_task.html#regression-spline",
+    "title": "Data Modelling",
+    "section": "3. Regression Spline",
+    "text": "3. Regression Spline\nA regression spline is a flexible statistical method that fits piecewise polynomials to data, making it particularly valuable for modeling complex, non-linear relationships in medical data where simple linear models fall short.\nInstead of fitting a single polynomial across the entire dataset, regression splines divide the data into segments at specific points called “knots” and fit separate polynomial functions to each segment. \nRestricted Cubic Splines (RCS), also known as natural splines, are the most widely used spline method in medical research due to their excellent balance of flexibility and stability.\n\ndd &lt;- datadist(df)\noptions(datadist = \"dd\")\n\nmodel3 &lt;- lrm(y ~ rcs(x1, 3), data = df, y = TRUE, x = TRUE)\nsummary(model3)\n\n\nHow do you interpret the model output, given that x1 is now modeled non-linearly?\nHow do you interpret the odds ratio or effect of x1 in this model?\nDoes the model appear to be overfitting or underfitting?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#multivariate-variable",
+    "href": "part1.2_precision_medicine_task.html#multivariate-variable",
+    "title": "Data Modelling",
+    "section": "4) Multivariate Variable",
+    "text": "4) Multivariate Variable\n\nmodel4 = glm(y~x1+x2+x3+x4+x5, df, family='binomial')\nsummary(model4)\n\nQuestions for discussion :\n\nHow do you interpret each coefficient or odds ratio in this multivariable model?\nIs this multivariable model better than the univariate model? How do you know?\nAre any predictors statistically insignificant? What might that imply?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#multivariate-variable-with-spline-regression",
+    "href": "part1.2_precision_medicine_task.html#multivariate-variable-with-spline-regression",
+    "title": "Data Modelling",
+    "section": "5) Multivariate Variable with Spline Regression",
+    "text": "5) Multivariate Variable with Spline Regression\n\nmodel5 = lrm(y~rcs(x1,3)+rcs(x2,3)+x3+x4+x5, data = df, y = TRUE, x = TRUE)\nsummary(model5)\n\nQuestions for discussion :\n\nHow do you interpret this model given that both x1 and x2 are modeled with restricted cubic splines\nHow do you interpret the odds ratios or non-linear effects?\nIs this model more flexible than Model 4?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#a.-aic",
+    "href": "part1.2_precision_medicine_task.html#a.-aic",
+    "title": "Data Modelling",
+    "section": "A. AIC",
+    "text": "A. AIC\nAIC is a measure of the relative quality of a model, balancing goodness of fit and model complexity. Lower AIC values indicate a better model. It penalizes models with more parameters to avoid overfitting.\n\nAIC(model1)\nAIC(model2)\nAIC(model3)\nAIC(model4)\nAIC(model5)\n\nHow do the AIC compare to the other models? Which model has the better AIC?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#b.-auc-area-under-the-roc-curve",
+    "href": "part1.2_precision_medicine_task.html#b.-auc-area-under-the-roc-curve",
+    "title": "Data Modelling",
+    "section": "B. AUC (Area Under the ROC Curve)",
+    "text": "B. AUC (Area Under the ROC Curve)\nAUC measures the model’s discriminative ability, i.e., how well it distinguishes between the two classes (e.g., 1 vs 0).\n\nmodel1$stats[\"C\"]\nmodel2$stats[\"C\"]\nmodel3$stats[\"C\"]\nmodel4$stats[\"C\"]\nmodel5$stats[\"C\"]\n\nHow do the AUC compare to the other models? Which model has the better AUC?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#c.-calibration-plot",
+    "href": "part1.2_precision_medicine_task.html#c.-calibration-plot",
+    "title": "Data Modelling",
+    "section": "C. Calibration Plot",
+    "text": "C. Calibration Plot\nThe calibration plot is used to detect if the model is producing well-calibrated probabilities, which is important for decision-making\n\ncal_model1 &lt;- calibrate(model1, method=\"boot\", B=200)\ncal_model2 &lt;- calibrate(model2, method=\"boot\", B=200)\ncal_model3 &lt;- calibrate(model3, method=\"boot\", B=200)\ncal_model4 &lt;- calibrate(model4, method=\"boot\", B=200)\ncal_model5 &lt;- calibrate(model5, method=\"boot\", B=200)\npar(mfrow = c(2, 3)) \n\nplot(cal_model1)\n\nEach plot includes the Median Absolute Error, which reflects the model’s calibration quality. How does the calibration performance compare across the models based on this value?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#c.-r-square",
+    "href": "part1.2_precision_medicine_task.html#c.-r-square",
+    "title": "Data Modelling",
+    "section": "C. R-Square",
+    "text": "C. R-Square\nR² estimates the proportion of variance in the outcome explained by the model.\n\nmodel1$stats[\"R2\"]\nmodel2$stats[\"R2\"]\nmodel3$stats[\"R2\"]\nmodel4$stats[\"R2\"]\nmodel5$stats[\"R2\"]\n\nHow do the R² values compare across the models, and what do they tell you about each model’s ability to explain the outcome?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine_task.html#summary-of-model-comparison",
+    "href": "part1.2_precision_medicine_task.html#summary-of-model-comparison",
+    "title": "Data Modelling",
+    "section": "Summary of Model Comparison",
+    "text": "Summary of Model Comparison\nConsidering the AIC, AUC, calibration plots, and R² values, which model appears to offer the best overall performance?"
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html",
+    "href": "part1.1_precision_medicine.html",
+    "title": "Data Preparation and Exploration",
+    "section": "",
+    "text": "In this practical, we will explore a dataset derived from an observational study focusing on short-term outcomes in a clinical context (e.g., 30-day mortality). The aim is to guide you through the key steps in data preparation, exploration, and predictive model development using R.\nWe begin by loading and inspecting the dataset, understanding its structure, and identifying the types of variables available for analysis.\n\n\nTo begin, we load the dataset and display the first few rows to get an overview of its structure and contents:\n\n\n\n\nTable 1\n\n\n\n\n\n\nx1\nx2\nx3\nx4\nx5\ny\n\n\n\n\n-0.2920649\n-0.0389402\n0\n0\n3\n0\n\n\n0.2585203\n-1.1038319\n0\n0\n3\n0\n\n\n-0.3255838\n0.0211378\n1\n1\n3\n0\n\n\n0.7591404\n1.2045629\n1\n0\n1\n0\n\n\n-0.7619825\n0.9918415\n1\n1\n3\n0\n\n\n0.3543335\n0.7423291\n0\n0\n3\n0\n\n\n\n\n\n\n\n\nThe dataset includes:\n\nFive predictors:\n\nx1 and x2: continuous variables\n\nx3 and x4: binary variables\n\nx5: categorical variable (with more than two levels)\n\nOutcome:\n\ny: a binary variable indicating the presence (1) or absence (0) of a health outcome\n\n\nThe outcome in this dataset is defined as a binary variable indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:\n\nEqual follow-up time: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.\nComplete outcome data: The outcome must be known for all patients – that is, there should be no loss to follow-up.\nWell-defined time window: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.\n\nIf these assumptions don’t hold, a time-to-event (survival) analysis would be more appropriate, as it can account for varying follow-up times and censoring.\nThis dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development."
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html#about-the-dataset",
+    "href": "part1.1_precision_medicine.html#about-the-dataset",
+    "title": "Data Preparation and Exploration",
+    "section": "",
+    "text": "To begin, we load the dataset and display the first few rows to get an overview of its structure and contents:\n\n\n\n\nTable 1\n\n\n\n\n\n\nx1\nx2\nx3\nx4\nx5\ny\n\n\n\n\n-0.2920649\n-0.0389402\n0\n0\n3\n0\n\n\n0.2585203\n-1.1038319\n0\n0\n3\n0\n\n\n-0.3255838\n0.0211378\n1\n1\n3\n0\n\n\n0.7591404\n1.2045629\n1\n0\n1\n0\n\n\n-0.7619825\n0.9918415\n1\n1\n3\n0\n\n\n0.3543335\n0.7423291\n0\n0\n3\n0\n\n\n\n\n\n\n\n\nThe dataset includes:\n\nFive predictors:\n\nx1 and x2: continuous variables\n\nx3 and x4: binary variables\n\nx5: categorical variable (with more than two levels)\n\nOutcome:\n\ny: a binary variable indicating the presence (1) or absence (0) of a health outcome\n\n\nThe outcome in this dataset is defined as a binary variable indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:\n\nEqual follow-up time: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.\nComplete outcome data: The outcome must be known for all patients – that is, there should be no loss to follow-up.\nWell-defined time window: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.\n\nIf these assumptions don’t hold, a time-to-event (survival) analysis would be more appropriate, as it can account for varying follow-up times and censoring.\nThis dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development."
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html#distribution-of-continuous-variables",
+    "href": "part1.1_precision_medicine.html#distribution-of-continuous-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "Distribution of Continuous Variables",
+    "text": "Distribution of Continuous Variables\nTo explore the distribution of the numeric predictors, we first visualize their shapes, spread, and central tendency using histograms. To assess whether the continuous variables are approximately normally distributed, we use Q-Q plots (quantile-quantile plots). In these plots, deviations from the diagonal line indicate departures from normality.\n\n\n\n\n\n\n\n\n\nThe exploratory analysis suggests that both variables are approximately normally distributed, supported by the following observations:\n\nThe histograms show approximately symmetric, bell-shaped distributions centered around zero.\nThe Q-Q plots confirm close alignment with the theoretical normal distribution.\nThe means and medians are similar for both x1 and x2, further supporting the absence of skew or extreme values.\n\nThese characteristics indicate that both x1 and x2 are reasonably well-behaved and do not require transformation at this stage. While normality of predictors is not a strict requirement for regression models, having approximately symmetric and outlier-free variables supports model stability and interpretability.\nWe will now proceed to explore the remaining variables and begin constructing a predictive model."
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html#distribution-of-categorical-variables",
+    "href": "part1.1_precision_medicine.html#distribution-of-categorical-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "Distribution of Categorical Variables",
+    "text": "Distribution of Categorical Variables\nExplore the frequency distribution of categorical variables (x3,x4, and x5) using bar plots.\n\n\n\n\n\n\n\n\n\nSummary of Categorical Predictors\n\nx3 (Binary)\nMost participants have a value of 0, with fewer having 1. Both categories are well represented, so no specific adjustments are needed for modeling.\nx4 (Binary)\nValues 0 and 1 occur with approximately equal frequency, offering good representation across categories for modeling and interpretation.\nx5 (Ordinal or Categorical with 4 Levels)\nLevels 2 and 3 are most frequent, while 1 and 4 are less common. All levels are represented in the dataset, but if x5 is modeled using indicator (dummy) variables, estimates for the less common levels may be less precise due to smaller sample sizes."
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html#correlation",
+    "href": "part1.1_precision_medicine.html#correlation",
+    "title": "Data Preparation and Exploration",
+    "section": "Correlation",
+    "text": "Correlation\nAnalyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér’s V for categorical) and visualize them.\n\ncor_result = rcompanion::correlation(df)\ncor_result\n\n   Var1 Var2              Type   N Measure Statistic Lower.CL Upper.CL\n1    x1   x2 Numeric x Numeric 200 Pearson     0.486    0.372    0.585\n2    x1   x3  Numeric x Binary 200 Pearson     0.168    0.030    0.300\n3    x1   x4  Numeric x Binary 200 Pearson    -0.002   -0.141    0.137\n4    x1   x5 Numeric x Nominal 200     Eta     0.046    0.000    0.122\n5    x1    y  Numeric x Binary 200 Pearson     0.482    0.368    0.582\n6    x2   x3  Numeric x Binary 200 Pearson     0.419    0.298    0.527\n7    x2   x4  Numeric x Binary 200 Pearson     0.095   -0.044    0.231\n8    x2   x5 Numeric x Nominal 200     Eta     0.081    0.000    0.170\n9    x2    y  Numeric x Binary 200 Pearson     0.274    0.140    0.397\n10   x3   x4   Binary x Binary 200     Phi     0.228       NA       NA\n11   x3   x5  Binary x Nominal 200  Cramer     0.168       NA       NA\n12   x3    y   Binary x Binary 200     Phi     0.121       NA       NA\n13   x4   x5  Binary x Nominal 200  Cramer     0.333       NA       NA\n14   x4    y   Binary x Binary 200     Phi    -0.062       NA       NA\n15   x5    y  Nominal x Binary 200  Cramer     0.096       NA       NA\n         Test p.value Signif\n1    cor.test  0.0000   ****\n2    cor.test  0.0171      *\n3    cor.test  0.9789   n.s.\n4       Anova  0.9353   n.s.\n5    cor.test  0.0000   ****\n6    cor.test  0.0000   ****\n7    cor.test  0.1798   n.s.\n8       Anova  0.7291   n.s.\n9    cor.test  0.0001   ****\n10 chisq.test  0.0013     **\n11 chisq.test  0.1297   n.s.\n12 chisq.test  0.0862   n.s.\n13 chisq.test  0.0001   ****\n14 chisq.test  0.3770   n.s.\n15 chisq.test  0.6037   n.s.\n\n\nThe correlation Plot :\n\nplot(cor_result)\n\n\n\n\n\n\n\n\nBased on the summary and the plot above, there are some insights that will be useful for modelling :\n🔸 Significance Legend:\n\n**** = p &lt; 0.0001 → highly significant\n** = p &lt; 0.01 → very significant\n* = p &lt; 0.05 → significant\nn.s. = not significant\n\nThere are some variables that has significant correlations between each other :\n\n\n\n\n\n\n\n\n\n\nPair\nCorrelation\nStrength\nSignificance\nNotes\n\n\n\n\nx1 ~ x2\n0.486\nModerate\n****\nModerate positive linear relationship\n\n\nx1 ~ y\n0.482\nModerate\n****\nx1 is moderately predictive of the outcome\n\n\nx2 ~ y\n0.274\nWeak-to-moderate\n****\nSome predictive power, less than x1\n\n\nx1 ~ x3\n0.168\nWeak\n*\nWeak positive correlation\n\n\nx2 ~ x3\n0.419\nModerate\n****\nx2 and x3 have moderate relationship\n\n\nx4 ~ x5\n0.333\nModerate\n****\nStrongest categorical relationship in data\n\n\nx3 ~ x4\n0.228\nWeak-to-moderate\n**\nSome association between x3 and x4"
+  },
+  {
+    "objectID": "part1.1_precision_medicine.html#univariate-relationship-between-predictors-and-response-variables",
+    "href": "part1.1_precision_medicine.html#univariate-relationship-between-predictors-and-response-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "Univariate relationship between Predictors and Response Variables",
+    "text": "Univariate relationship between Predictors and Response Variables\nExplore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.\n\nNumerical Predictors vs Response Variables\nUse boxplots to assess the relationship between continuous predictors and the response variable.\n\np10 &lt;- ggplot(df, aes(x = y, y = x1, fill = y)) + \n  geom_boxplot(alpha = 0.7) +\n  labs(title = \"X1 by Outcome Y\", x = \"Y\", y = \"X1\") + theme_minimal() +\n  theme(legend.position = \"none\")\n\np11 &lt;- ggplot(df, aes(x = y, y = x2, fill = y)) + \n  geom_boxplot(alpha = 0.7) +\n  labs(title = \"X2 by Outcome Y\", x = \"Y\", y = \"X2\") + theme_minimal()\n\ngrid.arrange(p10, p11, ncol = 2, top = \"Continuous Predictors by Outcome\")\n\n\n\n\n\n\n\n\nHere are some key takeaways from the plot :\nFor X1 and Y :\n\nMedian of x1is higher for y = 1 compared to y = 0.\nIndividuals with higher x1 values are more likely to have y = 1 (Indicate that there is moderate relationship between x1 and y, confirmed by the correlation value (0.482) with very high significance).\n\nFor X2 and Y :\n\nMedian of x2for y = 1 is also higher than for y = 0\nThe trend is upward, indicating that x2 may be somewhat predictive of y, confirmed by the positive correlation value (0.274) with high significance\n\n\n\nCategorical Predictors vs Response Variables\nUse grouped bar plots to explore how categorical predictors influence the response.\n\np12 &lt;- ggplot(df, aes_string(x = \"x3\", fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X3 by Outcome Y\")) + theme_minimal()\n\nWarning: `aes_string()` was deprecated in ggplot2 3.0.0.\nℹ Please use tidy evaluation idioms with `aes()`.\nℹ See also `vignette(\"ggplot2-in-packages\")` for more information.\n\np13 &lt;- ggplot(df, aes_string(x = \"x4\", fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X4 by Outcome Y\")) + theme_minimal()\n\np14 &lt;- ggplot(df, aes_string(x = \"x5\", fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X5 by Outcome Y\")) + theme_minimal()\n\n\ngrid.arrange(p12, p13, p14, ncol = 3, top = \"Categorical Predictors by Outcome\")\n\n\n\n\n\n\n\n\nFrom the bar plots titled “Categorical Predictors by Outcome”, we can analyze how the response variable y (0 or 1) is distributed across levels of the categorical predictors: x3, x4, and x5.\n\nin every variables, majority of cases have y = 0 (orange) with smaller proportion of y = 1 (blue)\nAll the categorical variables have low correlations with the y. Thus, there is no categorical variables that has significant relationship with Y, indicated by high p-values and low correlation. That’s why no clear or strong association captured by the graph."
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html",
+    "href": "part1.3_precision_medicine_task.html",
+    "title": "Model Validation",
+    "section": "",
+    "text": "Model validation is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the reliability, robustness, and generalizability of the model’s predictions beyond the training dataset.\nThere are two main types of validation:"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#apparent-validation",
+    "href": "part1.3_precision_medicine_task.html#apparent-validation",
+    "title": "Model Validation",
+    "section": "1) Apparent Validation",
+    "text": "1) Apparent Validation\nApparent validation in lrm refers to evaluating model performance on the same data used to fit the model.\n\nprint(model4)\n\ncal_apparent &lt;- calibrate(model_val, B = 0)\nplot(cal_apparent)\n\n\nvalidate(model4, \"boot\",0)\n\n\nWhat metrics (e.g., AUC, R², calibration) does this approach report?\nWhy might this evaluation be overly optimistic?\nHow can overfitting affect apparent performance?\nShould we trust a model that only shows good performance on training data?\nWhen (if ever) is apparent validation acceptable to report?"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#boostrap-validation",
+    "href": "part1.3_precision_medicine_task.html#boostrap-validation",
+    "title": "Model Validation",
+    "section": "2) Boostrap Validation",
+    "text": "2) Boostrap Validation\nBootstrap validation involves repeatedly sampling with replacement from the original dataset, fitting the model on each sample, and evaluating it on the “left-out” data.\n\nvalidate(model4, \"boot\",50)\n\n\ncal &lt;- calibrate(model4, B = 200)\nplot(cal, xlab = \"Predicted Probability\", ylab = \"Observed Probability\")\n\n\nWhat does bootstrap validation help us correct for?\nWhat is optimism in model performance? How is it estimated?\nWhy is bootstrap more reliable than split-sample validation in small datasets?\nHow do you interpret the calibration slope and intercept from bootstrap output?"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#cross-validation",
+    "href": "part1.3_precision_medicine_task.html#cross-validation",
+    "title": "Model Validation",
+    "section": "3) Cross Validation",
+    "text": "3) Cross Validation\nCross-validation involves splitting the dataset into parts, training the model on some parts, and testing it on the others — repeating this multiple times.\n\nvalidate(model4, \"crossvalidation\", B = 15)\n\n\nWhy is cross-validation more reliable than apparent validation?\nWhat might happen if you use too few folds or too many folds?"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#split-sample-validation",
+    "href": "part1.3_precision_medicine_task.html#split-sample-validation",
+    "title": "Model Validation",
+    "section": "4) Split Sample Validation",
+    "text": "4) Split Sample Validation\nRandomly split the dataset into training and testing subsets. In this practice, we divide into 70% train data and 30% test data.\n\ntrain_size = 0.7\nlen_df = nrow(df)\ntrain_end = floor(train_size*len_df)\n\ndf_train = df[1:train_end, ]\ndf_test = df[(train_end + 1):len_df, ]\n\n\ntrain_model &lt;- lrm(y ~ x1 + x2 + x3 + x4 + x5, \n                   data = df_train, x = TRUE, y = TRUE)\n\n\npred_probs &lt;- predict(train_model, newdata = df_test, type = \"fitted\")\nauc(roc(df_test$y, pred_probs))\n\n\nWhat are the risks of using split-sample validation with small data?\nHow does performance on the test set compare to the training set?"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#k-fold-cross-validation",
+    "href": "part1.3_precision_medicine_task.html#k-fold-cross-validation",
+    "title": "Model Validation",
+    "section": "5) K-Fold Cross-Validation",
+    "text": "5) K-Fold Cross-Validation\nK-fold cross-validation is a type of cross-validation where the dataset is split into K equal parts, and the process is repeated K times.\n\nctrl &lt;- trainControl(method = \"cv\", number = 5)\ntrain_cv &lt;- train(as.factor(y) ~ x1 + x2 + x3 + x4 + x5,\n                  data = df,\n                  method = \"glm\",\n                  family = binomial,\n                  trControl = ctrl)\n\ntrain_cv\n\n\nWhat does “K” represent in K-fold cross-validation?\nWhat happens if K is too small? Too large?\nHow does the performance improves by using K-fold Cross Validation?"
+  },
+  {
+    "objectID": "part1.3_precision_medicine_task.html#internal-vs-external-validation",
+    "href": "part1.3_precision_medicine_task.html#internal-vs-external-validation",
+    "title": "Model Validation",
+    "section": "6) Internal vs External Validation",
+    "text": "6) Internal vs External Validation\nExternal validation tests the model on a completely independent dataset that was not used at all during model development.\n\nset.seed(123)\n\nlogit &lt;- function(x){log(x/(1-x))}\nexpit &lt;- function(x){exp(x)/(1+exp(x))}\n\n# Simulate a dataset\nn = 300\n\nx1 &lt;- rnorm(n)\nx2 &lt;- rnorm(n)\nx3 &lt;- rbinom(n, 1, prob = 0.35) \nx4 &lt;- rbinom(n, 1, prob = 0.5 ) \nx5 &lt;- sample(1:4, size = n, replace = TRUE, prob =c(0.3,0.3,0.2,0.2))\n\nlogit.py &lt;- -2+x1+0.2*x1^2+0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-\n                   0.1*(x5==3)+0.2*(x5==4)+rnorm(n,0,0.1)\n\n\npy &lt;- expit(logit.py)\ny &lt;- rbinom(n,1,py)\n\ndf_test_external &lt;- data.frame(y = factor(y), x1, x2, x3 = factor(x3), x4 = factor(x4), x5 = factor(x5))\n\n\npred_probs_external &lt;- predict(model4, newdata = df_test_external, type = \"fitted\")\nauc(roc(df_test_external$y, pred_probs_external))\n\n\nWhy is external validation considered the “gold standard”?\nWhat happens if performance drops significantly in external validation?\n\nBased on the results from all validation methods, which validation approach is the most appropriate for this dataset, given that it only contains 200 observations? Why?"
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html",
+    "href": "part1.2_precision_medicine.html",
+    "title": "Model Development",
+    "section": "",
+    "text": "After preparing the data, the next step will be modelling. Modeling helps us understand how variables relate to each other. Models allow us to predict outcomes for new observations. Any prediction function demonstrates this - it takes new patient data and estimates their probability of the outcome occurring. This is crucial for clinical decision-making."
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#summary",
+    "href": "part1.2_precision_medicine.html#summary",
+    "title": "Model Development",
+    "section": "",
+    "text": "After preparing the data, the next step will be modelling. Modeling helps us understand how variables relate to each other. Models allow us to predict outcomes for new observations. Any prediction function demonstrates this - it takes new patient data and estimates their probability of the outcome occurring. This is crucial for clinical decision-making."
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#assessing-model-performance",
+    "href": "part1.2_precision_medicine.html#assessing-model-performance",
+    "title": "Model Development",
+    "section": "Assessing Model Performance",
+    "text": "Assessing Model Performance"
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#a.-aic",
+    "href": "part1.2_precision_medicine.html#a.-aic",
+    "title": "Model Development",
+    "section": "A. AIC",
+    "text": "A. AIC\nAIC is a measure of the relative quality of a model, balancing goodness of fit and model complexity. Lower AIC values indicate a better model. It penalizes models with more parameters to avoid overfitting.\n\ncat(paste0(\"AIC Model 1 : \",round(AIC(model1),2),\"\\n\",\n      \"AIC Model 2 : \",round(AIC(model2),2),\"\\n\",\n      \"AIC Model 3 : \",round(AIC(model3),2),\"\\n\",\n      \"AIC Model 4 : \",round(AIC(model4),2),\"\\n\",\n      \"AIC Model 5 : \",round(AIC(model5),2)))\n\nAIC Model 1 : 179.3\nAIC Model 2 : 184.81\nAIC Model 3 : 180.31\nAIC Model 4 : 187.43\nAIC Model 5 : 190.18\n\n\nBased on the result, Model1 has the lowest AIC (179.3), indicating it has the best balance between goodness-of-fit and model complexity. As the degrees of freedom increase from model1 to model5, the AIC generally increases, suggesting potential overfitting or diminishing returns from adding complexity"
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#b.-auroc-area-under-the-roc-curve",
+    "href": "part1.2_precision_medicine.html#b.-auroc-area-under-the-roc-curve",
+    "title": "Model Development",
+    "section": "B. AUROC (Area Under the ROC Curve)",
+    "text": "B. AUROC (Area Under the ROC Curve)\nAUC measures the model’s discriminative ability, i.e., how well it distinguishes between the two classes (e.g., 1 vs 0).\n\nAUC = 0.5 → no better than random\nAUC = 1.0 → perfect discrimination\nAUC &gt; 0.8 is generally considered good\n\nUse: Higher AUC means better ability to rank predicted probabilities correctly (e.g., a true positive is ranked higher than a false positive).\n\ncat(paste0(\"AUC Model 1 : \",round(model1$stats[\"C\"],2),\"\\n\",\n      \"AUC Model 2 : \",round(model2$stats[\"C\"],2),\"\\n\",\n      \"AUC Model 3 : \",round(model3$stats[\"C\"],2),\"\\n\",\n      \"AUC Model 4 : \",round(model4$stats[\"C\"],2),\"\\n\",\n      \"AUC Model 5 : \",round(model5$stats[\"C\"],2)))\n\nAUC Model 1 : 0.82\nAUC Model 2 : 0.81\nAUC Model 3 : 0.82\nAUC Model 4 : 0.83\nAUC Model 5 : 0.83\n\n\n\nAll models perform well, with AUC values above 0.80, indicating good discriminative ability.\nModel 4 and Model 5 have the highest AUC (0.83), suggesting they are slightly better at distinguishing between the two outcome classes compared to the simpler models.\nThe improvement in AUC from Model 1 to Model 4/5 is small but consistent, which may suggest added predictive value from including additional variables (Model 4) and using splines for non-linearity (Model 5)."
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#c.-calibration-plot",
+    "href": "part1.2_precision_medicine.html#c.-calibration-plot",
+    "title": "Model Development",
+    "section": "C. Calibration Plot",
+    "text": "C. Calibration Plot\nThe calibration plot is used to detect if the model is producing well-calibrated probabilities, which is important for decision-making\nEach plot compares:\n\nApparent line (dashed): fit on the same data used to train the model (i.e., not corrected for optimism).\nBias-corrected line (solid): fit after internal validation (bootstrapping with 200 repetitions), which adjusts for overfitting.\nThe closer both lines are to the 45-degree diagonal, the better the calibration of the model — i.e., predicted probabilities match actual outcomes.\n\n\nlibrary(rms)\ncal_model1 &lt;- calibrate(model1, method=\"boot\", B=200)\ncal_model2 &lt;- calibrate(model2, method=\"boot\", B=200)\ncal_model3 &lt;- calibrate(model3, method=\"boot\", B=200)\ncal_model4 &lt;- calibrate(model4, method=\"boot\", B=200)\ncal_model5 &lt;- calibrate(model5, method=\"boot\", B=200)\npar(mfrow = c(2, 3)) \n\nplot(cal_model1)\n\n\nn=200   Mean absolute error=0.025   Mean squared error=0.00083\n0.9 Quantile of absolute error=0.042\n\nplot(cal_model2)\n\n\nn=200   Mean absolute error=0.019   Mean squared error=0.00068\n0.9 Quantile of absolute error=0.052\n\nplot(cal_model3)\n\n\nn=200   Mean absolute error=0.022   Mean squared error=0.00084\n0.9 Quantile of absolute error=0.054\n\nplot(cal_model4)\n\n\nn=200   Mean absolute error=0.024   Mean squared error=0.00077\n0.9 Quantile of absolute error=0.038\n\nplot(cal_model5)\n\n\nn=200   Mean absolute error=0.026   Mean squared error=0.00147\n0.9 Quantile of absolute error=0.059\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nModel\nMedian Absolute Error\nCalibration Quality\n\n\n\n\n1\n0.023\nGood calibration. Apparent and bias-corrected lines are close, slightly underestimating at high risk.\n\n\n2\n0.019\nBest calibration among all models. Very close to ideal line with minimal optimism.\n\n\n3\n0.024\nSlight over-prediction at higher probabilities; acceptable calibration overall.\n\n\n4\n0.023\nGood calibration; bias-corrected line deviates slightly at extremes but still close.\n\n\n5\n0.027\nSlightly more overfitting visible; bias-corrected line dips more at high predicted probabilities. Still reasonable."
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#d.-r-square",
+    "href": "part1.2_precision_medicine.html#d.-r-square",
+    "title": "Model Development",
+    "section": "D. R-Square",
+    "text": "D. R-Square\nA R² that estimates the proportion of variance in the outcome explained by the model. Based on the model :\n\nR² = 0 → no explanatory power\nR² = 1 → perfect explanation (rare)\nValues are usually much lower than in linear regression — even 0.2–0.4 can be considered good for logistic models.\n\n\ncat(paste0(\"R2 Model 1 : \",round(model1$stats[\"R2\"],2), \"\\n\",\n      \"R2 Model 2 : \",round(model2$stats[\"R2\"],2), \"\\n\",\n      \"R2 Model 3 : \",round(model3$stats[\"R2\"],2), \"\\n\",\n      \"R2 Model 4 : \",round(model4$stats[\"R2\"],2), \"\\n\",\n      \"R2 Model 5 : \",round(model5$stats[\"R2\"],2)))\n\nR2 Model 1 : 0.35\nR2 Model 2 : 0.35\nR2 Model 3 : 0.35\nR2 Model 4 : 0.37\nR2 Model 5 : 0.37\n\n\nAll models explained a similar proportion of the variance in the outcome, with pseudo-R² values ranging from 0.35 to 0.37. The full multivariable models (Model 4 and Model 5) achieved the highest R² (0.37), suggesting slightly better overall fit compared to simpler models."
+  },
+  {
+    "objectID": "part1.2_precision_medicine.html#summary-of-model-comparison",
+    "href": "part1.2_precision_medicine.html#summary-of-model-comparison",
+    "title": "Model Development",
+    "section": "Summary of Model Comparison",
+    "text": "Summary of Model Comparison\n\n\n\n\n\n\n\n\n\n\n\nMetric\nModel 1\nModel 2\nModel 3\nModel 4\nModel 5\n\n\n\n\nAIC\nHigher\nHigher\nHigher\nLower\nLowest\n\n\nAUC\n0.82\n0.81\n0.82\n0.83\n0.83\n\n\nCalibration\nGood\nBest\nFair\nGood\nSlight overfit\n\n\nR² (Nagelkerke)\n0.35\n0.35\n0.35\n0.37\n0.37\n\n\n\nModel 4 and Model 5 are the best-performing models overall. Both achieve the highest AUC (0.83) and R² (0.37), indicating strong discriminative power and better explained variance.\n\nModel 4 (standard multivariable logistic regression) performs consistently well across all metrics and shows good calibration with lower AIC than simpler models.\nModel 5 (using restricted cubic splines for x1 and x2) slightly improves AIC but shows mild overfitting in the calibration plot, suggesting a trade-off between flexibility and generalizability.\n\nModel 4 (Multivariate model) is recommended as the best balance of discrimination, calibration, and stability.\nIn order to use the model for the third part, we will save the model in .rds extension\n\nsaveRDS(model4, \"model/model4.rds\")"
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html",
+    "href": "part1.3_precision_medicine.html",
+    "title": "Model Validation",
+    "section": "",
+    "text": "Model validation is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the reliability, robustness, and generalizability of the model’s predictions beyond the training dataset.\nThere are two main types of validation:\n\nApparent validation: Evaluates model performance on the same data used to fit the model. It often overestimate sperformance.\nInternal validation: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.\nExternal validation: Tests the model on an independent dataset to assess transportability."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#model-validation",
+    "href": "part1.3_precision_medicine.html#model-validation",
+    "title": "Model Validation",
+    "section": "",
+    "text": "Model validation is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the reliability, robustness, and generalizability of the model’s predictions beyond the training dataset.\nThere are two main types of validation:\n\nApparent validation: Evaluates model performance on the same data used to fit the model. It often overestimate sperformance.\nInternal validation: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.\nExternal validation: Tests the model on an independent dataset to assess transportability."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#apparent-validation",
+    "href": "part1.3_precision_medicine.html#apparent-validation",
+    "title": "Model Validation",
+    "section": "1) Apparent Validation",
+    "text": "1) Apparent Validation\nApparent validation in lrm refers to evaluating model performance on the same data used to fit the model.\n\nprint(model4)\n\nLogistic Regression Model\n\nlrm(formula = y ~ x1 + x2 + x3 + x4 + x5, data = df, x = TRUE, \n    y = TRUE)\n\n                       Model Likelihood      Discrimination    Rank Discrim.    \n                             Ratio Test             Indexes          Indexes    \nObs           200    LR chi2      57.80      R2       0.368    C       0.831    \n 0            148    d.f.             7      R2(7,200)0.224    Dxy     0.662    \n 1             52    Pr(&gt; chi2) &lt;0.0001    R2(7,115.4)0.356    gamma   0.662    \nmax |deriv| 8e-09                            Brier    0.136    tau-a   0.256    \n\n          Coef    S.E.   Wald Z Pr(&gt;|Z|)\nIntercept -1.4740 0.5031 -2.93  0.0034  \nx1         1.5514 0.3056  5.08  &lt;0.0001 \nx2         0.1240 0.2446  0.51  0.6121  \nx3=1       0.3845 0.4445  0.86  0.3870  \nx4=1      -0.5616 0.4164 -1.35  0.1774  \nx5=2       0.1054 0.5659  0.19  0.8522  \nx5=3      -0.2656 0.5883 -0.45  0.6517  \nx5=4       0.2856 0.6742  0.42  0.6718  \n\n\n\ncal_apparent &lt;- calibrate(model4, B = 0)\nplot(cal_apparent)\n\n\n\n\n\n\n\n\n\nn=200   Mean absolute error=0.038   Mean squared error=0.00255\n0.9 Quantile of absolute error=0.09\n\n\n\nvalidate(model4, \"boot\",0)\n\n          index.orig training    test optimism index.corrected n\nDxy           0.6622   0.6783  0.6195   0.0588          0.6034 2\nR2            0.3679   0.3830  0.3245   0.0585          0.3094 2\nIntercept     0.0000   0.0000 -0.0074   0.0074         -0.0074 2\nSlope         1.0000   1.0000  0.7996   0.2004          0.7996 2\nEmax          0.0000   0.0000  0.0511   0.0511          0.0511 2\nD             0.2840   0.2864  0.2452   0.0412          0.2428 2\nU            -0.0100  -0.0100  0.0227  -0.0327          0.0227 2\nQ             0.2940   0.2964  0.2225   0.0739          0.2201 2\nB             0.1357   0.1230  0.1419  -0.0189          0.1546 2\ng             1.8026   2.0026  1.6111   0.3915          1.4111 2\ngp            0.2526   0.2364  0.2375  -0.0011          0.2537 2\n\n\n\nAUC = 0.831, R² = 0.368 → Strong performance.\nBut: This uses the same data the model was trained on → likely overestimates performance.\nBy using the validate and set the bootstrap into 0 ( mean likely similar with current datasets, the test of Slope is near 1 (0.098)\n\nApparent validation evaluates model performance using the same data it was trained on. This might seem convenient, but it’s overly optimistic and misleading for several reasons:\n\nThe model may learn patterns that are specific to the training data (noise), and these won’t generalize. Apparent validation can’t detect this.\nAccuracy, AUC, and R² often appear much higher than they really are — because the model is tested on data it has already “seen.”\nRelying on apparent validation may lead to deploying models that fail when exposed to new data."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#boostrap-validation",
+    "href": "part1.3_precision_medicine.html#boostrap-validation",
+    "title": "Model Validation",
+    "section": "2) Boostrap Validation",
+    "text": "2) Boostrap Validation\nBootstrap validation involves repeatedly sampling with replacement from the original dataset, fitting the model on each sample, and evaluating it on the “left-out” data.\nHow it works:\n\nCreate “bootstrap samples” (e.g., 200 samples of the same size as the original dataset).\nFit the model on each bootstrap sample.\nEvaluate the model on the data not included in that sample (called “out-of-bag”).\nMeasure the optimism in performance (e.g., AUC, R²), and subtract it from the original score.\n\n\nvalidate(model4, \"boot\",50)\n\n          index.orig training    test optimism index.corrected  n\nDxy           0.6622   0.6952  0.6345   0.0607          0.6015 50\nR2            0.3679   0.4090  0.3410   0.0680          0.2999 50\nIntercept     0.0000   0.0000 -0.1275   0.1275         -0.1275 50\nSlope         1.0000   1.0000  0.8472   0.1528          0.8472 50\nEmax          0.0000   0.0000  0.0599   0.0599          0.0599 50\nD             0.2840   0.3231  0.2599   0.0632          0.2207 50\nU            -0.0100  -0.0100  0.0067  -0.0167          0.0067 50\nQ             0.2940   0.3331  0.2531   0.0800          0.2140 50\nB             0.1357   0.1288  0.1424  -0.0137          0.1494 50\ng             1.8026   2.0097  1.6833   0.3264          1.4762 50\ngp            0.2526   0.2647  0.2429   0.0219          0.2307 50\n\n\n\ncal &lt;- calibrate(model4, B = 200)\nplot(cal, xlab = \"Predicted Probability\", ylab = \"Observed Probability\")\n\n\n\n\n\n\n\n\n\nn=200   Mean absolute error=0.024   Mean squared error=0.00087\n0.9 Quantile of absolute error=0.044\n\n\n\nAUC (approx from Dxy/2) ≈ 0.613 + 0.5 = 0.8065, R² = 0.305 → slight optimism corrected.\nCalibration slope drops to 0.869 → indicates some overfitting.\nIntercept shifts to -0.109 → tendency to overpredict risk.\nEmax = 0.051 → modest miscalibration at some points."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#cross-validation",
+    "href": "part1.3_precision_medicine.html#cross-validation",
+    "title": "Model Validation",
+    "section": "3) Cross Validation",
+    "text": "3) Cross Validation\nCross-validation involves splitting the dataset into parts, training the model on some parts, and testing it on the others — repeating this multiple times.\nHow it works (general):\n\nDivide the data into K subsets (e.g., 5 or 10).\nIn each round, use K-1 folds for training and 1 fold for validation.\nRotate so each fold is used as validation once.\nAverage the results (AUC, accuracy, etc.) across all folds.\n\n\nvalidate(model4, \"crossvalidation\", B = 10)\n\n          index.orig training   test optimism index.corrected  n\nDxy           0.6622   0.6642 0.6207   0.0435          0.6187 10\nR2            0.3679   0.3716 0.4281  -0.0564          0.4243 10\nIntercept     0.0000   0.0000 1.4915  -1.4915          1.4915 10\nSlope         1.0000   1.0000 5.2499  -4.2499          5.2499 10\nEmax          0.0000   0.0000 0.3813   0.3813          0.3813 10\nD             0.2840   0.2872 0.3125  -0.0253          0.3093 10\nU            -0.0100  -0.0111 0.1047  -0.1158          0.1058 10\nQ             0.2940   0.2983 0.2078   0.0905          0.2035 10\nB             0.1357   0.1347 0.1505  -0.0158          0.1515 10\ng             1.8026   1.8258 7.2753  -5.4495          7.2522 10\ngp            0.2526   0.2536 0.2420   0.0117          0.2409 10\n\n\n\nReasonable discrimination (Dxy ~0.61), means good discrimination\nCorrected R² (0.3677) suggests the model explains ~37% of variance\nEmax Maximum Calibration Error : 0.2611"
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#split-sample-validation",
+    "href": "part1.3_precision_medicine.html#split-sample-validation",
+    "title": "Model Validation",
+    "section": "4) Split Sample Validation",
+    "text": "4) Split Sample Validation\nRandomly split the dataset into training and testing subsets. In this practice, we divide into 70% train data and 30% test data.\n\ntrain_size = 0.7\nlen_df = nrow(df)\ntrain_end = floor(train_size*len_df)\n\ndf_train = df[1:train_end, ]\ndf_test = df[(train_end + 1):len_df, ]\n\n\ntrain_model &lt;- lrm(y ~ x1 + x2 + x3 + x4 + x5, \n                   data = df_train, x = TRUE, y = TRUE)\n\nDo prediction on new data.\n\npred_probs &lt;- predict(train_model, newdata = df_test, type = \"fitted\")\nauc(roc(df_test$y, pred_probs))\n\nArea under the curve: 0.8326\n\n\n\nAUC = 0.8326, close to apparent → may be unstable due to small sample size. The model correctly ranks pairs of cases 83.26% of the time."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#k-fold-cross-validation",
+    "href": "part1.3_precision_medicine.html#k-fold-cross-validation",
+    "title": "Model Validation",
+    "section": "5) K-Fold Cross-Validation",
+    "text": "5) K-Fold Cross-Validation\nK-fold cross-validation is a type of cross-validation where the dataset is split into K equal parts, and the process is repeated K times.\nExample (5-fold CV):\n\nData is split into 5 parts (folds).\nTrain on 4 folds, validate on 1 fold.\nRepeat this process 5 times so each fold is used once for validation.\n\n\nctrl &lt;- trainControl(method = \"cv\", number = 5)\ntrain_cv &lt;- train(as.factor(y) ~ x1 + x2 + x3 + x4 + x5,\n                  data = df,\n                  method = \"glm\",\n                  family = binomial,\n                  trControl = ctrl)\n\ntrain_cv\n\nGeneralized Linear Model \n\n200 samples\n  5 predictor\n  2 classes: '0', '1' \n\nNo pre-processing\nResampling: Cross-Validated (5 fold) \nSummary of sample sizes: 159, 160, 160, 161, 160 \nResampling results:\n\n  Accuracy   Kappa    \n  0.7950719  0.4103705\n\n\n\nAccuracy = 0.7751: The model correctly predicted the outcome 77.5% of the time\nKappa = 0.3134: This measures agreement beyond chance\nConfirms similar performance to bootstrap."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#internal-vs-external-validation",
+    "href": "part1.3_precision_medicine.html#internal-vs-external-validation",
+    "title": "Model Validation",
+    "section": "6) Internal vs External Validation",
+    "text": "6) Internal vs External Validation\nExternal validation tests the model on a completely independent dataset that was not used at all during model development.\n\nset.seed(123)\n\nlogit &lt;- function(x){log(x/(1-x))}\nexpit &lt;- function(x){exp(x)/(1+exp(x))}\n\n# Simulate a dataset\nn = 300\n\nx1 &lt;- rnorm(n)\nx2 &lt;- rnorm(n)\nx3 &lt;- rbinom(n, 1, prob = 0.35) \nx4 &lt;- rbinom(n, 1, prob = 0.5 ) \nx5 &lt;- sample(1:4, size = n, replace = TRUE, prob =c(0.3,0.3,0.2,0.2))\n\nlogit.py &lt;- -2+x1+0.2*x1^2+0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-\n                   0.1*(x5==3)+0.2*(x5==4)+rnorm(n,0,0.1)\n\n\npy &lt;- expit(logit.py)\ny &lt;- rbinom(n,1,py)\n\ndf_test_external &lt;- data.frame(y = factor(y), x1, x2, x3 = factor(x3), x4 = factor(x4), x5 = factor(x5))\n\n\npred_probs_external &lt;- predict(model4, newdata = df_test_external, type = \"fitted\")\nauc(roc(df_test_external$y, pred_probs_external))\n\nArea under the curve: 0.7969\n\n\n0.7969 means the model correctly ranks pairs of cases 79.69% of the time."
+  },
+  {
+    "objectID": "part1.3_precision_medicine.html#summary-of-validation-method",
+    "href": "part1.3_precision_medicine.html#summary-of-validation-method",
+    "title": "Model Validation",
+    "section": "Summary of Validation Method",
+    "text": "Summary of Validation Method\n\n\n\n\n\n\n\n\n\n\n\nMetric\nApparent Validation\nBootstrap (Internal)\n5-Fold CV\nSplit-Sample\nExternal Validation\n\n\n\n\nAUC / C-index\n0.831\n0.613 (corrected Dxy) → AUC ≈ 0.8065\n—\n0.8326\n0.7969\n\n\nR²\n0.368\n0.305 (corrected)\n—\n—\n—\n\n\nCalibration Slope\n1.000\n0.869\n—\n—\n—\n\n\nIntercept\n0.000\n-0.109 (bias)\n—\n—\n—\n\n\nEmax\n0.000\n0.051\n—\n—\n—\n\n\nAccuracy\n—\n—\n0.775\n—\n—\n\n\nKappa\n—\n—\n0.313\n—\n—\n\n\n\nThe model shows strong performance in apparent validation, but bootstrap and external validation reveal some overfitting, especially in calibration. After correcting for optimism, AUC remains strong (~0.80) and R² is solid (~0.31), making the model acceptable for use, but not perfect."
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html",
+    "href": "part1.1_precision_medicine_task.html",
+    "title": "Data Preparation and Exploration",
+    "section": "",
+    "text": "Clinical prediction models are statistical or machine learning tools used to estimate an individual’s risk of developing a specific health outcome based on their baseline characteristics—such as demographic details, clinical history, physical measurements, or laboratory results. These models play a critical role in precision medicine by supporting risk stratification, early diagnosis, and personalized treatment decisions.\nIn this computer practical, we start from the premise that high-quality individual-level data are already available. Your first task will be to explore this dataset as a foundation for developing a clinical prediction model.\nYou will begin with Data Preparation and Exploration, a critical initial step in the modeling process. This phase focuses on understanding the structure and content of the dataset, examining variable types and distributions, identifying potential issues (such as missing data), and visualizing key features. These activities are essential for informing subsequent modeling decisions and ensuring the reliability of the prediction model."
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#install-r-and-rstudio",
+    "href": "part1.1_precision_medicine_task.html#install-r-and-rstudio",
+    "title": "Data Preparation and Exploration",
+    "section": "3.1 Install R and Rstudio",
+    "text": "3.1 Install R and Rstudio\n\nDownload and install R from: https://cran.r-project.org/\nDownload and install RStudio (Desktop version) from: https://posit.co/download/rstudio-desktop/"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#install-required-r-packages",
+    "href": "part1.1_precision_medicine_task.html#install-required-r-packages",
+    "title": "Data Preparation and Exploration",
+    "section": "3.2 Install Required R Packages",
+    "text": "3.2 Install Required R Packages\nOpen RStudio and run the following code to install the necessary packages (skip any that are already installed):\n\ninstall.packages(c('ggplot2','dplyr'))"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#load-required-r-packages",
+    "href": "part1.1_precision_medicine_task.html#load-required-r-packages",
+    "title": "Data Preparation and Exploration",
+    "section": "3.3 Load Required R Packages",
+    "text": "3.3 Load Required R Packages\nAfter installing the packages, load them into your R session using the following code:\n\nlibrary(ggplot2)\nlibrary(dplyr)"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#load-example-data",
+    "href": "part1.1_precision_medicine_task.html#load-example-data",
+    "title": "Data Preparation and Exploration",
+    "section": "3.4. Load Example Data",
+    "text": "3.4. Load Example Data\nWe will use an example dataset from an observational study on a short-term health outcome (e.g., 30-day mortality). The dataset contains both clinical and demographic baseline predictors and a binary outcome variable. It is stored in RDS format for efficient loading in R.\n\nNote: The dataset is complete and contains no missing values, allowing us to focus on core steps in data exploration and modeling without the need for imputation or data cleaning.\n\n\ndf &lt;- readRDS(url(\"https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds\"))\n\nThe dataset includes:\n\nFive predictors x1, x2, x3, x4 and x5, each assessed at baseline.\nOutcome:y (binary; 1 = event, 0 = no event)\n\nWe will use this dataset throughout the practical for data preparation, exploration, and prediction modeling."
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#descriptive-summaries",
+    "href": "part1.1_precision_medicine_task.html#descriptive-summaries",
+    "title": "Data Preparation and Exploration",
+    "section": "3.1 Descriptive Summaries",
+    "text": "3.1 Descriptive Summaries\nBegin by inspecting the structure of the dataset and summarizing its variables using the summary() function.\nTasks:\n\nView basic descriptive statistics of each variable.\nCheck the data types (numeric, factor, character, etc.).\n\n\nsummary(df)\n\nQuestions for Discussion:\n\nHow many variables are included in the dataset?\nWhat types of variables are present (e.g., continuous, binary, categorical), and how might these affect your choice of analysis methods?\nAre there any variables that seem irrelevant, redundant, or highly correlated with others? How would you identify and handle them?\nHow is the outcome defined in this dataset? In what ways could this outcome be analyzed - and what assumptions would those approaches require?"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#distribution-of-numeric-variables",
+    "href": "part1.1_precision_medicine_task.html#distribution-of-numeric-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "3.2 Distribution of Numeric Variables",
+    "text": "3.2 Distribution of Numeric Variables\nVisualize the distribution of numeric variables using histograms to understand their shapes, spread, and central tendencies.\n\n# Histograms for continuous variables\np1 &lt;- ggplot(df, aes(x = x1)) + \n  geom_histogram(bins = 20, fill = \"skyblue\", alpha = 0.7, color = \"black\") +\n  labs(title = \"Distribution of X1\", x = \"X1\", y = \"Frequency\") + theme_minimal()\n\np2 &lt;- ggplot(df, aes(x = x2)) + \n  geom_histogram(bins = 20, fill = \"lightgreen\", alpha = 0.7, color = \"black\") +\n  labs(title = \"Distribution of X2\", x = \"X2\", y = \"Frequency\") + theme_minimal()\n\n# Combine plots\ngrid.arrange(p1, p2, ncol = 2, top = \"Distribution of Continuous Variables\")\n\nQuestions for Discussion:\n\nDo the numeric variables follow a normal distribution?\nAre there noticeable differences in distribution across numeric variables?\nAre there any skewed distributions or outliers?\nShould any transformations (e.g., log, square root) be applied before modeling?"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#distribution-of-categorical-variables",
+    "href": "part1.1_precision_medicine_task.html#distribution-of-categorical-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "3.3 Distribution of Categorical Variables",
+    "text": "3.3 Distribution of Categorical Variables\nExplore the frequency distribution of categorical variables using bar plots.\n\n# 4.2 Bar plots for categorical variables\np5 &lt;- ggplot(df, aes(x = x3)) + \n  geom_bar(fill = \"steelblue\", alpha = 0.7) +\n  labs(title = \"Distribution of X3\", x = \"X3\", y = \"Count\") + theme_minimal()\n\np6 &lt;- ggplot(df, aes(x = x4)) + \n  geom_bar(fill = \"darkgreen\", alpha = 0.7) +\n  labs(title = \"Distribution of X4\", x = \"X4\", y = \"Count\") + theme_minimal()\n\np7 &lt;- ggplot(df, aes(x = x5)) + \n  geom_bar(fill = \"purple\", alpha = 0.7) +\n  labs(title = \"Distribution of X5\", x = \"X5\", y = \"Count\") + theme_minimal()\n\ngrid.arrange(p5, p6, p7, ncol = 3, top = \"Distribution of Categorical Variables\")\n\nQuestions for Discussion:\n\nWhat is the distribution of categories within each variable?\nAre some categories underrepresented or overrepresented?\nCould any variables benefit from combining sparse levels?\nDo any imbalances suggest potential bias or modeling challenges?"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#correlation",
+    "href": "part1.1_precision_medicine_task.html#correlation",
+    "title": "Data Preparation and Exploration",
+    "section": "3.4 Correlation",
+    "text": "3.4 Correlation\nAnalyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér’s V for categorical) and visualize them.\n\ncor_result = correlation(df)\ncor_result\n\nQuestions for Discussion:\n\nAt a 90% confidence level, which variable pairs have statistically significant correlations?\nWhich variables are most strongly correlated with the response variable (y)?\nAre there any signs of multicollinearity that might affect model stability?\n\nThe correlation plot will help to visualize the correlation of each variables.\n\nplot(cor_result)"
+  },
+  {
+    "objectID": "part1.1_precision_medicine_task.html#relationship-between-predictors-and-response-variables",
+    "href": "part1.1_precision_medicine_task.html#relationship-between-predictors-and-response-variables",
+    "title": "Data Preparation and Exploration",
+    "section": "3.5 Relationship between Predictors and Response Variables",
+    "text": "3.5 Relationship between Predictors and Response Variables\nExplore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.\n\n3.5.1 Numerical Predictors vs Response Variables\nUse boxplots to assess the relationship between continuous predictors and the response variable.\n\np10 &lt;- ggplot(df, aes(x = y, y = x1, fill = y)) + \n  geom_boxplot(alpha = 0.7) +\n  labs(title = \"X1 by Outcome Y\", x = \"Y\", y = \"X1\") + theme_minimal() +\n  theme(legend.position = \"none\")\n\np11 &lt;- ggplot(df, aes(x = y, y = x2, fill = y)) + \n  geom_boxplot(alpha = 0.7) +\n  labs(title = \"X2 by Outcome Y\", x = \"Y\", y = \"X2\") + theme_minimal()\n\ngrid.arrange(p10, p11, ncol = 2, top = \"Continuous Predictors by Outcome\")\n\nQuestions for Discussion:\n\nIs there a visible trend or pattern between numeric predictors and the response?\n\n\n\n3.5.2 Categorical Predictors vs Response Variables\nUse grouped bar plots to explore how categorical predictors influence the response.\n\np12 &lt;- ggplot(df, aes_string(x = x3, fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X3 by Outcome Y\")) + theme_minimal()\n\np13 &lt;- ggplot(df, aes_string(x = x4, fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X4 by Outcome Y\")) + theme_minimal()\n\np14 &lt;- ggplot(df, aes_string(x = x5, fill = \"factor(y)\")) +\n  geom_bar(position = \"fill\") +  # stacked proportion bars\n  ylab(\"Proportion\") +\n  labs(fill = \"y\", title = paste(\"X5 by Outcome Y\")) + theme_minimal()\n\n\ngrid.arrange(p12, p13, p14, ncol = 2, top = \"Categorical Predictors by Outcome\")\n\nQuestions for Discussion:\n\nAre there noticeable differences in the response variable across categories?\nDo any levels dominate the distribution?"
+  }
+]
