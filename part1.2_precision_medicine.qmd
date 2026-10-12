@@ -63,7 +63,8 @@ This part 1.2 Modelling will consist of some sections :
 ### Load the library
 
 ```{r}
-#| include: false
+#| message: false
+#| warning: false
 library(survival)
 library(lattice)
 library(Formula)
@@ -76,8 +77,13 @@ library(MASS)
 library(mgcv)
 library(glmnet)
 library(pROC)
+```
 
+### Load the dataset
 
+```{r}
+#| message: false
+#| warning: false
 df <- readRDS(file.path("data" ,'dataset.rds'))
 ```
 
