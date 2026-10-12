@@ -34,6 +34,9 @@ jobs:
       - name: Install R package dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
 
+      - name: Install practical R packages
+        run: Rscript setup.R
+
       - name: Render only HTML
         run: quarto render --to html
 

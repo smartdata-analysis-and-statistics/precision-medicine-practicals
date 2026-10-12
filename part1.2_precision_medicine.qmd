@@ -14,11 +14,29 @@ format:
     number-sections: false 
 ---
 
+::: {.callout-note title="How to use this solution"}
+The corresponding prompts are in the [Model Development computer practical](part1.2_precision_medicine_task.html). The map below identifies where each task is answered.
+
+- **Task:** the prompt in the linked computer practical.
+- **Solution:** the model code and output on this page.
+- **Discussion answer:** the interpretation beneath each model and performance assessment.
+:::
+
+## Task and solution map
+
+| Task in the computer practical | Worked solution and discussion answer |
+|---|---|
+| Fit a univariate model | [Univariate Model](#univariate-model) |
+| Categorize `x1` and interpret the odds ratios | [Univariate Model with Categorized `x1`](#univariate-model-with-categorize-variable) |
+| Model non-linearity with splines | [Regression Spline](#univariate-variable-regression-spline) and [Multivariable Spline Model](#multivariable-spline-model) |
+| Fit a multivariable model | [Multivariable Linear Model](#multivariate-linear-model) |
+| Compare AIC, AUC, calibration, and pseudo-R² | [Assessing Model Performance](#assessing-model-performance) and [Summary of Model Comparison](#summary-of-model-comparison) |
+
 ## Summary
 
 After preparing the data, the next step will be modelling. Modeling helps us understand how variables relate to each other. Models allow us to predict outcomes for new observations. Any prediction function demonstrates this - it takes new patient data and estimates their probability of the outcome occurring. This is crucial for clinical decision-making.
 
-# Key Sections :
+# Key sections
 
 This part 1.2 Modelling will consist of some sections :
 
@@ -59,15 +77,25 @@ print(model1)
 
 -   **Likelihood Ratio χ² (1 df):** 53.92, **p \< 0.0001** → Strong evidence that `x1` improves model fit.
 -   **Discrimination (C-index / AUC):** **0.822** → Excellent ability to distinguish between classes.
--   **R² (Nagelkerke):** 0.346 → Model explains \~34.6% of the variation in the outcome.
+-   **R² (Nagelkerke):** 0.346 → a pseudo-R² measure indicating model improvement over the null model; it is not a literal percentage of variance explained.
 -   **Brier Score:** 0.139 → Good overall predictive accuracy (closer to 0 is better).
 -   **Rank correlation (Dxy = 0.644, gamma = 0.644)** → Strong concordance between predicted probabilities and outcomes.
 
-The x1 variable is highly significant for the model, meaning `x1` is being meaningful predictive power for the linear logistic regression model.
+The `x1` variable is highly significant, indicating that it provides meaningful predictive power in the logistic regression model.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How should the coefficient for `x1` be interpreted?**
+
+**Answer.** A one-unit increase in `x1` increases the log-odds of `y = 1` by the fitted coefficient. Equivalently, the odds are multiplied by approximately 4.72, holding no other variables fixed because this is a univariate model.
+
+**Question 2. Is the association statistically significant?**
+
+**Answer.** Yes. The likelihood-ratio test is highly significant (`p < 0.0001`), providing strong evidence that `x1` is associated with the outcome in this dataset.
+:::
 
 ### 2. Univariate Model with Categorize Variable
 
-The second model includes **x1** along with categorized variables. Categorizing continuous variables can help capture non-linear relationships, simplify interpretation, or align with domain knowledge—especially when certain ranges of a variable are known to have distinct effects on the outcome. In this step we try to divide the variables into 5 steps.
+The second model includes **x1** as a categorized variable. Categorizing a continuous variable can help capture non-linear relationships, simplify interpretation, or align with domain knowledge—especially when certain ranges of a variable are known to have distinct effects on the outcome. Here, we divide **x1** into five groups based on its quintiles.
 
 ```{r}
 df$x1_bin <- cut(df$x1, 
@@ -96,13 +124,23 @@ Based on the summary and odds ratio, we can infer that :
 -   **R² (Nagelkerke)**: 0.349 → moderate explanatory power.
 -   **C-statistic (AUC)**: 0.812 → good discrimination.
 -   **Dxy (Somers’ D)**: 0.624 → aligns with C = 0.812.
--   **Brier Score**: 0.141 → good calibration (lower is better).
+-   **Brier Score**: 0.141 → lower values indicate better overall probabilistic accuracy.
 
-Being in the **Top 20% of x1_bin** increases the odds of the event occurring by **\~20.6x** compared to the reference group, and this effect is highly significant. The model shows **good discrimination and calibration**, making it a reliable classifier.
+Being in the **Top 20% of x1_bin** increases the odds of the event occurring by **\~20.6x** compared to the reference group, and this effect is highly significant. The model shows **good discrimination and calibration**, making it a reliable classifier.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How should the categorized coefficients and odds ratios be interpreted?**
+
+**Answer.** Each category is compared with the reference category, the bottom 20% of `x1`. The top 20% has approximately 20.6 times the odds of the event relative to that reference group; the other odds ratios describe their corresponding category contrasts.
+
+**Question 2. How does categorization change prediction and interpretation?**
+
+**Answer.** It makes results easier to communicate as group comparisons and can represent thresholds, but it discards information within each group and makes results depend on the chosen cut-points. A continuous or spline model should therefore also be considered.
+:::
 
 ### **3. Univariate Variable : Regression Spline**
 
-The third model uses the formula `y ~ rcs(x1, 3)`, which applies a **restricted cubic spline** with 3 knots to the variable **x1**. This allows the model to flexibly capture potential **non-linear relationships** between **x1** and the binary outcome, without imposing a strict linear assumption.
+The third model uses the formula `y ~ rcs(x1, 3)`, which applies a **restricted cubic spline** with three knots to **x1**. This allows the model to capture potential **non-linear relationships** between **x1** and the binary outcome without imposing a strict linear assumption.
 
 ```{r}
 dd <- datadist(df)
@@ -116,13 +154,27 @@ print(model3)
 -   **R² (Nagelkerke)**: 0.352 → moderate to strong explanatory power
 -   **C-statistic (AUC)**: 0.822 → **excellent discrimination ability**
 -   **Dxy (Somers’ D)**: 0.644 → aligns with high AUC
--   **Brier Score**: 0.138 → good calibration (lower = better)
+-   **Brier Score**: 0.138 → lower values indicate better overall probabilistic accuracy.
 
 **Interpretation :**
 
 -   The spline terms for `x1` suggest a **non-linear relationship** between `x1` and the log-odds of the outcome `y`.
 -   Although the individual coefficients are **not statistically significant**, the **overall model is highly significant**, meaning `x1`**as a whole** adds meaningful predictive power when modeled flexibly with splines.
 -   This implies that the effect of `x1` on the probability of the event is **not simply linear**—there might be **thresholds or curvature** in the relationship
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How should the spline model output be interpreted?**
+
+**Answer.** The spline represents the overall association between `x1` and the log-odds as a smooth curve. Individual spline-basis coefficients are not interpretable as separate one-unit effects; predicted probabilities or a plot of the fitted curve are more informative.
+
+**Question 2. What does the odds ratio mean for a non-linear effect?**
+
+**Answer.** There is no single constant odds ratio for all values of `x1`. The odds ratio depends on the comparison points, so it should be reported for clinically meaningful contrasts or shown through predicted risks.
+
+**Question 3. Could the spline be overfit or underfit?**
+
+**Answer.** Three knots provide more flexibility than a linear term but can still overfit a small dataset. The apparent improvement should therefore be checked with bootstrap or cross-validation.
+:::
 
 ### 4. Multivariate Linear Model
 
@@ -154,9 +206,23 @@ From the model, we can infer that :
 -   **x1**: The **only strong and statistically significant predictor** (p \< 0.0001). A one-unit increase in `x1` increases the log-odds of the outcome significantly.
 -   **x2, x3, x4, x5**: None are statistically significant (p \> 0.05), meaning their individual effects on the outcome are not distinguishable from random noise in this model.
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How should the multivariable coefficients and odds ratios be interpreted?**
+
+**Answer.** Each coefficient is the adjusted association with `y`, conditional on the other predictors. The adjusted odds for `y = 1` increase by approximately 4.72 for a one-unit increase in `x1`; the other estimates are comparatively uncertain and are not statistically significant here.
+
+**Question 2. Is this model better than the univariate model?**
+
+**Answer.** It has slightly higher apparent AUC and pseudo-R² than Model 1, but model quality is multidimensional. The added predictors should be judged using AIC, calibration, validation, and clinical usefulness rather than significance alone.
+
+**Question 3. What are the implications of insignificant predictors?**
+
+**Answer.** A non-significant coefficient does not prove that a predictor has no effect; it means this dataset does not provide strong evidence for an effect after adjustment. Removing predictors may improve parsimony, but that decision should consider prior knowledge and validation.
+:::
+
 ### 5. Multivariate Spline Model
 
-The fifth model uses lrm function with **restricted cubic splines with 3 knots** are applied to both **x1** and **x2** to flexibly model potential **non-linear effects**, while the remaining variables (**x3**, **x4**, and **x5**) are included as linear terms. This approach improves model fit by capturing complex relationships without overfitting.
+The fifth model uses the `lrm()` function with **restricted cubic splines with three knots** applied to both **x1** and **x2** to flexibly model potential **non-linear effects**, while the remaining variables (**x3**, **x4**, and **x5**) are included as linear terms. This approach can improve model fit by capturing complex relationships, although it may also increase the risk of overfitting.
 
 ```{r}
 model5 = lrm(y~rcs(x1,3)+rcs(x2,3)+x3+x4+x5, data = df, y = TRUE, x = TRUE)
@@ -179,6 +245,20 @@ Here is the complete interpretation for each variable :
 | x5 (3 vs 2) | -0.316 | 0.73× | Not significant |
 | x5 (4 vs 2) | +0.202 | 1.22× | Not significant |
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How should the multivariable spline model be interpreted?**
+
+**Answer.** `x1` and `x2` are allowed to have curved effects, while the categorical predictors remain additive terms. The model therefore estimates a flexible joint relationship, not one constant linear effect for each continuous predictor.
+
+**Question 2. How should the odds ratios for the spline terms be interpreted?**
+
+**Answer.** The reported odds ratios are basis-term or reference-contrast summaries and should not be read as a single global odds ratio per one-unit increase. Use predicted probabilities or pairwise contrasts at selected values instead.
+
+**Question 3. Is Model 5 more flexible than Model 4?**
+
+**Answer.** Yes. It has spline terms for `x1` and `x2`, so it can represent curvature, but the extra flexibility increases parameterization and overfitting risk. Its apparent gains must be weighed against AIC and validated performance.
+:::
+
 ## **Assessing Model Performance**
 
 ## A. AIC
@@ -194,11 +274,17 @@ cat(paste0("AIC Model 1 : ",round(AIC(model1),2),"\n",
       "AIC Model 5 : ",round(AIC(model5),2)))
 ```
 
-Based on the result, **Model1** has the **lowest AIC (179.3)**, indicating it has the best balance between goodness-of-fit and model complexity. As the degrees of freedom increase from model1 to model5, the AIC generally increases, suggesting potential overfitting or diminishing returns from adding complexity
+Based on the result, **Model 1** has the lowest AIC, indicating the best in-sample trade-off between goodness of fit and model complexity. The more flexible models improve discrimination only slightly while adding parameters, so their apparent performance should be interpreted alongside internal validation results.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. How should the AIC values be compared, and which model is preferred by AIC?**
+
+**Answer.** AIC compares relative fit after penalizing model complexity; lower values are preferred. Model 1 has the lowest AIC in this analysis. This does not mean it is automatically best for every purpose, because discrimination, calibration, validation, and clinical utility also matter.
+:::
 
 ## B. AUROC (Area Under the ROC Curve)
 
-AUC measures the model’s **discriminative ability**, i.e., how well it distinguishes between the two classes (e.g., 1 vs 0).
+AUC measures the model’s **discriminative ability**, or how well it ranks observations from the two outcome classes (e.g., 1 vs. 0). What constitutes useful discrimination depends on the clinical context and outcome prevalence.
 
 -   AUC = 0.5 → no better than random
 -   AUC = 1.0 → perfect discrimination
@@ -221,7 +307,13 @@ cat(paste0("AUC Model 1 : ",round(model1$stats["C"],2),"\n",
 
 -   **All models perform well**, with AUC values above **0.80**, indicating **good discriminative ability**.
 -   **Model 4 and Model 5** have the highest AUC (0.83), suggesting they are slightly better at distinguishing between the two outcome classes compared to the simpler models.
--   The improvement in AUC from Model 1 to Model 4/5 is **small but consistent**, which may suggest **added predictive value** from including additional variables (Model 4) and using splines for non-linearity (Model 5).
+-   The improvement in AUC from Model 1 to Model 4/5 is **small but consistent**, which may suggest **added predictive value** from including additional variables (Model 4) and using splines for non-linearity (Model 5).
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. How do the AUC values compare, and which model is better by discrimination?**
+
+**Answer.** All models have good apparent discrimination, with Model 4 and Model 5 marginally highest at about 0.83. The differences are small, so they should not be treated as decisive without uncertainty intervals or optimism-corrected validation.
+:::
 
 ## C. Calibration Plot
 
@@ -261,9 +353,15 @@ plot(cal_model5)
 | 4 | 0.023 | Good calibration; bias-corrected line deviates slightly at extremes but still close. |
 | 5 | 0.027 | Slightly more overfitting visible; bias-corrected line dips more at high predicted probabilities. Still reasonable. |
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. What do the calibration plots and median absolute errors show?**
+
+**Answer.** Models 1–4 have similar, generally good apparent calibration. Model 2 has the smallest reported median absolute error, while Model 5 shows slightly more deviation after correction. Calibration should be assessed on validated predictions, not only on the development data.
+:::
+
 ## D. R-Square
 
-A R² that estimates the proportion of variance in the outcome explained by the model. Based on the model :
+R² is a model-specific summary measure. For logistic regression, pseudo-R² values should not be interpreted as the proportion of variance explained. Based on the model:
 
 -   R² = 0 → no explanatory power
 -   R² = 1 → perfect explanation (rare)
@@ -280,24 +378,45 @@ cat(paste0("R2 Model 1 : ",round(model1$stats["R2"],2), "\n",
 
 All models explained a similar proportion of the variance in the outcome, with pseudo-R² values ranging from 0.35 to 0.37. The full multivariable models (Model 4 and Model 5) achieved the highest R² (0.37), suggesting slightly better overall fit compared to simpler models.
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. How do the pseudo-R² values compare, and what do they tell us?**
+
+**Answer.** Models 4 and 5 have the largest apparent pseudo-R² values, but the differences are small. Pseudo-R² is a model-specific measure of improvement over a null model; it is not the percentage of outcome variance explained and should not be compared directly with ordinary linear-regression R².
+:::
+
 ## Summary of Model Comparison
 
-| Metric              | Model 1 | Model 2 | Model 3 | Model 4 | Model 5        |
-|---------------------|---------|---------|---------|---------|----------------|
-| **AIC**             | Higher  | Higher  | Higher  | Lower   | Lowest         |
-| **AUC**             | 0.82    | 0.81    | 0.82    | 0.83    | 0.83           |
-| **Calibration**     | Good    | Best    | Fair    | Good    | Slight overfit |
-| **R² (Nagelkerke)** | 0.35    | 0.35    | 0.35    | 0.37    | 0.37           |
+The comparison table below is generated from the fitted models so that the reported values remain synchronized with the code.
 
-**Model 4** and **Model 5** are the best-performing models overall. Both achieve the highest **AUC (0.83)** and **R² (0.37)**, indicating strong discriminative power and better explained variance.
+```{r}
+#| echo: false
+comparison <- data.frame(
+  Model = paste("Model", 1:5),
+  AIC = sapply(list(model1, model2, model3, model4, model5), AIC),
+  AUC = sapply(list(model1, model2, model3, model4, model5),
+               function(model) unname(model$stats["C"])),
+  R2 = sapply(list(model1, model2, model3, model4, model5),
+              function(model) unname(model$stats["R2"]))
+)
+knitr::kable(comparison, digits = 3)
+```
+
+Model 4 and Model 5 have the strongest apparent discrimination and pseudo-R², but these measures do not account for model complexity. Model 1 has the lowest AIC overall, whereas Model 5 has the highest AIC. Because lower AIC is preferred, Model 5’s additional flexibility is not justified by sufficient improvement in fit. Model 4 is a reasonable teaching example for balancing discrimination, calibration, and complexity, although this conclusion should be confirmed with optimism-corrected validation.
 
 -   **Model 4** (standard multivariable logistic regression) performs **consistently well** across all metrics and shows **good calibration** with **lower AIC** than simpler models.
--   **Model 5** (using restricted cubic splines for x1 and x2) slightly improves AIC but shows **mild overfitting** in the calibration plot, suggesting a trade-off between flexibility and generalizability.
+-   **Model 5** (using restricted cubic splines for x1 and x2) slightly improves apparent discrimination but has a higher AIC and shows **mild overfitting** in the calibration plot, illustrating the trade-off between flexibility and generalizability.
 
-**Model 4** (Multivariate model) is recommended as the **best balance** of discrimination, calibration, and stability.
+**Model 4** (Multivariate model) is recommended as the **best balance** of discrimination, calibration, and stability.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. Which model is best overall?**
+
+**Answer.** There is no single winner based on apparent metrics alone. Model 1 has the lowest AIC, while Models 4 and 5 have slightly higher apparent AUC and pseudo-R². Model 4 is a reasonable teaching compromise because it is interpretable and flexible enough to include the available predictors, but the final choice should be based on optimism-corrected validation and the intended clinical use.
+:::
 
 In order to use the model for the third part, we will save the model in .rds extension
 
 ```{r}
+#| eval: false
 saveRDS(model4, "model/model4.rds")
 ```

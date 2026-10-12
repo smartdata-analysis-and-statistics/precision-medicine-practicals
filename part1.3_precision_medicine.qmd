@@ -14,17 +14,35 @@ format:
     number-sections: false 
 ---
 
+::: {.callout-note title="How to use this solution"}
+The corresponding prompts are in the [Model Validation computer practical](part1.3_precision_medicine_task.html). The map below identifies where each task is answered.
+
+- **Task:** the prompt in the linked computer practical.
+- **Solution:** the validation code and output on this page.
+- **Discussion answer:** the interpretation beneath each validation method.
+:::
+
+## Task and solution map
+
+| Task in the computer practical | Worked solution and discussion answer |
+|---|---|
+| Explain apparent validation | [Apparent Validation](#apparent-validation) |
+| Apply bootstrap validation | [Bootstrap Validation](#bootstrap-validation) |
+| Apply split-sample validation | [Split-sample Validation](#split-sample-validation) |
+| Apply cross-validation | [Cross-validation as a general family](#cross-validation-as-a-general-family) and [Manual 5-fold Cross-validation](#manual-5-fold-cross-validation) |
+| Distinguish internal and external validation | [Internal vs. External Validation](#internal-vs-external-validation) |
+
 ## Model Validation
 
 **Model validation** is the process of evaluating how well a predictive model performs when applied to new, unseen data. It helps assess the **reliability**, **robustness**, and **generalizability** of the model's predictions beyond the training dataset.
 
 There are two main types of validation:
 
--   **Apparent validation**: Evaluates model performance on the same data used to fit the model. It often **overestimate s**performance.
+-   **Apparent validation**: Evaluates model performance on the same data used to fit the model. It often **overestimates performance**.
 -   **Internal validation**: Uses resampling techniques (e.g., cross-validation, bootstrap) to estimate performance while correcting for optimism.
 -   **External validation**: Tests the model on an **independent** dataset to assess **transportability**.
 
-# Key Sections :
+# Key sections
 
 This part 1.3 Model Validation will consist of some sections :
 
@@ -49,12 +67,204 @@ Keywords for table summary :
 | **g** | How much your model's predictions vary.  |
 | **gp** | A adjusted version of g that accounts for the number of predictors in your model. |
 
+
+## Summary of validation methods
+
+The schema below highlights the key distinction: apparent validation reuses the development data for testing, resampling methods create held-out observations from the development data, and external validation uses a genuinely independent cohort. **K-fold cross-validation is one specific form of cross-validation**, rather than a completely separate validation family.
+
+<!--
+<div class="validation-schema" role="img" aria-label="Validation methods schema. Apparent validation is followed by internal validation, which branches to Bootstrap, Cross-validation, Split-sample Validation, and K-fold Cross-validation. External validation is shown last.">
+  <div class="schema-source">
+    <div class="schema-box schema-source-box">Development dataset</div>
+  </div>
+  <div class="schema-flow">
+    <div class="schema-row">
+      <div class="schema-box schema-method">
+        <strong>Apparent validation</strong>
+        <span>Train: all observations</span>
+        <span>Test: same observations</span>
+      </div>
+      <span class="schema-arrow" aria-hidden="true">→</span>
+      <div class="schema-box schema-result">Usually optimistic</div>
+    </div>
+    <div class="schema-group">
+      <div class="schema-group-title">Internal validation</div>
+      <div class="schema-row">
+        <div class="schema-box schema-method">
+          <strong>Bootstrap</strong>
+          <span>Train: bootstrap sample</span>
+          <span>Test: out-of-bag observations</span>
+        </div>
+        <span class="schema-arrow" aria-hidden="true">→</span>
+        <div class="schema-box schema-result">Optimism-corrected internal performance</div>
+      </div>
+      <div class="schema-row">
+        <div class="schema-box schema-method">
+          <strong>Cross-validation</strong>
+          <span>A family of resampling methods</span>
+        </div>
+        <span class="schema-arrow" aria-hidden="true">→</span>
+        <div class="schema-box schema-result">Left-out part used for testing</div>
+      </div>
+      <div class="schema-row">
+        <div class="schema-box schema-method">
+          <strong>Split-sample Validation</strong>
+          <span>Train: e.g. 70% of observations</span>
+          <span>Test: e.g. 30% of observations</span>
+        </div>
+        <span class="schema-arrow" aria-hidden="true">→</span>
+        <div class="schema-box schema-result">Held-out test performance</div>
+      </div>
+      <div class="schema-row">
+        <div class="schema-box schema-method">
+          <strong>K-fold Cross-validation</strong>
+          <span>Train: K − 1 folds</span>
+          <span>Test: 1 held-out fold</span>
+        </div>
+        <span class="schema-arrow" aria-hidden="true">→</span>
+        <div class="schema-box schema-result">Out-of-fold internal performance</div>
+      </div>
+    </div>
+    <div class="schema-row">
+      <div class="schema-box schema-method">
+        <strong>External validation</strong>
+        <span>Train: development cohort</span>
+        <span>Test: independent cohort</span>
+      </div>
+      <span class="schema-arrow" aria-hidden="true">→</span>
+      <div class="schema-box schema-result">Transportability to a new setting</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .validation-schema {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.7fr) minmax(0, 2.8fr);
+    gap: 1.25rem;
+    align-items: start;
+    margin: 1.5rem 0 2rem;
+    padding: 1rem;
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    border-radius: 0.35rem;
+  }
+
+  .schema-source {
+    display: flex;
+    align-items: center;
+    min-height: 100%;
+  }
+
+  .schema-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    min-height: 4.4rem;
+    padding: 0.7rem 0.85rem;
+    background: #ffffff;
+    border: 1px solid #6b7280;
+    border-radius: 0.2rem;
+    text-align: center;
+    line-height: 1.35;
+  }
+
+  .schema-source-box {
+    width: 100%;
+    font-weight: 600;
+  }
+
+  .schema-method {
+    flex: 1 1 0;
+  }
+
+  .schema-method strong {
+    font-weight: 600;
+  }
+
+  .schema-method span {
+    font-size: 0.9rem;
+  }
+
+  .schema-result {
+    flex: 0 1 15rem;
+  }
+
+  .schema-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .schema-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .schema-arrow {
+    display: flex;
+    align-items: center;
+    color: #4b5563;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .schema-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 0.85rem;
+    background: #ffffff;
+    border: 1px solid #9ca3af;
+    border-radius: 0.25rem;
+  }
+
+  .schema-group-title {
+    font-weight: 700;
+    text-align: center;
+  }
+
+  @media (max-width: 800px) {
+    .validation-schema {
+      grid-template-columns: 1fr;
+    }
+
+    .schema-source {
+      min-height: auto;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .schema-row {
+      flex-direction: column;
+    }
+
+    .schema-arrow {
+      justify-content: center;
+      transform: rotate(90deg);
+    }
+  }
+</style>
+-->
+
+{{< include validation-schema.html >}}
+
 | Method | Trains on | Tests on | Generalization Level | Best For |
 |----|----|----|----|----|
-| **Bootstrap** | Resampled dataset | Out-of-bag data | Internal (with optimism correction) | Small datasets |
-| **K-Fold CV** | K-1 folds | 1 held-out fold | Internal | Medium–large datasets |
-| **Cross-validation** | Varies (e.g., LOOCV, repeated CV) | Left-out part | Internal | Hyperparameter tuning |
-| **External Validation** | Original data | Completely new data | External (real-world test) | Final model evaluation |
+| **Bootstrap** | Resampled dataset | Out-of-bag data | Internal (with optimism correction) | Estimating optimism without setting aside a fixed test set |
+| **Split-sample Validation** | e.g. 70% of observations | e.g. 30% of observations | Internal (single random hold-out) | A simple, quick internal check when the dataset is large enough to tolerate withholding data |
+| **Cross-validation (family)** | Varies (e.g. LOOCV, repeated CV) | Left-out part | Internal | Internal performance estimation and, when needed, hyperparameter tuning |
+| **K-Fold CV (specific design)** | K − 1 folds | 1 held-out fold | Internal | A common, transparent CV design across many sample sizes |
+| **External Validation** | Original data | Completely new data | External (real-world test) | Final model evaluation and transportability |
+
+The split-sample method is internal validation because both training and testing use the development dataset. It does not provide external validation, and it does not automatically correct optimism. Its test estimate can be unstable because it depends on one random split.
+
+Cross-validation is the general family: each fitted model is tested on observations that were not used for that fit. The exact train/test arrangement depends on the named design. **K-fold cross-validation is one specific member of this family**, using `K - 1` folds for training and 1 held-out fold for testing, repeated until every fold has been used for testing. Therefore, K-fold CV should not be presented as an alternative to cross-validation; it is an example of cross-validation.
+
+The practical implication is that apparent validation is useful for describing the fitted model, bootstrap and cross-validation estimate internal generalizability, and external validation provides the strongest test of transportability.
 
 **Load the library**
 
@@ -74,7 +284,6 @@ library(MASS)
 library(mgcv)
 library(glmnet)
 library(pROC)
-library(caret)
 
 ```
 
@@ -104,20 +313,51 @@ print(model4)
 #| message: false
 #| warning: false
 #| paged-print: false
-cal_apparent <- calibrate(model4, B = 0)
-plot(cal_apparent)
+predicted <- predict(model4, newdata = df, type = "fitted")
+predicted <- pmin(pmax(predicted, 1e-6), 1 - 1e-6)
+observed <- as.numeric(as.character(df$y))
+
+calibration_model <- glm(
+  y ~ qlogis(predicted),
+  data = df,
+  family = binomial
+)
+
+apparent_metrics <- data.frame(
+  AUC = as.numeric(pROC::auc(pROC::roc(df$y, predicted, quiet = TRUE))),
+  Brier_score = mean((observed - predicted)^2),
+  Calibration_intercept = coef(calibration_model)[1],
+  Calibration_slope = coef(calibration_model)[2],
+  Pseudo_R2 = unname(model4$stats["R2"])
+)
+apparent_metrics
+
+calibration_data <- data.frame(observed, predicted)
+calibration_data$bin <- cut(
+  rank(calibration_data$predicted, ties.method = "first"),
+  breaks = seq(0, nrow(calibration_data), length.out = 11),
+  labels = FALSE,
+  include.lowest = TRUE
+)
+calibration_summary <- aggregate(
+  cbind(observed, predicted) ~ bin,
+  data = calibration_data,
+  FUN = mean
+)
+plot(
+  calibration_summary$predicted,
+  calibration_summary$observed,
+  xlim = c(0, 1),
+  ylim = c(0, 1),
+  xlab = "Mean predicted probability",
+  ylab = "Observed event proportion",
+  pch = 19,
+  main = "Apparent calibration"
+)
+abline(0, 1, lty = 2)
 ```
 
-```{r}
-#| message: false
-#| warning: false
-#| paged-print: false
-validate(model4, "boot",0)
-```
-
--   **AUC = 0.831**, R² = 0.368 → Strong performance.
--   But: This uses the same data the model was trained on → likely **overestimates performance**.
--   By using the validate and set the bootstrap into 0 ( mean likely similar with current datasets, the test of Slope is near 1 (0.098)
+The metrics and calibration plot above are apparent, in-sample estimates. Because the model is evaluated on the same observations used for fitting, these estimates are expected to be optimistic and should be compared with the bootstrap results below.
 
 **Apparent validation** evaluates model performance using the **same data** it was trained on. This might seem convenient, but it’s **overly optimistic and misleading** for several reasons:
 
@@ -125,7 +365,29 @@ validate(model4, "boot",0)
 2.  Accuracy, AUC, and R² often appear **much higher** than they really are — because the model is tested on data it has already "seen."
 3.  Relying on apparent validation may lead to deploying models that **fail** when exposed to new data.
 
-## 2) Boostrap Validation
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Which metrics are reported in apparent validation?**
+
+**Answer.** This section reports AUC, Brier score, calibration intercept, calibration slope, and pseudo-R², together with an apparent calibration plot.
+
+**Question 2. Why are apparent estimates optimistic?**
+
+**Answer.** The model is evaluated on the same observations used to estimate its coefficients, so it benefits from patterns and random noise already seen during fitting.
+
+**Question 3. How does overfitting affect apparent validation?**
+
+**Answer.** Overfitting generally makes apparent discrimination and pseudo-R² too high and can make calibration look better than it will be in new patients.
+
+**Question 4. Can a model be trusted only because it performs well on the training data?**
+
+**Answer.** No. Good training-data performance is necessary but not sufficient evidence of generalizability; internal or external validation is needed.
+
+**Question 5. When is apparent validation acceptable?**
+
+**Answer.** It is useful for describing the fitted model and teaching diagnostics, but it should not be the primary evidence for deployment or clinical performance claims.
+:::
+
+## 2) Bootstrap Validation
 
 Bootstrap validation involves repeatedly **sampling with replacement** from the original dataset, fitting the model on each sample, and evaluating it on the "left-out" data.
 
@@ -137,6 +399,7 @@ Bootstrap validation involves repeatedly **sampling with replacement** from th
 -   Measure the **optimism** in performance (e.g., AUC, R²), and subtract it from the original score.
 
 ```{r}
+#| eval: false
 #| message: false
 #| warning: false
 #| paged-print: false
@@ -144,6 +407,7 @@ validate(model4, "boot",50)
 ```
 
 ```{r}
+#| eval: false
 #| message: false
 #| warning: false
 #| paged-print: false
@@ -156,45 +420,37 @@ plot(cal, xlab = "Predicted Probability", ylab = "Observed Probability")
 -   Intercept shifts to **-0.109** → tendency to **overpredict** risk.
 -   Emax = 0.051 → modest miscalibration at some points.
 
-## 3) Cross Validation
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. What does bootstrap validation correct?**
 
-Cross-validation involves splitting the dataset into parts, training the model on some parts, and testing it on the others — repeating this multiple times.
+**Answer.** It estimates optimism caused by fitting and evaluating the model in the same sample, then adjusts performance estimates toward what is expected in new but similar samples.
 
-**How it works (general):**
+**Question 2. What is optimism, and how is it estimated?**
 
--   Divide the data into **K subsets** (e.g., 5 or 10).
--   In each round, use **K-1 folds** for training and **1 fold** for validation.
--   Rotate so each fold is used as validation once.
--   Average the results (AUC, accuracy, etc.) across all folds.
+**Answer.** Optimism is the difference between performance on a bootstrap sample and performance when that bootstrap-fitted model is applied to the original data. Repeating this process estimates the average optimism.
 
-```{r}
-#| message: false
-#| warning: false
-#| paged-print: false
-validate(model4, "crossvalidation", B = 10)
-```
+**Question 3. Why can bootstrap validation be preferable to a single split in a small dataset?**
 
--   Reasonable discrimination (Dxy \~0.61), means good discrimination
--   Corrected R² (0.3677) suggests the model explains \~37% of variance
--   Emax Maximum Calibration Error : 0.2611
+**Answer.** Bootstrap uses repeated resamples and retains information from the full dataset, whereas a single split discards part of the data for fitting and can produce an unstable result.
 
-## 4) Split Sample Validation
+**Question 4. How should the calibration slope and intercept be interpreted?**
 
-Randomly split the dataset into training and testing subsets. In this practice, we divide into 70% train data and 30% test data.
+**Answer.** A slope near 1 indicates appropriate spread of predictions and a slope below 1 suggests overfitting. An intercept near 0 indicates good overall calibration; the negative intercept here is consistent with some overprediction of risk.
+:::
+
+## 3) Split-sample Validation
+
+Randomly split the dataset into training and testing subsets. In this practical, we use 70% of the data for training and 30% for testing.
 
 ```{r}
 #| message: false
 #| warning: false
 #| paged-print: false
-train_size = 0.7
-len_df = nrow(df)
-train_end = floor(train_size*len_df)
-
-df_train = df[1:train_end, ]
-df_test = df[(train_end + 1):len_df, ]
-
-
-
+set.seed(2025)
+train_size <- 0.7
+train_id <- sample(seq_len(nrow(df)), size = floor(train_size * nrow(df)))
+df_train <- df[train_id, ]
+df_test <- df[-train_id, ]
 ```
 
 ```{r}
@@ -215,11 +471,62 @@ pred_probs <- predict(train_model, newdata = df_test, type = "fitted")
 auc(roc(df_test$y, pred_probs))
 ```
 
--   AUC = **0.8326**, close to apparent → may be **unstable** due to small sample size. The model correctly ranks pairs of cases 83.26% of the time.
+-   AUC = **0.8326**, close to apparent → may be **unstable** due to small sample size. The model correctly ranks pairs of cases 83.26% of the time.
 
-## 5) K-Fold Cross-Validation
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. What are the risks of split-sample validation with a small dataset?**
 
-K-fold cross-validation is a type of cross-validation where the dataset is split into **K equal parts**, and the process is repeated **K times**.
+**Answer.** The training model has fewer observations and the test estimate is based on only a subset, so both the fitted coefficients and the AUC can vary considerably with the random split.
+
+**Question 2. How should test performance be compared with training performance?**
+
+**Answer.** Test performance should generally be lower or less precise than apparent training performance. A similar value in one split is not proof of generalizability because the split may be favorable and the estimate is noisy.
+:::
+
+
+
+## 4) Cross-validation as a general family
+
+Cross-validation is a family of internal validation methods. The common principle is to repeatedly fit the model on a training subset and evaluate it on a corresponding held-out subset. **The exact scheme must be named**: the code below uses `method = "crossvalidation"` and `B = 5`, so in this practical it represents **one 5-fold cross-validation run**. Here, “folds” is the usual term; these are not clusters used in cluster analysis.
+
+This is different from the default call to `validate()`: `validate()` defaults to `method = "boot"`, which performs bootstrap validation. For `method = "crossvalidation"`, `B = 5` means that the development sample is divided into 5 groups; it does not mean five separate repetitions of 5-fold cross-validation.
+
+**How the 5-fold example works:**
+
+-   Divide the data into **5 subsets**.
+-   In each round, use **4 folds** for training and **1 fold** for validation.
+-   Rotate so each fold is used as validation once.
+-   Average the results across the 5 held-out folds.
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+#| paged-print: false
+set.seed(2025)
+validate(model4, "crossvalidation", B = 5)
+```
+
+-   Corrected Dxy is approximately **0.595**, corresponding to an AUC of approximately **0.798**.
+-   Corrected pseudo-R² is approximately **0.297**; it should not be interpreted as 29.7% of the outcome variance explained.
+-   Corrected calibration slope is approximately **0.941**, the intercept is approximately **−0.079**, and Emax is approximately **0.152**.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Why is cross-validation more reliable than apparent validation?**
+
+**Answer.** Each observation is evaluated in a held-out fold that was not used to fit its prediction, so the estimate is less optimistic than an in-sample estimate. In this example, that means 5-fold cross-validation.
+
+**Question 2. What happens if there are too few or too many folds?**
+
+**Answer.** Too few folds can make the training sets substantially smaller and increase bias; too many folds make the estimates more correlated and can increase computational cost and variance. The choice should reflect sample size and the modelling goal.
+:::
+
+
+## 5) Manual 5-fold Cross-validation
+
+This section implements the same cross-validation principle manually. It uses **5-fold cross-validation**, which is a specific design within the broader cross-validation family described above.
+
+The difference from the `rms::validate` example is therefore implementation: `validate()` provides a packaged resampling summary for an `rms` model, whereas this loop exposes each train/test split and lets us calculate accuracy, kappa, and AUC ourselves.
 
 **Example (5-fold CV):**
 
@@ -231,23 +538,62 @@ K-fold cross-validation is a type of cross-validation where the dataset is split
 #| message: false
 #| warning: false
 #| paged-print: false
-ctrl <- trainControl(method = "cv", number = 5)
-train_cv <- train(as.factor(y) ~ x1 + x2 + x3 + x4 + x5,
-                  data = df,
-                  method = "glm",
-                  family = binomial,
-                  trControl = ctrl)
+set.seed(2025)
+k <- 5
+fold_id <- sample(rep(seq_len(k), length.out = nrow(df)))
 
-train_cv
+cv_results <- lapply(seq_len(k), function(i) {
+  train_data <- df[fold_id != i, ]
+  test_data <- df[fold_id == i, ]
+  fit <- glm(y ~ x1 + x2 + x3 + x4 + x5,
+             data = train_data,
+             family = binomial)
+  prob <- predict(fit, newdata = test_data, type = "response")
+  pred <- factor(ifelse(prob >= 0.5, 1, 0), levels = levels(test_data$y))
+  tab <- table(test_data$y, pred)
+  observed_agreement <- sum(diag(tab)) / sum(tab)
+  expected_agreement <- sum(rowSums(tab) * colSums(tab)) / sum(tab)^2
+  data.frame(
+    accuracy = observed_agreement,
+    kappa = (observed_agreement - expected_agreement) /
+      (1 - expected_agreement),
+    auc = as.numeric(pROC::auc(pROC::roc(test_data$y, prob, quiet = TRUE)))
+  )
+})
+
+cv_results <- do.call(rbind, cv_results)
+cv_results
+colMeans(cv_results)
 ```
 
--   **Accuracy = 0.7751**: The model correctly predicted the outcome **77.5%** of the time
--   **Kappa = 0.3134**: This measures agreement beyond chance
--   Confirms similar performance to bootstrap.
+-   The cross-validation code reports mean accuracy, Cohen's kappa, and AUC across the five folds. Interpret these estimates as internal validation results rather than evidence of external transportability.
 
-## 6) Internal vs External Validation
+::: {.callout-note title="What is different from the general cross-validation example?"}
+Both examples use the same **5-fold cross-validation principle**: each model is trained on 4 folds and tested on the remaining fold. The difference is how the procedure is implemented and summarized.
 
-External validation tests the model on a **completely independent dataset** that was **not used at all during model development**.
+- `validate(model4, "crossvalidation", B = 5)` automatically refits the `lrm` model and returns model-specific indexes such as Dxy, pseudo-R², calibration slope, intercept, and Emax, including an optimism-corrected index.
+- This manual loop explicitly creates the five train/test splits, fits a `glm` model in each loop, and calculates accuracy, Cohen's kappa, and AUC. It is therefore easier to inspect and customize, but it requires more code and careful checks for data leakage and correct metric calculation.
+
+The results are not expected to be identical here because the examples use different model-fitting functions and different metrics. A numerical comparison would require the same fold assignments, the same model-fitting function, and the same performance metrics in both implementations.
+:::
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. What does `K` represent?**
+
+**Answer.** `K` is the number of folds. With `K = 5`, the model is trained on four-fifths of the data and evaluated on the remaining fifth, with every fold used once for testing.
+
+**Question 2. What happens if `K` is too small or too large?**
+
+**Answer.** A small `K` leaves less data for training and can increase bias; a very large `K` can increase variance and computational cost. The folds must also be large enough to contain both outcome classes.
+
+**Question 3. How does this improve the performance estimate?**
+
+**Answer.** It produces out-of-fold predictions for all observations and averages performance across several splits, reducing dependence on one arbitrary train/test partition. It still estimates internal, not external, validity.
+:::
+
+## 6) Internal vs. External Validation
+
+External validation tests the model on a **completely independent dataset** that was **not used during model development**. The example below is simulated transportability validation, not validation in an independent real-world cohort.
 
 ```{r}
 #| message: false
@@ -258,17 +604,19 @@ set.seed(123)
 logit <- function(x){log(x/(1-x))}
 expit <- function(x){exp(x)/(1+exp(x))}
 
-# Simulate a dataset
-n = 300
+# Simulate a dataset. This is simulated transportability validation,
+# not validation in an independent real-world cohort.
+n <- 300
 
 x1 <- rnorm(n)
 x2 <- rnorm(n)
-x3 <- rbinom(n, 1, prob = 0.35) 
-x4 <- rbinom(n, 1, prob = 0.5 ) 
-x5 <- sample(1:4, size = n, replace = TRUE, prob =c(0.3,0.3,0.2,0.2))
+x3 <- rbinom(n, 1, prob = 0.35)
+x4 <- rbinom(n, 1, prob = 0.5)
+x5 <- sample(1:4, size = n, replace = TRUE, prob = c(0.3, 0.3, 0.2, 0.2))
 
-logit.py <- -2+x1+0.2*x1^2+0.3*x2+0.1*x2^2+0.2*(x3==2)+0.2*(x4==2)+0.2*(x5==2)-
-                   0.1*(x5==3)+0.2*(x5==4)+rnorm(n,0,0.1)
+logit.py <- -2 + x1 + 0.2 * x1^2 + 0.3 * x2 + 0.1 * x2^2 +
+  0.2 * (x3 == 1) + 0.2 * (x4 == 1) + 0.2 * (x5 == 2) -
+  0.1 * (x5 == 3) + 0.2 * (x5 == 4) + rnorm(n, 0, 0.1)
 
 
 py <- expit(logit.py)
@@ -286,18 +634,38 @@ auc(roc(df_test_external$y, pred_probs_external))
 
 ```
 
-**0.7969** means the model correctly ranks pairs of cases **79.69%** of the time.
+**0.7969** means the model correctly ranks pairs of cases **79.69%** of the time.
 
-## Summary of Validation Method
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Why is external validation considered the strongest test of transportability?**
 
-| Metric | Apparent Validation | Bootstrap (Internal) | 5-Fold CV | Split-Sample | External Validation |
-|----|----|----|----|----|----|
-| **AUC / C-index** | 0.831 | 0.613 (corrected Dxy) → AUC ≈ 0.8065 | — | 0.8326 | 0.7969 |
-| **R²** | 0.368 | 0.305 (corrected) | — | — | — |
-| **Calibration Slope** | 1.000 | 0.869 | — | — | — |
-| **Intercept** | 0.000 | -0.109 (bias) | — | — | — |
-| **Emax** | 0.000 | 0.051 | — | — | — |
-| **Accuracy** | — | — | 0.775 | — | — |
-| **Kappa** | — | — | 0.313 | — | — |
+**Answer.** It evaluates the locked model in an independent patient population that was not used for model development, so it tests performance under a genuinely new case mix and care setting.
 
-The model shows strong performance in apparent validation, but bootstrap and external validation reveal **some overfitting**, especially in calibration. After correcting for optimism, **AUC remains strong (\~0.80)** and **R² is solid (\~0.31)**, making the model acceptable for use, but not perfect.
+**Question 2. What would a drop in external performance suggest?**
+
+**Answer.** It could indicate differences in case mix, predictor measurement, outcome prevalence, clinical practice, or model overfitting. Calibration should be inspected as well as AUC.
+
+**Question 3. Which validation approach is most appropriate for this dataset of about 200 observations?**
+
+**Answer.** Bootstrap validation and repeated or stratified cross-validation are preferable for internal validation because they use the available sample efficiently. The simulated external example is useful for teaching transportability, but it is not a substitute for validation in a real independent cohort.
+:::
+
+## Summary of validation results
+
+The methods are shown in the requested order. The rows retain the original performance results; a dash means that the metric was not reported for that method in this practical.
+
+::: {.table-responsive}
+
+| Metric/result | Apparent Validation | Bootstrap (internal) | Split-sample | 5-fold CV (general) | 5-fold CV (manual) | External validation |
+|---|---|---|---|---|---|---|
+| **AUC / C-index** | **0.831** | Corrected AUC ≈ **0.807** | **0.8326** | Corrected AUC ≈ **0.798** | Mean AUC **0.802** | **0.7969** |
+| **R²** | **0.368** | Corrected **0.305** | — | Corrected **0.297** | — | — |
+| **Calibration slope** | **1.000** | **0.869** | — | **0.941** | — | — |
+| **Intercept** | **0.000** | **−0.109** | — | **−0.079** | — | — |
+| **Emax** | **0.000** | **0.051** | — | **0.152** | — | — |
+| **Accuracy** | — | — | — | — | Mean **0.790** | — |
+| **Kappa** | — | — | — | — | Mean **0.381** | — |
+
+:::
+
+The model shows strong apparent performance, but internal validation indicates optimism and possible calibration problems. These results are useful for learning; they are not sufficient evidence that the model is ready for clinical use. A real deployment would require prespecified evaluation, adequate sample size, calibration assessment, clinical-utility analysis, and validation in an independent patient population.

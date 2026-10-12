@@ -1,0 +1,43 @@
+---
+title: "Welcome"
+subtitle: "An Introduction to Precision Medicine"
+author:
+  - name: "Smart Data Analysis and Statistics"
+date: "2025"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    toc-location: right
+    number-sections: false
+---
+
+# Welcome to the Practicals
+
+This site hosts practical exercises and supporting materials for the course **An Introduction to Precision Medicine**. The practicals use R and Quarto to demonstrate how to prepare clinical data, develop prognostic models, and assess model performance.
+
+## Practical materials
+
+The materials are organized as a short learning path:
+
+1. **Data preparation and exploration** — inspect the dataset, summarize variables, and explore relationships between predictors and the outcome.
+2. **Model development** — fit logistic regression models, investigate non-linearity, and compare model performance.
+3. **Model validation** — evaluate apparent, bootstrap, cross-validation, split-sample, and external validation approaches.
+
+Each topic includes a learner-facing practical and a solution document.
+
+| Topic | Practical | Solutions |
+|---|---|---|
+| Data preparation and exploration | [Computer practical](part1.1_precision_medicine_task.html) | [Solutions](part1.1_precision_medicine.html) |
+| Model development | [Computer practical](part1.2_precision_medicine_task.html) | [Solutions](part1.2_precision_medicine.html) |
+| Model validation | [Computer practical](part1.3_precision_medicine_task.html) | [Solutions](part1.3_precision_medicine.html) |
+
+## Getting started
+
+Before starting, install [R](https://cran.r-project.org/) and [RStudio](https://posit.co/download/rstudio-desktop/). The practical pages list the R packages required for each topic and include code blocks that can be copied directly into RStudio.
+
+The example data are stored in `data/dataset.rds`. The practicals assume a binary outcome with a common follow-up window; when those assumptions do not hold, a time-to-event analysis may be more appropriate.
+
+## Course information
+
+The practicals accompany the online course [An Introduction to Precision Medicine](https://sdas.thinkific.com/courses/precmedintro).

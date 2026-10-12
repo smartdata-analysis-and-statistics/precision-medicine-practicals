@@ -1,11 +1,20 @@
 project:
   type: website
+  resources:
+    - sdas_large.png
 
 website:
   title: "Precision Medicine Practicals"
   navbar: false
+  page-navigation: true
 
 format:
   html:
     theme: cosmo
     toc: true
+    toc-depth: 3
+    toc-location: right
+    number-sections: false
+    code-copy: true
+    code-overflow: wrap
+    include-before-body: _brand.html

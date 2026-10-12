@@ -14,6 +14,24 @@ format:
     number-sections: false 
 ---
 
+::: {.callout-note title="How to use this solution"}
+The corresponding prompts are in the [Data Preparation and Exploration computer practical](part1.1_precision_medicine_task.html). The map below shows where each task is answered in this solution.
+
+- **Task:** the prompt in the linked computer practical.
+- **Solution:** the worked code, output, tables, and figures on this page.
+- **Discussion answer:** the explanatory interpretation that follows the analysis in each section.
+:::
+
+## Task and solution map
+
+| Task in the computer practical | Worked solution and discussion answer |
+|---|---|
+| Load and inspect the dataset | [About the Dataset](#about-the-dataset) |
+| Summarize the variables | [Descriptive Statistics and Visualizations](#descriptive-statistics-and-visualizations) |
+| Explore numeric and categorical distributions | [Distribution of Continuous Variables](#distribution-of-continuous-variables) and [Distribution of Categorical Variables](#distribution-of-categorical-variables) |
+| Assess correlations and predictor–outcome relationships | [Correlation](#correlation) and [Univariate Relationships](#univariate-relationship-between-predictors-and-response-variables) |
+| Draw overall conclusions | [Conclusion](#conclusion) |
+
 ```{r}
 #| message: false
 #| warning: false
@@ -61,6 +79,24 @@ The outcome in this dataset is defined as a **binary variable** indicating wheth
 If these assumptions don’t hold, a **time-to-event (survival) analysis** would be more appropriate, as it can account for varying follow-up times and censoring.
 
 This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. How many variables are included in the dataset?**
+
+**Answer.** The dataset contains six variables: five predictors (`x1`–`x5`) and the binary outcome `y`.
+
+**Question 2. What types of variables are present, and how do they affect the analysis?**
+
+**Answer.** `x1` and `x2` are numeric, `x3` and `x4` are binary categorical variables, and `x5` has four categorical levels. The numeric variables can be summarized with means, medians, histograms, and boxplots; categorical variables require counts, proportions, and indicator terms in regression models. Because `y` is binary, logistic regression is appropriate.
+
+**Question 3. Are there irrelevant, redundant, or highly correlated variables?**
+
+**Answer.** The correlation results show a moderate relationship between `x1` and `x2`, but not evidence of severe multicollinearity. The predictors should still be checked jointly before modelling; variables should not be removed solely because a pairwise correlation is statistically significant.
+
+**Question 4. How is the outcome defined, and how could it be analyzed?**
+
+**Answer.** `y` is a binary event indicator. Logistic regression models the probability of the event when follow-up is fixed and outcomes are observed for all participants. If follow-up times varied or censoring occurred, survival analysis would be more appropriate.
+:::
 
 # Descriptive Statistics and Visualizations
 
@@ -154,6 +190,20 @@ The exploratory analysis suggests that both variables are approximately normally
 
 These characteristics indicate that both `x1` and `x2` are reasonably well-behaved and do not require transformation at this stage. While normality of predictors is not a strict requirement for regression models, having approximately symmetric and outlier-free variables supports model stability and interpretability.
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Do the numeric variables follow a normal distribution?**
+
+**Answer.** The histograms and Q-Q plots suggest that `x1` and `x2` are approximately symmetric and close to normal, although exact normality is not required for logistic regression.
+
+**Question 2. Are there noticeable differences in their distributions, skewness, or outliers?**
+
+**Answer.** The variables have similar, standardized-looking distributions with no prominent skew or extreme outliers visible in these plots.
+
+**Question 3. Should transformations be applied?**
+
+**Answer.** No transformation is required based on this exploratory assessment. Transformation or flexible terms should be reconsidered if diagnostic plots or model validation suggest non-linearity or influential observations.
+:::
+
 We will now proceed to explore the remaining variables and begin constructing a predictive model.
 
 ## Distribution of Categorical Variables
@@ -188,6 +238,24 @@ Summary of Categorical Predictors
 -   **`x5` (Ordinal or Categorical with 4 Levels)**\
     Levels `2` and `3` are most frequent, while `1` and `4` are less common. All levels are represented in the dataset, but if `x5` is modeled using indicator (dummy) variables, estimates for the less common levels may be less precise due to smaller sample sizes.
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. What is the distribution of the categorical variables?**
+
+**Answer.** `x3` is imbalanced toward level 0, `x4` is approximately balanced, and `x5` has four levels with levels 2 and 3 more common than levels 1 and 4.
+
+**Question 2. Are any categories under- or overrepresented?**
+
+**Answer.** Levels 1 and 4 of `x5` are less frequent, but they are still represented. Their estimates may therefore be less precise than those for the more common levels.
+
+**Question 3. Should sparse levels be combined?**
+
+**Answer.** Not automatically. Combining levels should be justified by subject-matter meaning and supported by adequate sample sizes; the current frequencies alone do not require combining them.
+
+**Question 4. Does the distribution suggest modelling challenges?**
+
+**Answer.** Some imbalance can increase uncertainty and make estimates sensitive to a few observations, so category counts and confidence intervals should be checked when interpreting the fitted model.
+:::
+
 ## Correlation
 
 Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér's V for categorical) and visualize them.
@@ -198,7 +266,7 @@ Analyze pairwise correlations to understand the linear relationships between var
 #| fig-height: 3
 #| fig-width: 3
 #| paged-print: true
-cor_result = rcompanion::correlation(df)
+cor_result = correlation::correlation(df)
 cor_result
 
 ```
@@ -206,7 +274,12 @@ cor_result
 The correlation Plot :
 
 ```{r}
-plot(cor_result)
+corrplot(
+  cor(df[vapply(df, is.numeric, logical(1))], use = "pairwise.complete.obs"),
+  method = "color",
+  type = "upper",
+  tl.col = "black"
+)
 ```
 
 Based on the summary and the plot above, there are some insights that will be useful for modelling :
@@ -230,6 +303,20 @@ There are some variables that has significant correlations between each other :
 | `x4` \~ `x5` | 0.333 | Moderate | \*\*\*\* | Strongest categorical relationship in data |
 | `x3` \~ `x4` | 0.228 | Weak-to-moderate | \*\* | Some association between `x3` and `x4` |
 
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Which pairs have significant correlations at the 90% confidence level?**
+
+**Answer.** The displayed results identify several statistically detectable associations, including `x1`–`x2`, `x1`–`y`, `x2`–`y`, `x2`–`x3`, `x3`–`x4`, and `x4`–`x5`. Statistical significance does not by itself imply a large or clinically important association.
+
+**Question 2. Which variables are most strongly related to `y`?**
+
+**Answer.** `x1` has the strongest relationship with `y`, followed by the weaker relationship for `x2`. The categorical predictors show comparatively weak outcome associations in this exploratory analysis.
+
+**Question 3. Is there evidence of multicollinearity?**
+
+**Answer.** The moderate `x1`–`x2` association is worth monitoring, but it is not, by itself, evidence of severe multicollinearity. Variance inflation, coefficient stability, and model diagnostics should be considered alongside the correlation table.
+:::
+
 ## Univariate relationship between Predictors and Response Variables
 
 Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.
@@ -241,47 +328,53 @@ Use boxplots to assess the relationship between continuous predictors and the re
 ```{r}
 p10 <- ggplot(df, aes(x = y, y = x1, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
-  labs(title = "X1 by Outcome Y", x = "Y", y = "X1") + theme_minimal() +
+  labs(title = "x1 by Outcome y", x = "y", y = "x1") + theme_minimal() +
   theme(legend.position = "none")
 
 p11 <- ggplot(df, aes(x = y, y = x2, fill = y)) + 
   geom_boxplot(alpha = 0.7) +
-  labs(title = "X2 by Outcome Y", x = "Y", y = "X2") + theme_minimal()
+  labs(title = "x2 by Outcome y", x = "y", y = "x2") + theme_minimal()
 
 grid.arrange(p10, p11, ncol = 2, top = "Continuous Predictors by Outcome")
 ```
 
 Here are some key takeaways from the plot :
 
-For X1 and Y :
+For x1 and y :
 
 -   Median of `x1`is higher for `y = 1` compared to `y = 0`.
 -   Individuals with higher `x1` values are more likely to have `y = 1` (Indicate that there is **moderate relationship between x1 and y**, confirmed by the correlation value (0.482) with very high significance).
 
-For X2 and Y :
+For x2 and y :
 
 -   Median of `x2`for `y = 1` is also higher than for `y = 0`
 -   The **trend is upward**, indicating that `x2` may be somewhat predictive of `y`, confirmed by the positive correlation value (0.274) with high significance
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question. Is there a visible trend or pattern for the numeric predictors?**
+
+**Answer.** The distribution of `x1` is clearly shifted upward among observations with `y = 1`, making it the strongest apparent numeric predictor. `x2` shows a weaker upward shift, suggesting some predictive information but less separation than `x1`.
+:::
 
 ### Categorical Predictors vs Response Variables
 
 Use grouped bar plots to explore how categorical predictors influence the response.
 
 ```{r}
-p12 <- ggplot(df, aes_string(x = "x3", fill = "factor(y)")) +
+p12 <- ggplot(df, aes(x = x3, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
-  labs(fill = "y", title = paste("X3 by Outcome Y")) + theme_minimal()
+  labs(fill = "y", title = paste("x3 by Outcome y")) + theme_minimal()
 
-p13 <- ggplot(df, aes_string(x = "x4", fill = "factor(y)")) +
+p13 <- ggplot(df, aes(x = x4, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
-  labs(fill = "y", title = paste("X4 by Outcome Y")) + theme_minimal()
+  labs(fill = "y", title = paste("x4 by Outcome y")) + theme_minimal()
 
-p14 <- ggplot(df, aes_string(x = "x5", fill = "factor(y)")) +
+p14 <- ggplot(df, aes(x = x5, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
-  labs(fill = "y", title = paste("X5 by Outcome Y")) + theme_minimal()
+  labs(fill = "y", title = paste("x5 by Outcome y")) + theme_minimal()
 
 
 grid.arrange(p12, p13, p14, ncol = 3, top = "Categorical Predictors by Outcome")
@@ -291,6 +384,16 @@ From the bar plots titled **"Categorical Predictors by Outcome"**, we can analy
 
 -   in every variables, majority of cases have `y = 0` (orange) with smaller proportion of `y = 1` (blue)
 -   All the categorical variables have low correlations with the y. Thus, there is **no categorical variables that has significant relationship with Y**, indicated by high p-values and low correlation. That's why no clear or strong association captured by the graph.
+
+::: {.callout-tip title="Questions for discussion and answers"}
+**Question 1. Are there noticeable differences in outcome proportions across categorical levels?**
+
+**Answer.** The plots show only modest differences in the proportion of `y = 1` across levels of `x3`, `x4`, and `x5`; no category produces the strong separation seen for `x1`.
+
+**Question 2. Do any levels dominate?**
+
+**Answer.** `y = 0` is the majority outcome in every group, and some `x5` levels have more observations than others. These differences should be considered when interpreting uncertainty, but they do not establish bias on their own.
+:::
 
 # Conclusion
 

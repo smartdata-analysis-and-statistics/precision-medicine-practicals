@@ -33,9 +33,9 @@ By completing this practical, you will be able to:
 
 # 3. Practical Modelling Steps
 
-## 1) Load the Libarary and Datasets
+## 1) Load the Libraries and Dataset
 
-Before starting the modelling workflow, first we have to load the library and also the datasets.
+Before starting the modelling workflow, load the required libraries and dataset.
 
 ```{r}
 #| eval: false
@@ -58,9 +58,9 @@ library(broom)
 df <- readRDS(file.path("data" ,'dataset.rds'))
 ```
 
-## 1) Univariate Variable
+## 1) Univariate Model
 
-Begin by using the univariate model, the model contain only one variable. Tha variable that we will use here is variable `x1`.
+Begin with a univariate model containing only one variable. Here, we use `x1`.
 
 ```{r}
 #| eval: false
@@ -77,7 +77,7 @@ print(model1)
 
 ## 2. Categorized Univariate Variable
 
-The second part is we would like to categorize univariate variable so that it will turn out from numeric variable into categorized variable. We will divide this variable into 5 parts based on the quantil of data.
+Next, categorize the continuous variable `x1` into five groups based on its sample quantiles.
 
 ```{r}
 #| eval: false
@@ -89,7 +89,7 @@ df$x1_bin <- cut(df$x1,
 df$x1_bin <- factor(df$x1_bin) 
 ```
 
-The next part, we would like to do modelling on this categorized variable
+Next, fit a model using this categorized variable.
 
 ```{r}
 #| eval: false
@@ -98,7 +98,7 @@ model2 <-  lrm(y ~ x1_bin, data = df, x = TRUE, y = TRUE)
 print(model2)
 ```
 
-we would like to also explore the odds ratio of each category.
+We also explore the odds ratio for each category.
 
 ```{r}
 #| eval: false
@@ -134,12 +134,15 @@ summary(model3)
 -   How do you interpret the **odds ratio** or effect of x1 in this model?
 -   Does the model appear to be **overfitting or underfitting**?
 
-## 4) Multivariate Variable
+## 4) Multivariable Model
 
 ```{r}
 #| eval: false
 #| include: true
-model4 = glm(y~x1+x2+x3+x4+x5, df, family='binomial')
+model4 <- lrm(y ~ x1 + x2 + x3 + x4 + x5,
+              data = df,
+              x = TRUE,
+              y = TRUE)
 summary(model4)
 ```
 
@@ -149,7 +152,7 @@ summary(model4)
 -   Is this multivariable model better than the univariate model? How do you know?
 -   Are any predictors **statistically insignificant**? What might that imply?
 
-## 5) Multivariate Variable with Spline Regression
+## 5) Multivariable Model with Spline Regression
 
 ```{r}
 #| eval: false
@@ -200,7 +203,7 @@ How do the AUC compare to the other models? Which model has the better AUC?
 
 ## C. **Calibration Plot**
 
-The calibration plot is used to detect if the model is producing **well-calibrated probabilities**, which is important for decision-making
+The calibration plot is used to assess whether the model produces **well-calibrated probabilities**, which is important for decision-making.
 
 ```{r}
 #| eval: false
@@ -217,7 +220,7 @@ plot(cal_model1)
 
 Each plot includes the **Median Absolute Error**, which reflects the model's **calibration quality**. How does the calibration performance compare across the models based on this value?
 
-## C. R-Square
+## D. R-Square
 
 R² estimates the proportion of variance in the outcome explained by the model.
 

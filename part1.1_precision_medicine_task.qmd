@@ -39,9 +39,9 @@ By completing this practical, you will be able to:
 
 # 3. Preparation
 
-Please complete these following setups on your computer :
+Please complete the following setup steps on your computer:
 
-## 3.1 Install R and Rstudio
+## 3.1 Install R and RStudio
 
 -   Download and install R from: <https://cran.r-project.org/>
 -   Download and install RStudio (Desktop version) from: <https://posit.co/download/rstudio-desktop/>
@@ -52,7 +52,11 @@ Open RStudio and run the following code to install the necessary packages (skip 
 
 ```{r}
 #| eval: false
-install.packages(c('ggplot2','dplyr'))
+install.packages(c(
+  "Formula", "Hmisc", "MASS", "broom", "corrplot", "correlation",
+  "dplyr", "ggplot2", "glmnet", "gridExtra", "kableExtra", "lattice",
+  "mgcv", "pROC", "reshape2", "rms", "survival", "tableone"
+))
 ```
 
 ## 3.3 Load Required R Packages
@@ -64,6 +68,9 @@ After installing the packages, load them into your R session using the following
 #| include: true
 library(ggplot2)
 library(dplyr)
+library(correlation)
+library(corrplot)
+library(gridExtra)
 ```
 
 ## 3.4. Load Example Data
@@ -75,7 +82,7 @@ We will use an example dataset from an observational study on a short-term healt
 ```{r}
 #| eval: true
 #| include: true
-df <- readRDS(url("https://raw.githubusercontent.com/smartdata-analysis-and-statistics/precision-medicine-practicals/main/data/dataset.rds"))
+df <- readRDS(file.path("data", "dataset.rds"))
 ```
 
 The dataset includes:
@@ -175,7 +182,7 @@ Analyze pairwise correlations to understand the linear relationships between var
 ```{r}
 #| eval: false
 #| include: true
-cor_result = correlation(df)
+cor_result <- correlation::correlation(df)
 cor_result
 ```
 
@@ -190,7 +197,12 @@ The correlation plot will help to visualize the correlation of each variables.
 ```{r}
 #| eval: false
 #| include: true
-plot(cor_result)
+corrplot(
+  cor(df[vapply(df, is.numeric, logical(1))], use = "pairwise.complete.obs"),
+  method = "color",
+  type = "upper",
+  tl.col = "black"
+)
 ```
 
 ## 3.5 Relationship between Predictors and Response Variables
@@ -227,17 +239,17 @@ Use grouped bar plots to explore how categorical predictors influence the respon
 ```{r}
 #| eval: false
 #| include: true
-p12 <- ggplot(df, aes_string(x = x3, fill = "factor(y)")) +
+p12 <- ggplot(df, aes(x = x3, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
   labs(fill = "y", title = paste("X3 by Outcome Y")) + theme_minimal()
 
-p13 <- ggplot(df, aes_string(x = x4, fill = "factor(y)")) +
+p13 <- ggplot(df, aes(x = x4, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
   labs(fill = "y", title = paste("X4 by Outcome Y")) + theme_minimal()
 
-p14 <- ggplot(df, aes_string(x = x5, fill = "factor(y)")) +
+p14 <- ggplot(df, aes(x = x5, fill = factor(y))) +
   geom_bar(position = "fill") +  # stacked proportion bars
   ylab("Proportion") +
   labs(fill = "y", title = paste("X5 by Outcome Y")) + theme_minimal()

@@ -15,13 +15,12 @@ library(pROC)
 logit <- function(x){log(x/(1-x))}
 expit <- function(x){exp(x)/(1+exp(x))}
 
-df = readRDS('dataset.rds')
+df <- readRDS(file.path("data", "dataset.rds"))
 
 model_base = glm(y~x1, data=df, family = 'binomial')
 model_base
 
 summary(model_base)
 
-new.patient <- new.patient <- data.frame(x1=-0.3, x2=-0.5, x3=1, x4=1, x5=2)
-
+new.patient <- data.frame(x1 = -0.3, x2 = -0.5, x3 = 1, x4 = 1, x5 = 2)
 

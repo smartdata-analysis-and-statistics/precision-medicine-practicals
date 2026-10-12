@@ -11,6 +11,18 @@ The course introduces the core concepts and methods of precision medicine, with 
 
 This repository includes selected materials and practical exercises designed to support learning and implementation using R and Quarto.
 
+## Practical website
+
+The materials can be rendered as a Quarto website. The landing page links the learner-facing practicals and their solution documents:
+
+- `part1.1_precision_medicine_task.qmd` — data preparation and exploration
+- `part1.2_precision_medicine_task.qmd` — model development
+- `part1.3_precision_medicine_task.qmd` — model validation
+
+The corresponding files without `_task` contain worked solutions. Run `quarto preview` for local development or `quarto render` to build the complete site.
+
+To install the R packages used across the practicals, run `source("setup.R")` from the project root. Package dependencies are declared in `DESCRIPTION`; use `renv` if you need a fully locked computational environment.
+
 ## License
 
 All materials in this repository — including Quarto files, R code, and figures — are licensed under the 

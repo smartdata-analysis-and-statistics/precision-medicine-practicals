@@ -1,0 +1,26 @@
+Package: precisionmedicinepracticals
+Type: Package
+Title: Precision Medicine Practicals
+Version: 0.1.0
+Description: Quarto practical materials for an introduction to precision medicine.
+License: CC BY-NC 4.0
+Suggests:
+    Formula,
+    Hmisc,
+    MASS,
+    broom,
+    corrplot,
+    correlation,
+    dplyr,
+    ggplot2,
+    glmnet,
+    gridExtra,
+    kableExtra,
+    lattice,
+    mgcv,
+    pROC,
+    reshape2,
+    rms,
+    survival,
+    tableone
+Encoding: UTF-8

@@ -1,0 +1,19 @@
+<div class="validation-schema" role="img" aria-label="Validation methods schema. Apparent validation is followed by internal validation, which includes Bootstrap, split-sample validation, and general cross-validation in that order. External validation is shown last."><div class="schema-source"><div class="schema-box schema-source-box">Development dataset</div></div><div class="schema-flow"><div class="schema-row"><div class="schema-box schema-method"><strong>Apparent validation</strong><span>Train: all observations</span><span>Test: same observations</span></div><span class="schema-arrow" aria-hidden="true">→</span><div class="schema-box schema-result">Usually optimistic</div></div><div class="schema-group"><div class="schema-group-title">Internal validation</div><div class="schema-row"><div class="schema-box schema-method"><strong>Bootstrap</strong><span>Train: bootstrap sample</span><span>Test: out-of-bag observations</span></div><span class="schema-arrow" aria-hidden="true">→</span><div class="schema-box schema-result">Optimism-corrected internal performance</div></div><div class="schema-row"><div class="schema-box schema-method"><strong>Split-sample Validation</strong><span>Train: 70% of observations</span><span>Test: 30% of observations</span></div><span class="schema-arrow" aria-hidden="true">→</span><div class="schema-box schema-result">Held-out test performance</div></div><div class="schema-row"><div class="schema-box schema-method"><strong>Cross-validation (general)</strong><span>Train: training subset for each repeat</span><span>Test: corresponding held-out subset</span></div><span class="schema-arrow" aria-hidden="true">→</span><div class="schema-box schema-result">Average held-out performance</div></div></div><div class="schema-row"><div class="schema-box schema-method"><strong>External validation</strong><span>Train: development cohort</span><span>Test: independent cohort</span></div><span class="schema-arrow" aria-hidden="true">→</span><div class="schema-box schema-result">Transportability to a new setting</div></div></div></div>
+
+<style>
+  .validation-schema { display: grid; grid-template-columns: minmax(150px, 0.7fr) minmax(0, 2.8fr); gap: 1.25rem; align-items: start; margin: 1.5rem 0 2rem; padding: 1rem; background: #ffffff; color: #1f2937; border: 1px solid #d1d5db; border-radius: 0.35rem; }
+  .schema-source { display: flex; align-items: center; min-height: 100%; }
+  .schema-box { display: flex; flex-direction: column; justify-content: center; gap: 0.2rem; min-height: 4.4rem; padding: 0.7rem 0.85rem; background: #ffffff; border: 1px solid #6b7280; border-radius: 0.2rem; text-align: center; line-height: 1.35; }
+  .schema-source-box { width: 100%; font-weight: 600; }
+  .schema-method { flex: 1 1 0; }
+  .schema-method strong { font-weight: 600; }
+  .schema-method span { font-size: 0.9rem; }
+  .schema-result { flex: 0 1 15rem; }
+  .schema-flow { display: flex; flex-direction: column; gap: 0.9rem; }
+  .schema-row { display: flex; align-items: stretch; gap: 0.65rem; }
+  .schema-arrow { display: flex; align-items: center; color: #4b5563; font-size: 1.35rem; line-height: 1; }
+  .schema-group { display: flex; flex-direction: column; gap: 0.7rem; padding: 0.85rem; background: #ffffff; border: 1px solid #9ca3af; border-radius: 0.25rem; }
+  .schema-group-title { font-weight: 700; text-align: center; }
+  @media (max-width: 800px) { .validation-schema { grid-template-columns: 1fr; } .schema-source { min-height: auto; } }
+  @media (max-width: 560px) { .schema-row { flex-direction: column; } .schema-arrow { justify-content: center; transform: rotate(90deg); } }
+</style>
