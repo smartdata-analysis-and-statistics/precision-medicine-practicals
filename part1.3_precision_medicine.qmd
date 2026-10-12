@@ -60,12 +60,6 @@ Keywords for table summary :
 | **Intercept** | Should be close to 0.  |
 | **Slope** | How spread out your predictions are compared to reality. Should be close to 1. |
 | **Emax** | The biggest calibration error the model makes. |
-| **D** | Another measure of how well your model discriminates between outcomes. Similar to Dxy but on a different scale. |
-| **U** | A measure of how much the model's predictions deviate from perfect calibration. |
-| **Q** | Combines discrimination and calibration into one score.  |
-| **B** | Measures how well-calibrated your predictions are.  |
-| **g** | How much your model's predictions vary.  |
-| **gp** | A adjusted version of g that accounts for the number of predictors in your model. |
 
 
 ## Summary of validation methods
@@ -266,7 +260,7 @@ Cross-validation is the general family: each fitted model is tested on observati
 
 The practical implication is that apparent validation is useful for describing the fitted model, bootstrap and cross-validation estimate internal generalizability, and external validation provides the strongest test of transportability.
 
-**Load the library**
+### Load the library
 
 ```{r}
 #| message: false
@@ -287,7 +281,7 @@ library(pROC)
 
 ```
 
-**Load Datasets and Saved Model**
+### Load datasets and saved model
 
 ```{r}
 #| message: false

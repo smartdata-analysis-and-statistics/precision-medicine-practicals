@@ -44,7 +44,23 @@ This part 1.2 Modelling will consist of some sections :
 -   Building The Model
 -   Assessing model performance including AIC, AUC, Calibration Plot, and R Square
 
-Load the library
+## Keywords summary
+
+| Field | Definition |
+|---|---|
+| **Dxy** | Somers' D rank correlation; a discrimination measure related to AUC by `AUC = (Dxy + 1) / 2`. |
+| **R²** | A model-specific pseudo-R² measure; it is not the percentage of outcome variance explained. |
+| **Intercept** | Calibration intercept; values near 0 indicate little overall over- or underprediction. |
+| **Slope** | Calibration slope; values near 1 indicate appropriate spread of predictions. |
+| **Emax** | Maximum absolute calibration error. |
+| **D** | Discrimination index derived from the model likelihood ratio, calculated as `(χ²_model − 1) / n`; larger values indicate more information than the null model. |
+| **U** | Unreliability index: the lack of fit remaining after overall calibration; values near 0 are preferred. |
+| **Q** | Overall quality index, calculated as `Q = D − U`; larger values are preferred. |
+| **B** | Brier score: the mean squared difference between observed outcomes and predicted probabilities; smaller values are preferred. |
+| **g** | Gini mean difference of the linear predictor (`Xβ`), measuring separation on the log-odds scale. |
+| **gp** | Gini mean difference on the predicted-probability scale; in `rms`, this is not an adjustment for the number of predictors. |
+
+### Load the library
 
 ```{r}
 #| include: false
@@ -384,34 +400,128 @@ All models explained a similar proportion of the variance in the outcome, with p
 **Answer.** Models 4 and 5 have the largest apparent pseudo-R² values, but the differences are small. Pseudo-R² is a model-specific measure of improvement over a null model; it is not the percentage of outcome variance explained and should not be compared directly with ordinary linear-regression R².
 :::
 
+## E. Additional `rms` criteria and optimism-corrected performance
+
+For **Model 4**, `rms::validate()` reports the additional indexes `D`, `U`, `Q`, `B`, `g`, and `gp`. The BMJ guide recommends internal validation and choosing the final model using optimism-corrected performance. Here we use bootstrap validation, with 200 resamples, because it repeatedly refits each model and estimates how much its apparent performance is optimistic.
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+set.seed(2025)
+models <- list(model1, model2, model3, model4, model5)
+bootstrap_validation <- lapply(models, function(model) {
+  validate(model, method = "boot", B = 200)
+})
+
+criteria_boot <- bootstrap_validation[[4]]
+criteria_boot[c("D", "U", "Q", "B", "g", "gp"),
+            c("index.orig", "training", "test", "optimism", "index.corrected")] |>
+  round(4)
+```
+
+For the **apparent Model 4 fit**, `D`, `B`, `g`, and `gp` can also be checked directly from the fitted model. The apparent `U` and `Q` values are extracted from the `validate()` result above because they require the calibration-based validation calculation:
+
+```{r}
+#| message: false
+#| warning: false
+#| paged-print: false
+y_num <- as.numeric(as.character(df$y))
+linear_predictor <- predict(model4, newdata = df, type = "lp")
+predicted_probability <- plogis(linear_predictor)
+n <- nrow(df)
+
+apparent_checks <- c(
+  D = (unname(model4$stats["Model L.R."]) - 1) / n,
+  U = unname(criteria_boot["U", "index.orig"]),
+  Q = unname(criteria_boot["Q", "index.orig"]),
+  B = mean((y_num - predicted_probability)^2),
+  g = Hmisc::GiniMd(linear_predictor),
+  gp = Hmisc::GiniMd(predicted_probability)
+)
+round(apparent_checks, 4)
+```
+
+`D` is a discrimination index derived from the model likelihood-ratio statistic, so larger values indicate more information than the null model. `B` is the Brier score, so smaller values indicate more accurate predicted probabilities. `g` measures separation on the linear-predictor (log-odds) scale, while `gp` measures separation on the predicted-probability scale; larger values indicate greater separation. `U` is an unreliability index and values near zero are preferred. `Q` combines discrimination and calibration as `Q = D − U`, so larger values are preferred; in this output, the apparent `Q` equals the apparent `D` minus `U` up to rounding. The validation output should be preferred to the apparent values when discussing expected performance on new data.
+
 ## Summary of Model Comparison
 
-The comparison table below is generated from the fitted models so that the reported values remain synchronized with the code.
+The comparison tables below are generated from the fitted models and the bootstrap validation objects so that the reported values remain synchronized with the code.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
+validation_rows <- c("Dxy", "R2", "Intercept", "Slope", "D", "U", "Q", "B", "g", "gp")
+
+apparent_rms <- do.call(rbind, lapply(bootstrap_validation, function(validation) {
+  unname(validation[validation_rows, "index.orig"])
+}))
+colnames(apparent_rms) <- validation_rows
+
+corrected_rms <- do.call(rbind, lapply(bootstrap_validation, function(validation) {
+  unname(validation[validation_rows, "index.corrected"])
+}))
+colnames(corrected_rms) <- validation_rows
+
 comparison <- data.frame(
   Model = paste("Model", 1:5),
-  AIC = sapply(list(model1, model2, model3, model4, model5), AIC),
-  AUC = sapply(list(model1, model2, model3, model4, model5),
-               function(model) unname(model$stats["C"])),
-  R2 = sapply(list(model1, model2, model3, model4, model5),
-              function(model) unname(model$stats["R2"]))
+  AIC = sapply(models, AIC),
+  AUC = (apparent_rms[, "Dxy"] + 1) / 2,
+  R2 = apparent_rms[, "R2"],
+  `Calibration intercept` = apparent_rms[, "Intercept"],
+  `Calibration slope` = apparent_rms[, "Slope"],
+  D = apparent_rms[, "D"],
+  U = apparent_rms[, "U"],
+  Q = apparent_rms[, "Q"],
+  B = apparent_rms[, "B"],
+  g = apparent_rms[, "g"],
+  gp = apparent_rms[, "gp"],
+  check.names = FALSE
 )
 knitr::kable(comparison, digits = 3)
 ```
 
-Model 4 and Model 5 have the strongest apparent discrimination and pseudo-R², but these measures do not account for model complexity. Model 1 has the lowest AIC overall, whereas Model 5 has the highest AIC. Because lower AIC is preferred, Model 5’s additional flexibility is not justified by sufficient improvement in fit. Model 4 is a reasonable teaching example for balancing discrimination, calibration, and complexity, although this conclusion should be confirmed with optimism-corrected validation.
+The first table reports **apparent, development-sample performance**. The apparent calibration intercept is 0 and the apparent calibration slope is 1 for every model because each model is evaluated on the same data used to fit it; these values do not demonstrate performance in new patients. The `D` column describes apparent discrimination, so larger values are better. `U` is the unreliability index; values close to zero indicate little residual calibration-related unreliability. `Q = D − U` combines discrimination and calibration, so larger values are preferred. The `B` column is the Brier score, so smaller values are better. The `g` and `gp` columns describe separation on the linear-predictor and predicted-probability scales, respectively, so larger values indicate greater separation.
 
--   **Model 4** (standard multivariable logistic regression) performs **consistently well** across all metrics and shows **good calibration** with **lower AIC** than simpler models.
--   **Model 5** (using restricted cubic splines for x1 and x2) slightly improves apparent discrimination but has a higher AIC and shows **mild overfitting** in the calibration plot, illustrating the trade-off between flexibility and generalizability.
+### Bootstrap optimism-corrected performance
 
-**Model 4** (Multivariate model) is recommended as the **best balance** of discrimination, calibration, and stability.
+The next table reports the `index.corrected` values from the same bootstrap validation. For AUC, the optimism-corrected `Dxy` is converted using `AUC = (Dxy + 1) / 2`. For calibration, an intercept closer to 0 and a slope closer to 1 are preferred. These corrected values are more relevant than apparent values when comparing expected performance in new patients.
+
+```{r}
+#| echo: false
+bootstrap_comparison <- data.frame(
+  Model = paste("Model", 1:5),
+  AUC = (corrected_rms[, "Dxy"] + 1) / 2,
+  R2 = corrected_rms[, "R2"],
+  `Calibration intercept` = corrected_rms[, "Intercept"],
+  `Calibration slope` = corrected_rms[, "Slope"],
+  D = corrected_rms[, "D"],
+  U = corrected_rms[, "U"],
+  Q = corrected_rms[, "Q"],
+  B = corrected_rms[, "B"],
+  g = corrected_rms[, "g"],
+  gp = corrected_rms[, "gp"],
+  check.names = FALSE
+)
+knitr::kable(bootstrap_comparison, digits = 3)
+```
+
+Models 4 and 5 have the strongest apparent discrimination and pseudo-R², but bootstrap correction reduces their expected performance. The corrected calibration slopes below 1 for Models 2–5 indicate some overfitting or overly extreme predictions after internal validation; Models 4 and 5 should therefore not be described as clearly superior from apparent AUC alone. Model 1 has the lowest AIC, but AIC is a fit-and-complexity criterion rather than an optimism-corrected predictive-performance measure. The final choice should consider corrected discrimination, calibration, model complexity, and clinical usefulness.
+
+Efthimiou et al. recommend assessing both discrimination and calibration, performing internal validation, and basing final model selection on optimism-corrected performance; when models perform similarly, a simpler model may be preferable. Clinical usefulness is a separate question that would require decision-curve analysis, which is outside this comparison table. See [Efthimiou et al., *The BMJ* (2024)](https://www.bmj.com/content/386/bmj-2023-078276), BMJ 2024;386:e078276, doi: [10.1136/bmj-2023-078276](https://doi.org/10.1136/bmj-2023-078276).
+
+The `D`, `U`, `Q`, `B`, `g`, and `gp` indexes describe different aspects of performance and should not be ranked as if they had the same scale. In particular, larger `D`, `Q`, `g`, and `gp` values are preferred, whereas smaller `B` values are preferred and `U` should be close to zero. All reported apparent values can be optimistic because each model is evaluated on the data used to fit it.
+
+-   **Models 4 and 5** (the more flexible multivariable specifications) have the strongest apparent discrimination, but their performance decreases more after bootstrap optimism correction.
+-   **Model 1** has the lowest AIC and, in this analysis, the strongest optimism-corrected AUC, `D`, and `Q`, with a calibration slope closest to 1. Model 3 gives a similar corrected result.
+
+**Teaching conclusion.** Model 4 remains a useful example of a clinically interpretable multivariable model, but the available results do not justify calling it the best-performing model. A final choice would require prespecified model-selection criteria, uncertainty intervals, and assessment of clinical usefulness.
 
 ::: {.callout-tip title="Questions for discussion and answers"}
 **Question. Which model is best overall?**
 
-**Answer.** There is no single winner based on apparent metrics alone. Model 1 has the lowest AIC, while Models 4 and 5 have slightly higher apparent AUC and pseudo-R². Model 4 is a reasonable teaching compromise because it is interpretable and flexible enough to include the available predictors, but the final choice should be based on optimism-corrected validation and the intended clinical use.
+**Answer.** There is no single winner based on apparent metrics alone. Models 4 and 5 look strongest before correction, but Model 1 has the lowest AIC and the strongest optimism-corrected discrimination and `Q` in this analysis; Model 3 is similar. Model 4 remains a reasonable teaching example because it is interpretable and includes the available predictors, but it should not be declared the best model without considering uncertainty, external validation, and clinical usefulness.
 :::
 
 In order to use the model for the third part, we will save the model in .rds extension
