@@ -449,7 +449,6 @@ round(apparent_checks, 4)
 The comparison tables below are generated from the fitted models and the bootstrap validation objects so that the reported values remain synchronized with the code.
 
 ```{r}
-#| echo: false
 #| message: false
 #| warning: false
 validation_rows <- c("Dxy", "R2", "Intercept", "Slope", "D", "U", "Q", "B", "g", "gp")
@@ -459,10 +458,6 @@ apparent_rms <- do.call(rbind, lapply(bootstrap_validation, function(validation)
 }))
 colnames(apparent_rms) <- validation_rows
 
-corrected_rms <- do.call(rbind, lapply(bootstrap_validation, function(validation) {
-  unname(validation[validation_rows, "index.corrected"])
-}))
-colnames(corrected_rms) <- validation_rows
 
 comparison <- data.frame(
   Model = paste("Model", 1:5),
@@ -489,7 +484,13 @@ The first table reports **apparent, development-sample performance**. The appare
 The next table reports the `index.corrected` values from the same bootstrap validation. For AUC, the optimism-corrected `Dxy` is converted using `AUC = (Dxy + 1) / 2`. For calibration, an intercept closer to 0 and a slope closer to 1 are preferred. These corrected values are more relevant than apparent values when comparing expected performance in new patients.
 
 ```{r}
-#| echo: false
+
+corrected_rms <- do.call(rbind, lapply(bootstrap_validation, function(validation) {
+  unname(validation[validation_rows, "index.corrected"])
+}))
+colnames(corrected_rms) <- validation_rows
+
+
 bootstrap_comparison <- data.frame(
   Model = paste("Model", 1:5),
   AUC = (corrected_rms[, "Dxy"] + 1) / 2,
@@ -516,7 +517,7 @@ The `D`, `U`, `Q`, `B`, `g`, and `gp` indexes describe different aspects of perf
 -   **Models 4 and 5** (the more flexible multivariable specifications) have the strongest apparent discrimination, but their performance decreases more after bootstrap optimism correction.
 -   **Model 1** has the lowest AIC and, in this analysis, the strongest optimism-corrected AUC, `D`, and `Q`, with a calibration slope closest to 1. Model 3 gives a similar corrected result.
 
-**Teaching conclusion.** Model 4 remains a useful example of a clinically interpretable multivariable model, but the available results do not justify calling it the best-performing model. A final choice would require prespecified model-selection criteria, uncertainty intervals, and assessment of clinical usefulness.
+**Teaching conclusion.** Model 4 remains a useful and interpretable teaching example because it includes all available predictors. However, its apparent performance should not be interpreted as evidence that it is the best model. Final selection should consider optimism-corrected performance, uncertainty, external validation, and clinical usefulness.
 
 ::: {.callout-tip title="Questions for discussion and answers"}
 **Question. Which model is best overall?**
