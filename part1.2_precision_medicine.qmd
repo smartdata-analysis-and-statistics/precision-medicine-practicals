@@ -36,6 +36,8 @@ The corresponding prompts are in the [Model Development computer practical](part
 
 After preparing the data, the next step will be modelling. Modeling helps us understand how variables relate to each other. Models allow us to predict outcomes for new observations. Any prediction function demonstrates this - it takes new patient data and estimates their probability of the outcome occurring. This is crucial for clinical decision-making.
 
+In this practical, we follow the recommendations of [Efthimiou et al., *The BMJ* (2024)](https://www.bmj.com/content/386/bmj-2023-078276). Their guide emphasizes that a clinical prediction model should be assessed using both **discrimination**—how well it separates patients with and without the outcome—and **calibration**—how closely predicted risks agree with observed outcomes. It also stresses that performance measured on the development data can be optimistic, so internal validation should be used to obtain a more honest estimate before considering model selection or clinical usefulness.
+
 # Key sections
 
 This part 1.2 Modelling will consist of some sections :
@@ -406,9 +408,36 @@ All models explained a similar proportion of the variance in the outcome, with p
 **Answer.** Models 4 and 5 have the largest apparent pseudo-R² values, but the differences are small. Pseudo-R² is a model-specific measure of improvement over a null model; it is not the percentage of outcome variance explained and should not be compared directly with ordinary linear-regression R².
 :::
 
-## E. Additional `rms` criteria and optimism-corrected performance
+## E. Additional discrimination, calibration, and prediction-accuracy indices
 
-For **Model 4**, `rms::validate()` reports the additional indexes `D`, `U`, `Q`, `B`, `g`, and `gp`. The BMJ guide recommends internal validation and choosing the final model using optimism-corrected performance. Here we use bootstrap validation, with 200 resamples, because it repeatedly refits each model and estimates how much its apparent performance is optimistic.
+The additional `rms` indexes describe different aspects of model performance beyond a single measure such as AUC:
+
+-   **`D`** summarizes discrimination on the model-information scale; larger values indicate more separation between outcome groups.
+-   **`U`** measures unreliability related to calibration; values close to zero are preferred.
+-   **`Q`** combines discrimination and calibration as `Q = D − U`; larger values are preferred.
+-   **`B`** is the Brier score, measuring the accuracy of predicted probabilities; smaller values are preferred.
+-   **`g`** measures separation on the linear-predictor (log-odds) scale, while **`gp`** measures separation on the predicted-probability scale; larger values indicate greater separation.
+
+For Models 1–5, `rms::validate()` returns these indexes together with the following validation columns:
+
+-   **`index.orig`**: the apparent performance of the original fitted model, evaluated on the full development dataset before optimism correction.
+-   **`training`**: the average performance of each bootstrap-refitted model when it is evaluated on the bootstrap sample used to fit it.
+-   **`test`**: the average performance of each bootstrap-refitted model when it is evaluated on the original development dataset, which acts as the comparison sample for estimating optimism.
+-   **`optimism`**: the average difference between `training` and `test`; it estimates how much performance is inflated when a model is evaluated on the data used to fit it.
+-   **`index.corrected`**: `index.orig - optimism`, giving an optimism-corrected estimate of internal performance.
+
+The bootstrap procedure and the corresponding values for all five models are shown in the following **Summary of Model Comparison** section. There, we first examine apparent development-sample performance and then compare it with bootstrap optimism-corrected performance.
+
+## Summary of Model Comparison
+
+We will use **two complementary ways to assess model performance**. Both use the same discrimination, calibration, and prediction-accuracy measures, but differ in whether the model is evaluated on its development data or after bootstrap optimism correction:
+
+1. **Apparent, development-sample performance:** each model is evaluated on the same observations used to fit it. This describes how well the model fits the development data, but it is usually optimistic because the model has already seen those observations.
+2. **Bootstrap optimism-corrected performance:** the modelling and assessment process is repeated in bootstrap samples, and the apparent optimism is estimated and subtracted from the original performance. This provides a more realistic estimate of expected internal performance in new patients from a similar population.
+
+The tables below are generated from the fitted models and the bootstrap validation objects so that the reported values remain synchronized with the code.
+
+The bootstrap validation procedure used for both tables is:
 
 ```{r}
 #| message: false
@@ -420,39 +449,12 @@ bootstrap_validation <- lapply(models, function(model) {
   validate(model, method = "boot", B = 200)
 })
 
-criteria_boot <- bootstrap_validation[[4]]
-criteria_boot[c("D", "U", "Q", "B", "g", "gp"),
-            c("index.orig", "training", "test", "optimism", "index.corrected")] |>
-  round(4)
+criteria_rows <- c("D", "U", "Q", "B", "g", "gp")
 ```
 
-For the **apparent Model 4 fit**, `D`, `B`, `g`, and `gp` can also be checked directly from the fitted model. The apparent `U` and `Q` values are extracted from the `validate()` result above because they require the calibration-based validation calculation:
+### Apparent, development-sample performance
 
-```{r}
-#| message: false
-#| warning: false
-#| paged-print: false
-y_num <- as.numeric(as.character(df$y))
-linear_predictor <- predict(model4, newdata = df, type = "lp")
-predicted_probability <- plogis(linear_predictor)
-n <- nrow(df)
-
-apparent_checks <- c(
-  D = (unname(model4$stats["Model L.R."]) - 1) / n,
-  U = unname(criteria_boot["U", "index.orig"]),
-  Q = unname(criteria_boot["Q", "index.orig"]),
-  B = mean((y_num - predicted_probability)^2),
-  g = Hmisc::GiniMd(linear_predictor),
-  gp = Hmisc::GiniMd(predicted_probability)
-)
-round(apparent_checks, 4)
-```
-
-`D` is a discrimination index derived from the model likelihood-ratio statistic, so larger values indicate more information than the null model. `B` is the Brier score, so smaller values indicate more accurate predicted probabilities. `g` measures separation on the linear-predictor (log-odds) scale, while `gp` measures separation on the predicted-probability scale; larger values indicate greater separation. `U` is an unreliability index and values near zero are preferred. `Q` combines discrimination and calibration as `Q = D − U`, so larger values are preferred; in this output, the apparent `Q` equals the apparent `D` minus `U` up to rounding. The validation output should be preferred to the apparent values when discussing expected performance on new data.
-
-## Summary of Model Comparison
-
-The comparison tables below are generated from the fitted models and the bootstrap validation objects so that the reported values remain synchronized with the code.
+The first table reports the apparent performance of Models 1–5. The code extracts the `index.orig` column from each `rms::validate()` result. These are development-sample estimates: useful for showing how the calculations work, but not sufficient evidence that a model will perform equally well in new patients.
 
 ```{r}
 #| message: false
@@ -483,11 +485,13 @@ comparison <- data.frame(
 knitr::kable(comparison, digits = 3)
 ```
 
-The first table reports **apparent, development-sample performance**. The apparent calibration intercept is 0 and the apparent calibration slope is 1 for every model because each model is evaluated on the same data used to fit it; these values do not demonstrate performance in new patients. The `D` column describes apparent discrimination, so larger values are better. `U` is the unreliability index; values close to zero indicate little residual calibration-related unreliability. `Q = D − U` combines discrimination and calibration, so larger values are preferred. The `B` column is the Brier score, so smaller values are better. The `g` and `gp` columns describe separation on the linear-predictor and predicted-probability scales, respectively, so larger values indicate greater separation.
+In the resulting table, the apparent calibration intercept is 0 and the apparent calibration slope is 1 for every model because each model is evaluated on the same data used to fit it; these values do not demonstrate performance in new patients. The interpretation of the additional indexes is given in Section E above.
+
+
 
 ### Bootstrap optimism-corrected performance
 
-The next table reports the `index.corrected` values from the same bootstrap validation. For AUC, the optimism-corrected `Dxy` is converted using `AUC = (Dxy + 1) / 2`. For calibration, an intercept closer to 0 and a slope closer to 1 are preferred. These corrected values are more relevant than apparent values when comparing expected performance in new patients.
+The second table reports the `index.corrected` values from the same bootstrap validation. This follows the BMJ guide's principle that the complete modelling process should be repeated in the resampled data, including any model-selection steps if they were used. Here, each of the five fitted models is validated with 200 bootstrap repetitions. For AUC, the optimism-corrected `Dxy` is converted using `AUC = (Dxy + 1) / 2`. For calibration, an intercept closer to 0 and a slope closer to 1 are preferred. These corrected values are more relevant than apparent values when comparing expected performance in new patients.
 
 ```{r}
 
@@ -514,14 +518,16 @@ bootstrap_comparison <- data.frame(
 knitr::kable(bootstrap_comparison, digits = 3)
 ```
 
+The resulting table shows the optimism-corrected estimates for each model. Comparing it with the apparent table illustrates the effect of optimism correction: the apparent performance of the more flexible models decreases more noticeably, while the corrected calibration slopes below 1 suggest that some predictions are too extreme after accounting for overfitting.
+
 Models 4 and 5 have the strongest apparent discrimination and pseudo-R², but bootstrap correction reduces their expected performance. The corrected calibration slopes below 1 for Models 2–5 indicate some overfitting or overly extreme predictions after internal validation; Models 4 and 5 should therefore not be described as clearly superior from apparent AUC alone. Model 1 has the lowest AIC, but AIC is a fit-and-complexity criterion rather than an optimism-corrected predictive-performance measure. The final choice should consider corrected discrimination, calibration, model complexity, and clinical usefulness.
 
-Efthimiou et al. recommend assessing both discrimination and calibration, performing internal validation, and basing final model selection on optimism-corrected performance; when models perform similarly, a simpler model may be preferable. Clinical usefulness is a separate question that would require decision-curve analysis, which is outside this comparison table. See [Efthimiou et al., *The BMJ* (2024)](https://www.bmj.com/content/386/bmj-2023-078276), BMJ 2024;386:e078276, doi: [10.1136/bmj-2023-078276](https://doi.org/10.1136/bmj-2023-078276).
-
-The `D`, `U`, `Q`, `B`, `g`, and `gp` indexes describe different aspects of performance and should not be ranked as if they had the same scale. In particular, larger `D`, `Q`, `g`, and `gp` values are preferred, whereas smaller `B` values are preferred and `U` should be close to zero. All reported apparent values can be optimistic because each model is evaluated on the data used to fit it.
+Efthimiou et al. recommend assessing both discrimination and calibration, performing internal validation, and basing final model selection on optimism-corrected performance; when models perform similarly, a simpler model may be preferable. See [Efthimiou et al., *The BMJ* (2024)](https://www.bmj.com/content/386/bmj-2023-078276), BMJ 2024;386:e078276, doi: [10.1136/bmj-2023-078276](https://doi.org/10.1136/bmj-2023-078276).
 
 -   **Models 4 and 5** (the more flexible multivariable specifications) have the strongest apparent discrimination, but their performance decreases more after bootstrap optimism correction.
 -   **Model 1** has the lowest AIC and, in this analysis, the strongest optimism-corrected AUC, `D`, and `Q`, with a calibration slope closest to 1. Model 3 gives a similar corrected result.
+
+For a related perspective on validating prediction models for patient outcomes and individualized treatment effects, see [Chapter 19 of *Comparative Effectiveness and Personalized Medicine Research Using Real-World Data*](https://doi.org/10.1201/9781003300809-19).
 
 **Teaching conclusion.** Model 4 remains a useful and interpretable teaching example because it includes all available predictors. However, its apparent performance should not be interpreted as evidence that it is the best model. Final selection should consider optimism-corrected performance, uncertainty, external validation, and clinical usefulness.
 
@@ -537,3 +543,13 @@ In order to use the model for the third part, we will save the model in .rds ext
 #| eval: false
 saveRDS(model4, "model/model4.rds")
 ```
+
+## Bibliography
+
+-   Efthimiou, O., Seo, M., Chalkou, K., Debray, T., Egger, M., and Salanti, G. (2024). [Developing clinical prediction models: a step-by-step guide](https://www.bmj.com/content/386/bmj-2023-078276). *The BMJ*, 386, e078276. [https://doi.org/10.1136/bmj-2023-078276](https://doi.org/10.1136/bmj-2023-078276). **Concept connection:** this is the main framework for comparing discrimination, calibration, internal validation, model selection, and clinical usefulness in this practical.
+-   Thao, L. T. P., Efthimiou, O., Varga, T. V., Hoogland, J., and Debray, T. P. A. (2026). [Validation of prediction models for patient outcomes and individualized treatment effect](https://doi.org/10.1201/9781003300809-19). In T. P. A. Debray, T.-L. Nguyen, and R. W. Platt (Eds.), *Comparative Effectiveness and Personalized Medicine Research Using Real-World Data* (pp. 485–512). CRC Press. **Concept connection:** this extends validation from outcome prediction to individualized treatment-effect prediction, clarifying why good prognostic performance alone does not establish personalized treatment benefit.
+-   Debray, T. P. A., Nguyen, T.-L., and Platt, R. W. (Eds.). (2026). [*Comparative Effectiveness and Personalized Medicine Research Using Real-World Data*](https://doi.org/10.1201/9781003300809). CRC Press, Chapman & Hall/CRC Biostatistics Series. [Amazon ebook page](https://www.amazon.co.uk/Comparative-Effectiveness-Personalized-Real-World-Biostatistics-ebook/dp/B0GSHH52DQ). **Concept connection:** the book provides the broader real-world-evidence and personalized-medicine context for moving from model performance to evidence that can support treatment decisions.
+-   Steyerberg, E. W., Vickers, A. J., Cook, N. R., Gerds, T., Gonen, M., Obuchowski, N., Pencina, M. J., and Kattan, M. W. (2010). Assessing the performance of prediction models: a framework for traditional and novel measures. *Epidemiology*, 21(1), 128–138. [https://doi.org/10.1097/EDE.0b013e3181c30fb2](https://doi.org/10.1097/EDE.0b013e3181c30fb2). **Concept connection:** this supports treating discrimination, calibration, overall accuracy, and decision-analytic measures as complementary rather than interchangeable criteria.
+-   Collins, G. S., Reitsma, J. B., Altman, D. G., and Moons, K. G. M. (2015). Transparent Reporting of a multivariable prediction model for Individual Prognosis Or Diagnosis (TRIPOD): the TRIPOD statement. *Annals of Internal Medicine*, 162(1), 55–63. [https://doi.org/10.7326/M14-0697](https://doi.org/10.7326/M14-0697). **Concept connection:** this provides the reporting framework behind documenting the model specification, predictors, performance measures, and validation procedure.
+-   Riley, R. D., Ensor, J., Snell, K. I. E., Harrell, F. E., Martin, G. P., Reitsma, J. B., Moons, K. G. M., Collins, G. S., and van Smeden, M. (2020). Calculating the sample size required for developing a clinical prediction model. *The BMJ*, 368, m441. [https://doi.org/10.1136/bmj.m441](https://doi.org/10.1136/bmj.m441). **Concept connection:** this explains why the number of participants and outcome events relative to model complexity affect overfitting and the reliability of apparent performance.
+-   Moons, K. G. M., Wolff, R. F., Riley, R. D., Whiting, P. F., Westwood, M., Collins, G. S., Reitsma, J. B., Kleijnen, J., and Mallett, S. (2019). PROBAST: a tool to assess risk of bias and applicability of prediction model studies. *Annals of Internal Medicine*, 170(1), 51–58. [https://doi.org/10.7326/M18-1376](https://doi.org/10.7326/M18-1376). **Concept connection:** this provides a framework for asking whether the development data, predictors, outcome definition, and analysis could create bias or limit applicability.
