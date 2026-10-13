@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Aulia Kharis">
+<meta name="author" content="Thomas Debray">
+
+<title>Data Preparation and Exploration – Precision Medicine Practicals</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-890df4807d457dbc410f87df85df408d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#task-and-solution-map" id="toc-task-and-solution-map" class="nav-link active" data-scroll-target="#task-and-solution-map">Task and solution map</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#about-the-dataset" id="toc-about-the-dataset" class="nav-link" data-scroll-target="#about-the-dataset">About the Dataset</a></li>
+  </ul></li>
+  <li><a href="#descriptive-statistics-and-visualizations" id="toc-descriptive-statistics-and-visualizations" class="nav-link" data-scroll-target="#descriptive-statistics-and-visualizations">Descriptive Statistics and Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#distribution-of-continuous-variables" id="toc-distribution-of-continuous-variables" class="nav-link" data-scroll-target="#distribution-of-continuous-variables">Distribution of Continuous Variables</a></li>
+  <li><a href="#distribution-of-categorical-variables" id="toc-distribution-of-categorical-variables" class="nav-link" data-scroll-target="#distribution-of-categorical-variables">Distribution of Categorical Variables</a></li>
+  <li><a href="#correlation" id="toc-correlation" class="nav-link" data-scroll-target="#correlation">Correlation</a></li>
+  <li><a href="#univariate-relationship-between-predictors-and-response-variables" id="toc-univariate-relationship-between-predictors-and-response-variables" class="nav-link" data-scroll-target="#univariate-relationship-between-predictors-and-response-variables">Univariate relationship between Predictors and Response Variables</a>
+  <ul class="collapse">
+  <li><a href="#numerical-predictors-vs-response-variables" id="toc-numerical-predictors-vs-response-variables" class="nav-link" data-scroll-target="#numerical-predictors-vs-response-variables">Numerical Predictors vs Response Variables</a></li>
+  <li><a href="#categorical-predictors-vs-response-variables" id="toc-categorical-predictors-vs-response-variables" class="nav-link" data-scroll-target="#categorical-predictors-vs-response-variables">Categorical Predictors vs Response Variables</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a>
+  <ul class="collapse">
+  <li><a href="#bibliography" id="toc-bibliography" class="nav-link" data-scroll-target="#bibliography">Bibliography</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+<div class="sdas-header" role="banner">
+  <a class="sdas-brand" href="https://sdas.thinkific.com/courses/precmedintro" aria-label="Smart Data Analysis and Statistics">
+    <img src="sdas_large.png" alt="Smart Data Analysis and Statistics" class="sdas-logo">
+  </a>
+</div>
+
+<style>
+  :root {
+    --sdas-navy: #26476b;
+    --sdas-green: #80c42b;
+    --sdas-dark: #212529;
+    --sdas-muted: #5d6873;
+    --sdas-light-blue: #eef4f8;
+    --sdas-light-green: #f3f9e9;
+    --sdas-border: #d8e1e8;
+  }
+
+  /* Desktop page frame: full-width brand header, readable article column,
+     and a compact table of contents. */
+  #quarto-content {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 235px;
+    grid-template-rows: auto auto;
+    column-gap: 3.5rem;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+  }
+
+  #quarto-content > .sdas-header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  #quarto-content > #quarto-document-content {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    max-width: 820px;
+    padding-top: 2.5rem;
+  }
+
+  #quarto-content > #quarto-margin-sidebar {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    padding-top: 2.5rem;
+    border-left: 1px solid var(--sdas-border);
+    padding-left: 1.25rem;
+  }
+
+  #quarto-margin-sidebar #toc-title {
+    margin-top: 0;
+    color: var(--sdas-navy);
+    font-size: 1.05rem;
+  }
+
+  #quarto-margin-sidebar a {
+    color: var(--sdas-navy);
+  }
+
+  #quarto-margin-sidebar a:hover,
+  #quarto-margin-sidebar a:focus,
+  #quarto-margin-sidebar .active {
+    color: #5c8f18;
+  }
+
+  .sdas-header {
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.15rem 0 0;
+  }
+
+  .sdas-brand {
+    display: inline-flex;
+    align-items: center;
+    color: var(--sdas-navy);
+    text-decoration: none;
+  }
+
+  .sdas-brand:hover,
+  .sdas-brand:focus {
+    color: var(--sdas-green);
+    text-decoration: none;
+  }
+
+  .sdas-header::after {
+    display: block;
+    height: 4px;
+    margin-top: 1rem;
+    background: var(--sdas-green);
+    border-radius: 999px;
+    content: "";
+  }
+
+  .sdas-logo {
+    display: block;
+    width: min(15rem, 72vw);
+    height: auto;
+  }
+
+  #quarto-document-content h1,
+  #quarto-document-content h2,
+  #quarto-document-content h3 {
+    color: var(--sdas-navy);
+    line-height: 1.25;
+  }
+
+  #quarto-document-content h1 {
+    margin-top: 0;
+  }
+
+  #quarto-document-content h2 {
+    border-left: 5px solid var(--sdas-green);
+    padding-left: 0.75rem;
+  }
+
+  #quarto-document-content a {
+    color: var(--sdas-navy);
+  }
+
+  #quarto-document-content a:hover,
+  #quarto-document-content a:focus {
+    color: #5c8f18;
+  }
+
+  #quarto-document-content .callout {
+    border-color: var(--sdas-border);
+    border-left-width: 5px;
+    border-radius: 0.35rem;
+  }
+
+  #quarto-document-content .callout.callout-note {
+    border-left-color: var(--sdas-navy);
+    background: var(--sdas-light-blue);
+  }
+
+  #quarto-document-content .callout.callout-tip {
+    border-left-color: var(--sdas-green);
+    background: var(--sdas-light-green);
+  }
+
+  #quarto-document-content pre.sourceCode,
+  #quarto-document-content div.sourceCode {
+    border-color: var(--sdas-border);
+    background: #f6f8fa;
+  }
+
+  #quarto-document-content table {
+    border-color: var(--sdas-border);
+  }
+
+  #quarto-document-content table thead th {
+    color: #fff;
+    background: var(--sdas-navy);
+  }
+
+  #quarto-document-content table tbody tr:nth-child(even) {
+    background: var(--sdas-light-blue);
+  }
+
+  @media (max-width: 991px) {
+    #quarto-content {
+      display: block !important;
+      max-width: none;
+      padding: 0 1rem 3rem;
+    }
+
+    #quarto-content > #quarto-document-content {
+      max-width: none;
+      padding-top: 2rem;
+    }
+
+    #quarto-content > #quarto-margin-sidebar {
+      margin-top: 3rem;
+      padding: 1rem 0 0;
+      border-top: 1px solid var(--sdas-border);
+      border-left: 0;
+    }
+
+    .sdas-logo {
+      width: min(13rem, 70vw);
+    }
+  }
+
+  /* Keep the index in the full-width preview layout, while practical pages
+     place the logo above the table of contents in the right sidebar. */
+  body.sdas-practical #quarto-content {
+    grid-template-rows: auto;
+  }
+
+  body.sdas-practical #quarto-content > #quarto-document-content {
+    grid-row: 1;
+  }
+
+  body.sdas-practical #quarto-content > #quarto-margin-sidebar {
+    grid-row: 1;
+    padding-top: 0;
+  }
+
+  body.sdas-practical #quarto-margin-sidebar > .sdas-header {
+    display: block;
+    width: 100%;
+    margin: 0 0 1rem;
+    padding: 0 0 0.75rem;
+    border-bottom: 1px solid var(--sdas-border);
+  }
+
+  body.sdas-practical .sdas-logo {
+    width: min(12rem, 100%);
+  }
+
+  @media (max-width: 991px) {
+    body.sdas-practical #quarto-content > #quarto-document-content {
+      padding-top: 2rem;
+    }
+
+    body.sdas-practical #quarto-content > #quarto-margin-sidebar {
+      padding-top: 0;
+    }
+
+    body.sdas-practical .sdas-logo {
+      width: min(13rem, 70vw);
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const placeLogo = () => {
+      const logo = document.querySelector('.sdas-header');
+      const page = document.querySelector('#quarto-content');
+      const sidebar = document.querySelector('#quarto-margin-sidebar');
+      const main = document.querySelector('#quarto-document-content');
+      const title = document.querySelector('#title-block-header .title');
+      const isIndex = /(^|\/)index\.html$/.test(window.location.pathname) ||
+        window.location.pathname.endsWith('/') ||
+        title?.textContent.trim() === 'Welcome';
+
+      if (!logo || !page || !sidebar || !main) return;
+
+      document.body.classList.toggle('sdas-index', isIndex);
+      document.body.classList.toggle('sdas-practical', !isIndex);
+
+      if (isIndex && logo.parentElement !== page) {
+        page.prepend(logo);
+      } else if (!isIndex) {
+        const target = window.matchMedia('(min-width: 992px)').matches ? sidebar : main;
+        if (logo.parentElement !== target) target.prepend(logo);
+      }
+    };
+
+    placeLogo();
+    window.addEventListener('resize', placeLogo);
+  })();
+</script>
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Data Preparation and Exploration</h1>
+<p class="subtitle lead">Computer Practical Solutions</p>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Authors</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Aulia Kharis </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Smart Data Analysis and Statistics
+          </p>
+      </div>
+    <div class="quarto-title-meta-contents">
+    <p class="author">Thomas Debray </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Smart Data Analysis and Statistics
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="How to use this solution">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>How to use this solution
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The corresponding prompts are in the <a href="part1.1_precision_medicine_task.html">Data Preparation and Exploration computer practical</a>. The map below shows where each task is answered in this solution.</p>
+<ul>
+<li><strong>Task:</strong> the prompt in the linked computer practical.</li>
+<li><strong>Solution:</strong> the worked code, output, tables, and figures on this page.</li>
+<li><strong>Discussion answer:</strong> the explanatory interpretation that follows the analysis in each section.</li>
+</ul>
+</div>
+</div>
+<section id="task-and-solution-map" class="level2">
+<h2 class="anchored" data-anchor-id="task-and-solution-map">Task and solution map</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Task in the computer practical</th>
+<th>Worked solution and discussion answer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Load and inspect the dataset</td>
+<td><a href="#about-the-dataset">About the Dataset</a></td>
+</tr>
+<tr class="even">
+<td>Summarize the variables</td>
+<td><a href="#descriptive-statistics-and-visualizations">Descriptive Statistics and Visualizations</a></td>
+</tr>
+<tr class="odd">
+<td>Explore numeric and categorical distributions</td>
+<td><a href="#distribution-of-continuous-variables">Distribution of Continuous Variables</a> and <a href="#distribution-of-categorical-variables">Distribution of Categorical Variables</a></td>
+</tr>
+<tr class="even">
+<td>Assess correlations and predictor–outcome relationships</td>
+<td><a href="#correlation">Correlation</a> and <a href="#univariate-relationship-between-predictors-and-response-variables">Univariate Relationships</a></td>
+</tr>
+<tr class="odd">
+<td>Draw overall conclusions</td>
+<td><a href="#conclusion">Conclusion</a></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>In this practical, we will explore a dataset derived from an observational study focusing on short-term outcomes in a clinical context (e.g., 30-day mortality). The aim is to guide you through the key steps in data preparation, exploration, and predictive model development using R.</p>
+<p>We begin by loading and inspecting the dataset, understanding its structure, and identifying the types of variables available for analysis.</p>
+<section id="about-the-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="about-the-dataset">About the Dataset</h2>
+<p>To begin, we load the dataset and display the first few rows to get an overview of its structure and contents:</p>
+<div class="cell">
+<div id="tbl-headdata" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-headdata-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1
+</figcaption>
+<div aria-describedby="tbl-headdata-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">x1</th>
+<th style="text-align: right;">x2</th>
+<th style="text-align: left;">x3</th>
+<th style="text-align: left;">x4</th>
+<th style="text-align: left;">x5</th>
+<th style="text-align: left;">y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-0.2920649</td>
+<td style="text-align: right;">-0.0389402</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.2585203</td>
+<td style="text-align: right;">-1.1038319</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-0.3255838</td>
+<td style="text-align: right;">0.0211378</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.7591404</td>
+<td style="text-align: right;">1.2045629</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-0.7619825</td>
+<td style="text-align: right;">0.9918415</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.3543335</td>
+<td style="text-align: right;">0.7423291</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>The dataset includes:</p>
+<ul>
+<li><strong>Five predictors:</strong>
+<ul>
+<li><code>x1</code> and <code>x2</code>: continuous variables<br>
+</li>
+<li><code>x3</code> and <code>x4</code>: binary variables<br>
+</li>
+<li><code>x5</code>: categorical variable (with more than two levels)</li>
+</ul></li>
+<li><strong>Outcome:</strong>
+<ul>
+<li><code>y</code>: a binary variable indicating the presence (1) or absence (0) of a health outcome</li>
+</ul></li>
+</ul>
+<p>The outcome in this dataset is defined as a <strong>binary variable</strong> indicating whether a patient experienced the event (e.g., death) or not within a fixed short-term period (e.g., 30 days). To analyze this outcome using binary classification methods (e.g., logistic regression), the following assumptions should generally hold:</p>
+<ol type="1">
+<li><strong>Equal follow-up time</strong>: All patients must have been followed for the same fixed duration (e.g., 30 days). Otherwise, some patients may appear event-free simply because they were observed for a shorter period.</li>
+<li><strong>Complete outcome data</strong>: The outcome must be known for all patients – that is, there should be no loss to follow-up.</li>
+<li><strong>Well-defined time window</strong>: The event must have occurred within the specified time frame (e.g., “30-day mortality”), and not at an arbitrary point in time.</li>
+</ol>
+<p>If these assumptions don’t hold, a <strong>time-to-event (survival) analysis</strong> would be more appropriate, as it can account for varying follow-up times and censoring.</p>
+<p>This dataset will be used throughout the practical to illustrate key steps in data preparation, exploration, and prediction model development.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question 1. How many variables are included in the dataset?</strong></p>
+<p><strong>Answer.</strong> The dataset contains six variables: five predictors (<code>x1</code>–<code>x5</code>) and the binary outcome <code>y</code>.</p>
+<p><strong>Question 2. What types of variables are present, and how do they affect the analysis?</strong></p>
+<p><strong>Answer.</strong> <code>x1</code> and <code>x2</code> are numeric, <code>x3</code> and <code>x4</code> are binary categorical variables, and <code>x5</code> has four categorical levels. The numeric variables can be summarized with means, medians, histograms, and boxplots; categorical variables require counts, proportions, and indicator terms in regression models. Because <code>y</code> is binary, logistic regression is appropriate.</p>
+<p><strong>Question 3. Are there irrelevant, redundant, or highly correlated variables?</strong></p>
+<p><strong>Answer.</strong> The correlation results show a moderate relationship between <code>x1</code> and <code>x2</code>, but not evidence of severe multicollinearity. The predictors should still be checked jointly before modelling; variables should not be removed solely because a pairwise correlation is statistically significant.</p>
+<p><strong>Question 4. How is the outcome defined, and how could it be analyzed?</strong></p>
+<p><strong>Answer.</strong> <code>y</code> is a binary event indicator. Logistic regression models the probability of the event when follow-up is fixed and outcomes are observed for all participants. If follow-up times varied or censoring occurred, survival analysis would be more appropriate.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="descriptive-statistics-and-visualizations" class="level1">
+<h1>Descriptive Statistics and Visualizations</h1>
+<p>Before building any predictive models, it is important to first explore and understand the dataset. This section provides a step-by-step guide to generating descriptive statistics and visualizations that will help you examine the structure, distribution, and relationships among the variables.</p>
+<p>We begin by examining the structure and summary statistics of the dataset. This will help us understand the types of variables present and their basic characteristics.</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-striped table-condensed caption-top table-sm small">
+<caption>Summary of Variables</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Variable</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Overall</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">n</td>
+<td style="text-align: left;">200</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x1 (mean (SD))</td>
+<td style="text-align: left;">0.07 (0.94)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">x2 (mean (SD))</td>
+<td style="text-align: left;">0.06 (1.02)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x3 = 1 (%)</td>
+<td style="text-align: left;">69 (34.5)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">x4 = 1 (%)</td>
+<td style="text-align: left;">99 (49.5)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x5 (%)</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding-left: 2em;" data-indentlevel="1">1</td>
+<td style="text-align: left;">31 (15.5)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding-left: 2em;" data-indentlevel="1">2</td>
+<td style="text-align: left;">72 (36.0)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding-left: 2em;" data-indentlevel="1">3</td>
+<td style="text-align: left;">61 (30.5)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding-left: 2em;" data-indentlevel="1">4</td>
+<td style="text-align: left;">36 (18.0)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="distribution-of-continuous-variables" class="level2">
+<h2 class="anchored" data-anchor-id="distribution-of-continuous-variables">Distribution of Continuous Variables</h2>
+<p>To explore the distribution of the numeric predictors, we first visualize their <strong>shapes, spread, and central tendency</strong> using histograms. To assess whether the continuous variables are approximately normally distributed, we use <strong>Q-Q plots (quantile-quantile plots)</strong>. In these plots, deviations from the diagonal line indicate departures from normality.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The exploratory analysis suggests that both variables are approximately normally distributed, supported by the following observations:</p>
+<ul>
+<li>The histograms show approximately symmetric, bell-shaped distributions centered around zero.</li>
+<li>The Q-Q plots confirm close alignment with the theoretical normal distribution.</li>
+<li>The means and medians are similar for both <code>x1</code> and <code>x2</code>, further supporting the absence of skew or extreme values.</li>
+</ul>
+<p>These characteristics indicate that both <code>x1</code> and <code>x2</code> are reasonably well-behaved and do not require transformation at this stage. While normality of predictors is not a strict requirement for regression models, having approximately symmetric and outlier-free variables supports model stability and interpretability.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question 1. Do the numeric variables follow a normal distribution?</strong></p>
+<p><strong>Answer.</strong> The histograms and Q-Q plots suggest that <code>x1</code> and <code>x2</code> are approximately symmetric and close to normal, although exact normality is not required for logistic regression.</p>
+<p><strong>Question 2. Are there noticeable differences in their distributions, skewness, or outliers?</strong></p>
+<p><strong>Answer.</strong> The variables have similar, standardized-looking distributions with no prominent skew or extreme outliers visible in these plots.</p>
+<p><strong>Question 3. Should transformations be applied?</strong></p>
+<p><strong>Answer.</strong> No transformation is required based on this exploratory assessment. Transformation or flexible terms should be reconsidered if diagnostic plots or model validation suggest non-linearity or influential observations.</p>
+</div>
+</div>
+<p>We will now proceed to explore the remaining variables and begin constructing a predictive model.</p>
+</section>
+<section id="distribution-of-categorical-variables" class="level2">
+<h2 class="anchored" data-anchor-id="distribution-of-categorical-variables">Distribution of Categorical Variables</h2>
+<p>Explore the frequency distribution of categorical variables (<code>x3</code>,<code>x4</code>, and <code>x5</code>) using bar plots.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Summary of Categorical Predictors</p>
+<ul>
+<li><p><strong><code>x3</code> (Binary)</strong><br>
+Most participants have a value of <code>0</code>, with fewer having <code>1</code>. Both categories are well represented, so no specific adjustments are needed for modeling.</p></li>
+<li><p><strong><code>x4</code> (Binary)</strong><br>
+Values <code>0</code> and <code>1</code> occur with approximately equal frequency, offering good representation across categories for modeling and interpretation.</p></li>
+<li><p><strong><code>x5</code> (Ordinal or Categorical with 4 Levels)</strong><br>
+Levels <code>2</code> and <code>3</code> are most frequent, while <code>1</code> and <code>4</code> are less common. All levels are represented in the dataset, but if <code>x5</code> is modeled using indicator (dummy) variables, estimates for the less common levels may be less precise due to smaller sample sizes.</p></li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question 1. What is the distribution of the categorical variables?</strong></p>
+<p><strong>Answer.</strong> <code>x3</code> is imbalanced toward level 0, <code>x4</code> is approximately balanced, and <code>x5</code> has four levels with levels 2 and 3 more common than levels 1 and 4.</p>
+<p><strong>Question 2. Are any categories under- or overrepresented?</strong></p>
+<p><strong>Answer.</strong> Levels 1 and 4 of <code>x5</code> are less frequent, but they are still represented. Their estimates may therefore be less precise than those for the more common levels.</p>
+<p><strong>Question 3. Should sparse levels be combined?</strong></p>
+<p><strong>Answer.</strong> Not automatically. Combining levels should be justified by subject-matter meaning and supported by adequate sample sizes; the current frequencies alone do not require combining them.</p>
+<p><strong>Question 4. Does the distribution suggest modelling challenges?</strong></p>
+<p><strong>Answer.</strong> Some imbalance can increase uncertainty and make estimates sensitive to a few observations, so category counts and confidence intervals should be checked when interpreting the fitted model.</p>
+</div>
+</div>
+</section>
+<section id="correlation" class="level2">
+<h2 class="anchored" data-anchor-id="correlation">Correlation</h2>
+<p>Analyze pairwise correlations to understand the linear relationships between variables. Use correlation coefficients (Pearson, Spearman, or Cramér’s V for categorical) and visualize them.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>cor_result <span class="ot">=</span> correlation<span class="sc">::</span><span class="fu">correlation</span>(df)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>cor_result</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Correlation Matrix (pearson-method)
+
+Parameter1 | Parameter2 |    r |       95% CI | t(198) |         p
+------------------------------------------------------------------
+x1         |         x2 | 0.49 | [0.37, 0.59] |   7.82 | &lt; .001***
+
+p-value adjustment method: Holm (1979)
+Observations: 200</code></pre>
+</div>
+</div>
+<p>The correlation Plot :</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>(df[<span class="fu">vapply</span>(df, is.numeric, <span class="fu">logical</span>(<span class="dv">1</span>))], <span class="at">use =</span> <span class="st">"pairwise.complete.obs"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"color"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"upper"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tl.col =</span> <span class="st">"black"</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on the summary and the plot above, there are some insights that will be useful for modelling :</p>
+<p><strong>🔸 Significance Legend:</strong></p>
+<ul>
+<li><code>****</code>&nbsp;= p &lt; 0.0001 → highly significant</li>
+<li><code>**</code>&nbsp;= p &lt; 0.01 → very significant</li>
+<li><code>*</code>&nbsp;= p &lt; 0.05 → significant</li>
+<li><code>n.s.</code>&nbsp;= not significant</li>
+</ul>
+<p>There are some variables that has significant correlations between each other :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pair</th>
+<th>Correlation</th>
+<th>Strength</th>
+<th>Significance</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x1</code>&nbsp;~&nbsp;<code>x2</code></td>
+<td>0.486</td>
+<td>Moderate</td>
+<td>****</td>
+<td>Moderate positive linear relationship</td>
+</tr>
+<tr class="even">
+<td><code>x1</code>&nbsp;~&nbsp;<code>y</code></td>
+<td>0.482</td>
+<td>Moderate</td>
+<td>****</td>
+<td><code>x1</code>&nbsp;is moderately predictive of the outcome</td>
+</tr>
+<tr class="odd">
+<td><code>x2</code>&nbsp;~&nbsp;<code>y</code></td>
+<td>0.274</td>
+<td>Weak-to-moderate</td>
+<td>****</td>
+<td>Some predictive power, less than&nbsp;<code>x1</code></td>
+</tr>
+<tr class="even">
+<td><code>x1</code>&nbsp;~&nbsp;<code>x3</code></td>
+<td>0.168</td>
+<td>Weak</td>
+<td>*</td>
+<td>Weak positive correlation</td>
+</tr>
+<tr class="odd">
+<td><code>x2</code>&nbsp;~&nbsp;<code>x3</code></td>
+<td>0.419</td>
+<td>Moderate</td>
+<td>****</td>
+<td><code>x2</code>&nbsp;and&nbsp;<code>x3</code>&nbsp;have moderate relationship</td>
+</tr>
+<tr class="even">
+<td><code>x4</code>&nbsp;~&nbsp;<code>x5</code></td>
+<td>0.333</td>
+<td>Moderate</td>
+<td>****</td>
+<td>Strongest categorical relationship in data</td>
+</tr>
+<tr class="odd">
+<td><code>x3</code>&nbsp;~&nbsp;<code>x4</code></td>
+<td>0.228</td>
+<td>Weak-to-moderate</td>
+<td>**</td>
+<td>Some association between&nbsp;<code>x3</code>&nbsp;and&nbsp;<code>x4</code></td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question 1. Which pairs have significant correlations at the 90% confidence level?</strong></p>
+<p><strong>Answer.</strong> The displayed results identify several statistically detectable associations, including <code>x1</code>–<code>x2</code>, <code>x1</code>–<code>y</code>, <code>x2</code>–<code>y</code>, <code>x2</code>–<code>x3</code>, <code>x3</code>–<code>x4</code>, and <code>x4</code>–<code>x5</code>. Statistical significance does not by itself imply a large or clinically important association.</p>
+<p><strong>Question 2. Which variables are most strongly related to <code>y</code>?</strong></p>
+<p><strong>Answer.</strong> <code>x1</code> has the strongest relationship with <code>y</code>, followed by the weaker relationship for <code>x2</code>. The categorical predictors show comparatively weak outcome associations in this exploratory analysis.</p>
+<p><strong>Question 3. Is there evidence of multicollinearity?</strong></p>
+<p><strong>Answer.</strong> The moderate <code>x1</code>–<code>x2</code> association is worth monitoring, but it is not, by itself, evidence of severe multicollinearity. Variance inflation, coefficient stability, and model diagnostics should be considered alongside the correlation table.</p>
+</div>
+</div>
+</section>
+<section id="univariate-relationship-between-predictors-and-response-variables" class="level2">
+<h2 class="anchored" data-anchor-id="univariate-relationship-between-predictors-and-response-variables">Univariate relationship between Predictors and Response Variables</h2>
+<p>Explore how the predictor variables relate to the response variable. This can reveal early signs of predictive power and potential modeling strategies.</p>
+<section id="numerical-predictors-vs-response-variables" class="level3">
+<h3 class="anchored" data-anchor-id="numerical-predictors-vs-response-variables">Numerical Predictors vs Response Variables</h3>
+<p>Use boxplots to assess the relationship between continuous predictors and the response variable.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>p10 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x1, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"x1 by Outcome y"</span>, <span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"x1"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>p11 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> y, <span class="at">y =</span> x2, <span class="at">fill =</span> y)) <span class="sc">+</span> </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"x2 by Outcome y"</span>, <span class="at">x =</span> <span class="st">"y"</span>, <span class="at">y =</span> <span class="st">"x2"</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p10, p11, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="st">"Continuous Predictors by Outcome"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here are some key takeaways from the plot :</p>
+<p>For x1 and y :</p>
+<ul>
+<li>Median of <code>x1</code>is higher for <code>y = 1</code> compared to <code>y = 0</code>.</li>
+<li>Individuals with higher&nbsp;<code>x1</code>&nbsp;values are more likely to have&nbsp;<code>y = 1</code> (Indicate that there is <strong>moderate relationship between x1 and y</strong>, confirmed by the correlation value (0.482) with very high significance).</li>
+</ul>
+<p>For x2 and y :</p>
+<ul>
+<li>Median of <code>x2</code>for <code>y = 1</code> is also higher than for <code>y = 0</code></li>
+<li>The <strong>trend is upward</strong>, indicating that <code>x2</code> may be somewhat predictive of <code>y</code>, confirmed by the positive correlation value (0.274) with high significance</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question. Is there a visible trend or pattern for the numeric predictors?</strong></p>
+<p><strong>Answer.</strong> The distribution of <code>x1</code> is clearly shifted upward among observations with <code>y = 1</code>, making it the strongest apparent numeric predictor. <code>x2</code> shows a weaker upward shift, suggesting some predictive information but less separation than <code>x1</code>.</p>
+</div>
+</div>
+</section>
+<section id="categorical-predictors-vs-response-variables" class="level3">
+<h3 class="anchored" data-anchor-id="categorical-predictors-vs-response-variables">Categorical Predictors vs Response Variables</h3>
+<p>Use grouped bar plots to explore how categorical predictors influence the response.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>p12 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x3, <span class="at">fill =</span> <span class="fu">factor</span>(y))) <span class="sc">+</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"x3 by Outcome y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>p13 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x4, <span class="at">fill =</span> <span class="fu">factor</span>(y))) <span class="sc">+</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"x4 by Outcome y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>p14 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> x5, <span class="at">fill =</span> <span class="fu">factor</span>(y))) <span class="sc">+</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  <span class="co"># stacked proportion bars</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"y"</span>, <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"x5 by Outcome y"</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(p12, p13, p14, <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">top =</span> <span class="st">"Categorical Predictors by Outcome"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="part1.1_precision_medicine_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From the bar plots titled&nbsp;<strong>“Categorical Predictors by Outcome”</strong>, we can analyze how the response variable&nbsp;<code>y</code>&nbsp;(0 or 1) is distributed across levels of the categorical predictors:&nbsp;<code>x3</code>,&nbsp;<code>x4</code>, and&nbsp;<code>x5</code>.</p>
+<ul>
+<li>in every variables, majority of cases have <code>y = 0</code> (orange) with smaller proportion of <code>y = 1</code> (blue)</li>
+<li>All the categorical variables have low correlations with the y. Thus, there is <strong>no categorical variables that has significant relationship with Y</strong>, indicated by high p-values and low correlation. That’s why no clear or strong association captured by the graph.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled" title="Questions for discussion and answers">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Questions for discussion and answers
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Question 1. Are there noticeable differences in outcome proportions across categorical levels?</strong></p>
+<p><strong>Answer.</strong> The plots show only modest differences in the proportion of <code>y = 1</code> across levels of <code>x3</code>, <code>x4</code>, and <code>x5</code>; no category produces the strong separation seen for <code>x1</code>.</p>
+<p><strong>Question 2. Do any levels dominate?</strong></p>
+<p><strong>Answer.</strong> <code>y = 0</code> is the majority outcome in every group, and some <code>x5</code> levels have more observations than others. These differences should be considered when interpreting uncertainty, but they do not establish bias on their own.</p>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>From the exploratory analysis, we found that the numeric predictors&nbsp;<code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;show meaningful relationships with the outcome&nbsp;<code>y</code>, with&nbsp;<code>x1</code>&nbsp;being the strongest predictor, as supported by both correlation coefficients and clear separation in boxplots. In contrast, the categorical variables&nbsp;<code>x3</code>,&nbsp;<code>x4</code>, and&nbsp;<code>x5</code>&nbsp;show weak or no significant associations with the outcome, with only&nbsp;<code>x3</code>&nbsp;displaying a mild visual trend that is not statistically significant. Additionally, all variables are complete with no missing values, and the data appears standardized. Overall,&nbsp;<code>x1</code>&nbsp;and&nbsp;<code>x2</code>&nbsp;are likely the most valuable predictors for modeling&nbsp;<code>y</code>, while the categorical variables may contribute little to model performance.</p>
+<p>For related guidance on checking the accuracy, completeness, timeliness, and potential bias of real-world data before modelling, see Chapter 2, <a href="https://smartdata-analysis-and-statistics.github.io/comparative-effectiveness/chapter_03.html"><em>Validity control and quality assessment of real-world data and real-world evidence</em></a>, in the book listed below.</p>
+<section id="bibliography" class="level2">
+<h2 class="anchored" data-anchor-id="bibliography">Bibliography</h2>
+<ul>
+<li>Read, C., and Debray, T. P. A. (2026). <a href="https://smartdata-analysis-and-statistics.github.io/comparative-effectiveness/chapter_03.html">Validity control and quality assessment of real-world data and real-world evidence</a>. In T. P. A. Debray, T.-L. Nguyen, and R. W. Platt (Eds.), <em>Comparative Effectiveness and Personalized Medicine Research Using Real-World Data</em>. CRC Press. <a href="https://doi.org/10.1201/9781003300809">Book DOI</a>. <strong>Concept connection:</strong> this supports the checks of completeness, distributions, and possible data-quality or bias problems before fitting a model.</li>
+<li>Efthimiou, O., Seo, M., Chalkou, K., Debray, T., Egger, M., and Salanti, G. (2024). <a href="https://www.bmj.com/content/386/bmj-2023-078276">Developing clinical prediction models: a step-by-step guide</a>. <em>The BMJ</em>, 386, e078276. <a href="https://doi.org/10.1136/bmj-2023-078276">https://doi.org/10.1136/bmj-2023-078276</a>. <strong>Concept connection:</strong> this motivates examining the target population, outcome, and candidate predictors before model development.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
